@@ -50,10 +50,10 @@ android {
 }
 
 dependencies {
-
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.insert.koin.koin.core)
     implementation (libs.glide.compose)
-
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

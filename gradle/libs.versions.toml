@@ -14,8 +14,10 @@ media3Common = "1.4.1"
 media3Session = "1.4.1"
 media3Ui = "1.4.1"
 koin-bom = "x.x.x"
+navigationCompose = "2.7.7"
 
 [libraries]
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 insert-koin-koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinCore" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-core = { module = "io.insert-koin:koin-core" }

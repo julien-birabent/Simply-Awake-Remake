@@ -1,6 +1,6 @@
 package com.example.simplyawakeremake
 
-data class TrackModel(
+data class UiTrack(
     val createDate: Int,
     val duration: String,
     val id: String,

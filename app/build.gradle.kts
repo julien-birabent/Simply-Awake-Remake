@@ -50,10 +50,19 @@ android {
 }
 
 dependencies {
-    implementation (libs.androidx.navigation.compose)
     implementation(libs.koin.core)
     implementation(libs.insert.koin.koin.core)
+    implementation(platform(libs.koin.bom))
+    implementation (libs.koin.androidx.compose)
+    implementation(libs.koin.android)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.adapter.rxjava3)
+    implementation(libs.rxjava3.rxkotlin)
+
     implementation (libs.glide.compose)
+
+    implementation (libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -65,6 +74,7 @@ dependencies {
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

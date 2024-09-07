@@ -54,6 +54,8 @@ dependencies {
     implementation(libs.insert.koin.koin.core)
     implementation(platform(libs.koin.bom))
     implementation (libs.koin.androidx.compose)
+    implementation(libs.logging.interceptor)
+    implementation(libs.androidx.runtime.rxjava3)
     implementation(libs.koin.android)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)

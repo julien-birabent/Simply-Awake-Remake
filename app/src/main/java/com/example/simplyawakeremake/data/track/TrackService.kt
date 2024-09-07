@@ -1,9 +1,10 @@
 package com.example.simplyawakeremake.data.track
 
-import com.example.simplyawakeremake.data.common.ApiService
 import io.reactivex.rxjava3.core.Single
+import retrofit2.http.GET
 
-interface TrackService : ApiService<ApiTrack> {
+interface TrackService {
 
-    override fun fetchAll() : Single<List<ApiTrack>>
+    @GET("api/tracks")
+    fun fetchAll(): Single<List<ApiTrack>>
 }

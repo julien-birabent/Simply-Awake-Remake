@@ -19,7 +19,9 @@ class DataCollectionPreferences<T>(
     override fun getValue(thisRef: Any, property: KProperty<*>): List<T> {
         val type = object : TypeToken<List<T>>() {}.type
         val sharedPrefStoredValue = sharedPreferences.getString(key, null)
-        return gson.fromJson(sharedPrefStoredValue, type)
+        return sharedPrefStoredValue?.let {
+            gson.fromJson(it, type)
+        } ?: emptyList()
     }
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: List<T>) {

@@ -1,14 +1,14 @@
 package com.example.simplyawakeremake.data.common
 
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.core.Single
 
-abstract class DataRepository<UiModel, DTO, DB>(
-    private val service: ApiService<DTO>,
-    private val saver: DataSaver<DB>
-) {
+abstract class DataRepository<UiModel, DTO, DB> {
 
-    abstract val dtoToDbMapper: (DTO) -> DB
-    abstract val dbToUiModelMapper: (DB) -> UiModel
+    protected abstract val fetchAllCall: () -> Single<List<DTO>>
+    protected abstract val saver: DataSaver<DB>
+    protected abstract val dtoToDbMapper: (DTO) -> DB
+    protected abstract val dbToUiModelMapper: (DB) -> UiModel
 
     fun getAll(): Flowable<ResultState<List<UiModel>>> =
         Flowable.concatDelayError(listOf(loadSavedData(), fetchAllRemotely()))
@@ -17,7 +17,7 @@ abstract class DataRepository<UiModel, DTO, DB>(
             }
 
     private fun fetchAllRemotely(): Flowable<ResultState<List<UiModel>>> =
-        service.fetchAll()
+        fetchAllCall()
             .map { dtoList -> saver.persist(dtoList.map(dtoToDbMapper)) }
             .flatMap { saver.loadAll() }.toFlowable()
             .map { dbObjects -> dbObjects.map { dbToUiModelMapper(it) } }

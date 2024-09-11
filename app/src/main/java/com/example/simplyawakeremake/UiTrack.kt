@@ -10,4 +10,7 @@ data class UiTrack(
     val season: Int,
     val year: Int,
     val duration: String
-)
+) {
+    val ordinal : Int = name.substring(0, 2).toInt()
+}
+

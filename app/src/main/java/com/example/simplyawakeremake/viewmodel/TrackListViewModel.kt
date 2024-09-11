@@ -12,11 +12,11 @@ class TrackListViewModel : ViewModel(), KoinComponent {
 
     private val trackRepository: TrackRepository by inject()
 
-    val screenState: Flowable<PlayerListUIState> = trackRepository.getAll().map {
-        when (it) {
+    val screenState: Flowable<PlayerListUIState> = trackRepository.getAll().map { resultState ->
+        when (resultState) {
             is ResultState.Error -> PlayerListUIState.Error
             is ResultState.Loading -> PlayerListUIState.Loading
-            is ResultState.Success -> PlayerListUIState.Tracks(it.data)
+            is ResultState.Success -> PlayerListUIState.Tracks(resultState.data.sortedBy { it.ordinal })
         }
     }
 }

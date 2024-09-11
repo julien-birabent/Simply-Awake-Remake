@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.simplyawakeremake.UiTrack
@@ -65,8 +66,26 @@ fun TrackItem(track: UiTrack) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            track.id,
+            track.name,
             style = MaterialTheme.typography.bodyMedium
         )
     }
+}
+
+@Composable
+@Preview(showBackground = true, backgroundColor = 0xFFFFFF)
+fun TrackItemPreview() {
+    TrackItem(
+        track = UiTrack(
+            "",
+            1,
+            1,
+            "Track Name",
+            120,
+            "Tags : mindfullness",
+            duration = "1:00",
+            season = 1,
+            year = 2000
+        )
+    )
 }

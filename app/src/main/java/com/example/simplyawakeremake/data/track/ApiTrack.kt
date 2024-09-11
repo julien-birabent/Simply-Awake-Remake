@@ -7,7 +7,7 @@ import com.google.gson.annotations.SerializedName
 
 data class ApiTrack(
     @SerializedName("id")
-    val id: String/*,
+    val id: String,
     @Expose
     @SerializedName("createDate")
     val createDate: Int,
@@ -31,18 +31,18 @@ data class ApiTrack(
     val year: Int,
     @Expose
     @SerializedName("duration")
-    val duration: String*/
+    val duration: String
 )
 
 //TODO To be updated at a later stage when I know what the UI needs data wise and in which format.
 fun ApiTrack.toUiTrack(): UiTrack = UiTrack(
     id,
-    /*createDate,
+    createDate,
     updateDate,
     name,
     lengthInSeconds,
     tagString,
     season,
     year,
-    duration*/
+    duration
 )

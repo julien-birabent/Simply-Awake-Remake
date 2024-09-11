@@ -1,7 +1,7 @@
 package com.example.simplyawakeremake
 
 data class UiTrack(
-    val id: String/*,
+    val id: String,
     val createDate: Int,
     val updateDate: Int,
     val name: String,
@@ -9,5 +9,5 @@ data class UiTrack(
     val tagString: String,
     val season: Int,
     val year: Int,
-    val duration: String*/
+    val duration: String
 )

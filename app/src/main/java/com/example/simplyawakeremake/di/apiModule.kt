@@ -1,17 +1,17 @@
 package com.example.simplyawakeremake.di
 
+import com.example.simplyawakeremake.R
 import com.example.simplyawakeremake.data.track.TrackService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-
-const val baseTrackServerUrl = "https://evolv-audio.sfo3.cdn.digitaloceanspaces.com/simply-awake/"
 
 val dataModule = module {
 
@@ -39,7 +39,7 @@ val dataModule = module {
         val rxAdapter = RxJava3CallAdapterFactory.create()
         Retrofit.Builder()
             .client(get())
-            .baseUrl(baseTrackServerUrl)
+            .baseUrl(androidContext().getString(R.string.baseCDNUrl))
             .addCallAdapterFactory(rxAdapter)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

@@ -21,9 +21,11 @@ koin-bom = "3.5.0"
 navigationCompose = "2.8.0"
 retrofit = "2.11.0"
 rxkotlinVersion = "3.0.1"
+uiTooling = "1.7.1"
 
 [libraries]
 androidx-runtime-rxjava3 = { module = "androidx.compose.runtime:runtime-rxjava3", version.ref = "composeVersion" }
+androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroidxCompose" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxCompose" }

@@ -50,14 +50,34 @@ android {
 }
 
 dependencies {
+    // Android
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
+    implementation (libs.koin.androidx.compose)
+    implementation (libs.androidx.navigation.compose)
+    implementation(libs.androidx.activity.compose)
 
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation (libs.androidx.ui.tooling)
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.media3.ui)
+
+    // Testing
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+
+    // External libraries
     implementation(libs.koin.core)
     implementation(libs.insert.koin.koin.core)
     implementation(platform(libs.koin.bom))
-    implementation (libs.koin.androidx.compose)
     implementation(libs.logging.interceptor)
     implementation(libs.androidx.runtime.rxjava3)
     implementation(libs.koin.android)
@@ -66,21 +86,5 @@ dependencies {
     implementation (libs.adapter.rxjava3)
     implementation(libs.rxjava3.rxkotlin)
     implementation (libs.glide)
-
-    implementation (libs.androidx.navigation.compose)
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.media3.common)
-    implementation(libs.androidx.media3.session)
-    implementation(libs.androidx.media3.ui)
-
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
 }

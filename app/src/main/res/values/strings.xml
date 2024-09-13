@@ -10,7 +10,5 @@
     <string name="notification_play">Play</string>
     <string name="notification_pause">Pause</string>
 
-    <string name="baseServerUrl">https://app.simplyalwaysawake.com/</string>
-    <string name="baseSpacesUrl">https://evolv-audio.sfo3.digitaloceanspaces.com/simply-awake/</string>
     <string name="baseCDNUrl">https://evolv-audio.sfo3.cdn.digitaloceanspaces.com/simply-awake/</string>
 </resources>

@@ -14,7 +14,7 @@ class TrackListViewModel : ViewModel(), KoinComponent {
 
     val screenState: Flowable<PlayerListUIState> = trackRepository.getAll().map { resultState ->
         when (resultState) {
-            is ResultState.Error -> PlayerListUIState.Error
+            is ResultState.Error -> PlayerListUIState.Error(resultState.throwable)
             is ResultState.Loading -> PlayerListUIState.Loading
             is ResultState.Success -> PlayerListUIState.Tracks(resultState.data.sortedBy { it.ordinal })
         }
@@ -37,5 +37,5 @@ sealed interface PlayerListUIState {
      */
     data object Loading : PlayerListUIState
 
-    data object Error : PlayerListUIState
+    data class Error(val throwable: Throwable) : PlayerListUIState
 }

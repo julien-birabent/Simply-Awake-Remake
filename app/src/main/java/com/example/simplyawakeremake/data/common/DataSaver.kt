@@ -8,5 +8,5 @@ interface DataSaver<T> {
 
     fun loadAll() : Single<List<T>>
 
-    fun select(id: String) : T
+    fun select(id: String) : T?
 }

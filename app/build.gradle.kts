@@ -50,6 +50,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.media3.exoplayer)
     // Android
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)

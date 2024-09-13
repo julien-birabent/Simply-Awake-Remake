@@ -17,7 +17,7 @@ class TrackSharedPrefsSaver(sharedPreferences: SharedPreferences) : DataSaver<Ap
         return Single.just(tracks)
     }
 
-    override fun select(id: String): ApiTrack {
-        return tracks.first { it.id == id }
+    override fun select(id: String): ApiTrack? {
+        return tracks.firstOrNull { it.id == id }
     }
 }

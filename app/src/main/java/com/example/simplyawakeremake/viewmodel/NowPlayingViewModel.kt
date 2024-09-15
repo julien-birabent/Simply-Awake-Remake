@@ -16,41 +16,48 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.session.MediaSession
+import com.example.simplyawakeremake.ExoPlayerPublishSubject
 import com.example.simplyawakeremake.UiTrack
 import com.example.simplyawakeremake.data.common.ResultState
 import com.example.simplyawakeremake.data.track.TrackRepository
 import com.example.simplyawakeremake.data.track.TrackUriProvider
-import com.example.simplyawakeremake.notifications.SimplyAwakeNotificationManager
 import com.example.simplyawakeremake.screens.ControlButtons
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
-import kotlinx.coroutines.SupervisorJob
+import io.reactivex.rxjava3.schedulers.Schedulers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.util.concurrent.TimeUnit
 
 class NowPlayingViewModel(val player: ExoPlayer, private val app: Application) :
     AndroidViewModel(app), KoinComponent {
 
     private val trackUriProvider: TrackUriProvider by inject()
     private val trackRepository: TrackRepository by inject()
-
+    private val exoPlayerPublishSubject = ExoPlayerPublishSubject(player)
+    private val exoPlayerEvents = exoPlayerPublishSubject.observable()
 
     private val trackIdProcessor: BehaviorProcessor<String> =
         BehaviorProcessor.create()
 
-    private val contextProcessor: BehaviorProcessor<Context> =
-        BehaviorProcessor.create()
+    val totalDurationInMs = exoPlayerEvents.filter { it.isPlaying }
+            .distinctUntilChanged()
+            .map { player.duration }
 
-    private val _currentPlayingIndex = MutableStateFlow(0)
-    val currentPlayingIndex = _currentPlayingIndex.asStateFlow()
+    val isPlaying = exoPlayerEvents.map { it.isPlaying }.distinctUntilChanged()
 
-    private val _totalDurationInMS = MutableStateFlow(0L)
-    val totalDurationInMS = _totalDurationInMS.asStateFlow()
+    // Emit the current position of the playback each seconds in the format of a Long in Milliseconds
+    val playerPositionUpdates =
+        Flowable.combineLatest(Flowable.interval(1, TimeUnit.SECONDS, AndroidSchedulers.mainThread()), exoPlayerEvents) { _, playerStatus ->
+            playerStatus
+        }
+            .filter { it.isPlaying }
+            .map { player.currentPosition }
+            .subscribeOn(Schedulers.computation())
 
-    private val _isPlaying = MutableStateFlow(false)
-    val isPlaying = _isPlaying.asStateFlow()
 
     //private lateinit var notificationManager: SimplyAwakeNotificationManager
 
@@ -101,9 +108,9 @@ class NowPlayingViewModel(val player: ExoPlayer, private val app: Application) :
         player.apply {
             setAudioAttributes(audioAttributes, true)
             repeatMode = Player.REPEAT_MODE_OFF
-            addListener(playerListener)
+            addListener(exoPlayerPublishSubject.playerListener)
 
-            playWhenReady = false
+            playWhenReady = true
             setMediaSource(createMediaSourceFrom(app, track))
             prepare()
         }
@@ -129,43 +136,6 @@ class NowPlayingViewModel(val player: ExoPlayer, private val app: Application) :
 
     fun updatePlayerPosition(position: Long) {
         player.seekTo(position)
-    }
-
-    private fun syncPlayerFlows() {
-        _currentPlayingIndex.value = player.currentMediaItemIndex
-        _totalDurationInMS.value = player.duration.coerceAtLeast(0L)
-    }
-
-    private val playerListener = object : Player.Listener {
-
-        override fun onPlaybackStateChanged(playbackState: Int) {
-            super.onPlaybackStateChanged(playbackState)
-            syncPlayerFlows()
-            when (playbackState) {
-                Player.STATE_BUFFERING,
-                Player.STATE_READY -> {
-                    //notificationManager.showNotificationForPlayer(player)
-                }
-
-                else -> {
-                   // notificationManager.hideNotification()
-                }
-            }
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            super.onMediaItemTransition(mediaItem, reason)
-            syncPlayerFlows()
-        }
-
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            super.onIsPlayingChanged(isPlaying)
-            _isPlaying.value = isPlaying
-        }
-
-        override fun onPlayerError(error: PlaybackException) {
-            super.onPlayerError(error)
-        }
     }
 
 }

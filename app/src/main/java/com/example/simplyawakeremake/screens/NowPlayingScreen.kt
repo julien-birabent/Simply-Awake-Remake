@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -72,7 +73,6 @@ fun NowPlayingScreen(
     val currentPositionState by viewModel.playerPositionUpdates.subscribeAsState(0L)
 
     val uiState by viewModel.uiState.subscribeAsState(initial = PlayerUIState.Loading)
-
 
     when (uiState) {
         PlayerUIState.Error -> {

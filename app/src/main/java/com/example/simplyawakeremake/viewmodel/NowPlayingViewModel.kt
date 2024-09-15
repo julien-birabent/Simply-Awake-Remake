@@ -9,7 +9,6 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
-import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
@@ -26,8 +25,6 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.schedulers.Schedulers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
@@ -44,14 +41,20 @@ class NowPlayingViewModel(val player: ExoPlayer, private val app: Application) :
         BehaviorProcessor.create()
 
     val totalDurationInMs = exoPlayerEvents.filter { it.isPlaying }
-            .distinctUntilChanged()
-            .map { player.duration }
+        .distinctUntilChanged()
+        .map { player.duration }
 
     val isPlaying = exoPlayerEvents.map { it.isPlaying }.distinctUntilChanged()
 
     // Emit the current position of the playback each seconds in the format of a Long in Milliseconds
     val playerPositionUpdates =
-        Flowable.combineLatest(Flowable.interval(1, TimeUnit.SECONDS, AndroidSchedulers.mainThread()), exoPlayerEvents) { _, playerStatus ->
+        Flowable.combineLatest(
+            Flowable.interval(
+                1,
+                TimeUnit.SECONDS,
+                AndroidSchedulers.mainThread()
+            ), exoPlayerEvents
+        ) { _, playerStatus ->
             playerStatus
         }
             .filter { it.isPlaying }
@@ -134,10 +137,10 @@ class NowPlayingViewModel(val player: ExoPlayer, private val app: Application) :
         return ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
     }
 
-    fun updatePlayerPosition(position: Long) {
-        player.seekTo(position)
+    override fun onCleared() {
+        super.onCleared()
+        player.stop()
     }
-
 }
 
 

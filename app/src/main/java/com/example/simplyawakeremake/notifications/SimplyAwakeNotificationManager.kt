@@ -3,7 +3,10 @@ package com.example.simplyawakeremake.notifications
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
+import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import androidx.core.content.ContextCompat
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -49,17 +52,13 @@ private val glideOptions = RequestOptions()
  * @param context The context used to create the notification.
  * @param sessionToken The session token used to build MediaController.
  * @param player The ExoPlayer instance.
- * @param notificationListener The listener for notification events.
  */
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class SimplyAwakeNotificationManager(
     private val context: Context,
     sessionToken: SessionToken,
-    private val player: Player,
-    notificationListener: PlayerNotificationManager.NotificationListener
+    private val player: Player
 ) {
-    private val serviceJob = SupervisorJob()
-    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
     private val notificationManager: PlayerNotificationManager
 
     init {
@@ -74,31 +73,26 @@ class SimplyAwakeNotificationManager(
             .setChannelNameResourceId(R.string.notification_channel)
             .setChannelDescriptionResourceId(R.string.notification_channel_description)
             .setMediaDescriptionAdapter(DescriptionAdapter(mediaController))
-            .setNotificationListener(notificationListener)
-            .setSmallIconResourceId(R.drawable.ic_notification)
             .build()
             .apply {
                 setPlayer(player)
+                setUsePlayPauseActions(true)
                 setUseRewindAction(true)
                 setUseRewindActionInCompactView(true)
+                setColorized(true)
+                setColor(Color.BLACK)
 
                 setUseFastForwardAction(false)
-                setUseFastForwardActionInCompactView(false)
+                setUsePreviousAction(false)
+                setUseChronometer(true)
             }
 
     }
 
-    /**
-     * Hides the notification.
-     */
     fun hideNotification() {
         notificationManager.setPlayer(null)
     }
 
-    /**
-     * Shows the notification for the given player.
-     * @param player The player instance for which the notification is shown.
-     */
     fun showNotificationForPlayer(player: Player) {
         notificationManager.setPlayer(player)
     }
@@ -106,46 +100,19 @@ class SimplyAwakeNotificationManager(
     private inner class DescriptionAdapter(private val controller: ListenableFuture<MediaController>) :
         PlayerNotificationManager.MediaDescriptionAdapter {
 
-        var currentIconUri: Uri? = null
-        var currentBitmap: Bitmap? = null
-
         override fun createCurrentContentIntent(player: Player): PendingIntent? =
             controller.get().sessionActivity
 
-        override fun getCurrentContentText(player: Player) = ""
+        override fun getCurrentContentText(player: Player) = "Simply Awake"
 
-        override fun getCurrentContentTitle(player: Player) = controller.get().mediaMetadata.title.toString()
+        override fun getCurrentContentTitle(player: Player) =
+            controller.get().mediaMetadata.title.toString()
 
         override fun getCurrentLargeIcon(
             player: Player,
             callback: PlayerNotificationManager.BitmapCallback
         ): Bitmap? {
-            val iconUri = controller.get().mediaMetadata.artworkUri
-            return if (currentIconUri != iconUri || currentBitmap == null) {
-
-                // Cache the bitmap for the current song so that successive calls to
-                // `getCurrentLargeIcon` don't cause the bitmap to be recreated.
-                currentIconUri = iconUri
-                serviceScope.launch {
-                    currentBitmap = iconUri?.let {
-                        resolveUriAsBitmap(it)
-                    }
-                    currentBitmap?.let { callback.onBitmap(it) }
-                }
-                null
-            } else {
-                currentBitmap
-            }
-        }
-
-        private suspend fun resolveUriAsBitmap(uri: Uri): Bitmap? {
-            return withContext(Dispatchers.IO) {
-                Glide.with(context).applyDefaultRequestOptions(glideOptions)
-                    .asBitmap()
-                    .load(uri)
-                    .submit(NOTIFICATION_LARGE_ICON_SIZE, NOTIFICATION_LARGE_ICON_SIZE)
-                    .get()
-            }
+            return /*(ContextCompat.getDrawable(context, R.drawable.enzo) as BitmapDrawable).bitmap*/ null
         }
     }
 }

@@ -71,7 +71,6 @@ fun NowPlayingScreen(
     val isPlayingState by viewModel.isPlaying.subscribeAsState(false)
     val totalDurationState by viewModel.totalDurationInMs.subscribeAsState(initial = 0L)
     val currentPositionState by viewModel.playerPositionUpdates.subscribeAsState(0L)
-
     val uiState by viewModel.uiState.subscribeAsState(initial = PlayerUIState.Loading)
 
     when (uiState) {
@@ -126,14 +125,15 @@ fun PlayerSlider(exoPlayer: ExoPlayer, duration: Long) {
 
     // Coroutine to update the slider position
     LaunchedEffect(exoPlayer) {
-            while (true) {
-                // Check if the player is ready and playing
-                if (exoPlayer.isPlaying && duration > 0 && !isInteracting) {
-                    val currentPosition = exoPlayer.currentPosition.toFloat()
-                    sliderPosition = currentPosition.div(duration).times(100f) // Normalize the position between 0 and 100
-                }
-                delay(1000L) // Update every second
+        while (true) {
+            // Check if the player is ready and playing
+            if (exoPlayer.isPlaying && duration > 0 && !isInteracting) {
+                val currentPosition = exoPlayer.currentPosition.toFloat()
+                sliderPosition = currentPosition.div(duration)
+                    .times(100f) // Normalize the position between 0 and 100
             }
+            delay(1000L) // Update every second
+        }
     }
     Column {
         // Slider to reflect and control playback position

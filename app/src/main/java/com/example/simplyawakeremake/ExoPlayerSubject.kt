@@ -7,7 +7,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 
-class ExoPlayerPublishSubject(private val exoPlayer: ExoPlayer) {
+class ExoPlayerSubject(private val exoPlayer: ExoPlayer) {
 
     private val subject: BehaviorProcessor<PlayerStatus> = BehaviorProcessor.create()
 

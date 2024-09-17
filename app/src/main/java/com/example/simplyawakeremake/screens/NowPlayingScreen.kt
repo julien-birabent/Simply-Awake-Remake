@@ -1,6 +1,5 @@
 package com.example.simplyawakeremake.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -22,17 +21,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rxjava3.subscribeAsState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,17 +38,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import androidx.navigation.NavController
 import com.example.simplyawakeremake.R
 import com.example.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.example.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
 import com.example.simplyawakeremake.viewmodel.NowPlayingViewModel
 import com.example.simplyawakeremake.viewmodel.PlayerUIState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -68,6 +58,7 @@ fun NowPlayingScreen(
     LaunchedEffect(viewModel) {
         viewModel.setupTrackId(trackId)
     }
+
     val isPlayingState by viewModel.isPlaying.subscribeAsState(false)
     val totalDurationState by viewModel.totalDurationInMs.subscribeAsState(initial = 0L)
     val currentPositionState by viewModel.playerPositionUpdates.subscribeAsState(0L)
@@ -75,7 +66,7 @@ fun NowPlayingScreen(
 
     when (uiState) {
         PlayerUIState.Error -> {
-
+            Text(text = "Error")
         }
 
         PlayerUIState.Loading -> {
@@ -103,7 +94,7 @@ fun NowPlayingScreen(
                 TrackInformationSection(track.name, track.tagString)
                 Spacer(modifier = Modifier.size(12.dp))
                 PlayerControlsView(
-                    viewModel.player,
+                    (uiState as PlayerUIState.ReadyToPlay).player,
                     totalDurationState,
                     currentPositionState,
                     isPlayingState
@@ -116,21 +107,20 @@ fun NowPlayingScreen(
 }
 
 @Composable
-fun PlayerSlider(exoPlayer: ExoPlayer, duration: Long) {
-    var sliderPosition by remember { mutableFloatStateOf(0f) }
+fun PlayerSlider(player: Player, duration: Long) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged by interactionSource.collectIsDraggedAsState()
     val isInteracting = isPressed || isDragged
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
 
     // Coroutine to update the slider position
-    LaunchedEffect(exoPlayer) {
+    LaunchedEffect(player) {
         while (true) {
             // Check if the player is ready and playing
-            if (exoPlayer.isPlaying && duration > 0 && !isInteracting) {
-                val currentPosition = exoPlayer.currentPosition.toFloat()
-                sliderPosition = currentPosition.div(duration)
-                    .times(100f) // Normalize the position between 0 and 100
+            if (player.duration > 0 && !isInteracting) {
+                val currentPosition = player.currentPosition.toFloat()
+                sliderPosition = currentPosition.div(player.duration).times(100f) // Normalize the position between 0 and 100
             }
             delay(1000L) // Update every second
         }
@@ -143,7 +133,7 @@ fun PlayerSlider(exoPlayer: ExoPlayer, duration: Long) {
             onValueChangeFinished = {
                 // When the user finishes sliding, seek to the new position in the ExoPlayer
                 val newPosition = (sliderPosition / 100) * duration
-                exoPlayer.seekTo(newPosition.toLong())
+                player.seekTo(newPosition.toLong())
             },
             valueRange = 0f..100f, // Slider range is normalized from 0 to 100,
             interactionSource = interactionSource,
@@ -193,7 +183,7 @@ fun TrackInformationSection(trackName: String, tags: String) {
  */
 @Composable
 fun PlayerControlsView(
-    exoPlayer: ExoPlayer,
+    exoPlayer: Player,
     totalDuration: Long,
     currentPosition: Long,
     isPlaying: Boolean,
@@ -204,7 +194,7 @@ fun PlayerControlsView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        PlayerSlider(exoPlayer = exoPlayer, totalDuration)
+        PlayerSlider(player = exoPlayer, totalDuration)
 
         // Display current position and total duration
         Row(

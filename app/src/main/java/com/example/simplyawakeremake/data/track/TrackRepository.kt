@@ -12,7 +12,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 
-class TrackRepository() : DataRepository<UiTrack, ApiTrack, ApiTrack>(), KoinComponent {
+class TrackRepository: DataRepository<UiTrack, ApiTrack, ApiTrack>(), KoinComponent {
 
     private val trackService: TrackService by inject()
     override val fetchAllCall: () -> Single<List<ApiTrack>>

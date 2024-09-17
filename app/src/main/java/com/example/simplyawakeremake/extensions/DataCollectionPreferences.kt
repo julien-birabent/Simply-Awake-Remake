@@ -20,8 +20,12 @@ class DataCollectionPreferences<T>(
 
     override fun getValue(thisRef: Any, property: KProperty<*>): List<T> {
         val sharedPrefStoredValue = sharedPreferences.getString(key, null)
-        return jsonParser.parse(sharedPrefStoredValue).asJsonArray
-            .map { gson.fromJson(it, objectClass) }
+        return if (sharedPrefStoredValue != null) {
+            jsonParser.parse(sharedPrefStoredValue).asJsonArray
+                .map { gson.fromJson(it, objectClass) }
+        } else {
+            emptyList()
+        }
     }
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: List<T>) {

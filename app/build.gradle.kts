@@ -50,26 +50,46 @@ android {
 }
 
 dependencies {
-
-    implementation (libs.glide.compose)
-
+    // Android
+    val composeBom = platform(libs.androidx.compose.bom)
+    implementation(composeBom)
+    androidTestImplementation(composeBom)
+    implementation (libs.koin.androidx.compose)
+    implementation (libs.androidx.navigation.compose)
+    implementation(libs.androidx.activity.compose)
+    implementation (libs.google.accompanist.systemuicontroller)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation (libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
+
+    // Media 3
+    implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
+
+    // External libraries
+    implementation(libs.koin.core)
+    implementation(libs.insert.koin.koin.core)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.logging.interceptor)
+    implementation(libs.androidx.runtime.rxjava3)
+    implementation (libs.rxandroid)
+    implementation(libs.koin.android)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+    implementation (libs.adapter.rxjava3)
+    implementation(libs.rxjava3.rxkotlin)
+    implementation (libs.glide)
+
 }

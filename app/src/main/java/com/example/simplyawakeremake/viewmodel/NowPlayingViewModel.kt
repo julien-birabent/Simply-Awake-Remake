@@ -121,7 +121,7 @@ class NowPlayingViewModel(private val app: Application) :
     @OptIn(UnstableApi::class)
     private fun createMediaItem(track: UiTrack): MediaItem {
         val mediaMetaData = MediaMetadata.Builder()
-            .setTitle(track.name)
+            .setTitle(track.displayName)
             .setArtist("Simply Awake : " + track.tagString)
             .setArtworkData(
                 AppCompatResources.getDrawable(app, R.drawable.enzo)?.toByteArray(),

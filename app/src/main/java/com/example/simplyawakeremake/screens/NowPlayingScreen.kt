@@ -91,7 +91,7 @@ fun NowPlayingScreen(
                         .weight(0.5f, false),
                     contentScale = ContentScale.Fit
                 )
-                TrackInformationSection(track.name, track.tagString)
+                TrackInformationSection(track.displayName, track.tagString)
                 Spacer(modifier = Modifier.size(12.dp))
                 PlayerControlsView(
                     (uiState as PlayerUIState.ReadyToPlay).player,

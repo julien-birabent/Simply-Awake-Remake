@@ -11,7 +11,6 @@ import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.example.simplyawakeremake.R
-import com.example.simplyawakeremake.viewmodel.NowPlayingViewModel
 
 @UnstableApi
 class PlaybackService : MediaSessionService() {

@@ -92,7 +92,7 @@ fun TrackItem(track: UiTrack, navigateToTrack: (id: String) -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    track.name,
+                    "${track.ordinal} " + track.displayName,
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Left,
                     modifier = Modifier.fillMaxWidth()

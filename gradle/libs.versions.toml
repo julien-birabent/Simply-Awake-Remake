@@ -1,4 +1,5 @@
 [versions]
+accompanistSystemuicontrollerVersion = "0.36.0"
 agp = "8.3.2"
 composeVersion = "1.7.0"
 converterGson = "2.9.0"
@@ -29,6 +30,7 @@ media3Exoplayer = "1.4.1"
 androidx-runtime-rxjava3 = { module = "androidx.compose.runtime:runtime-rxjava3", version.ref = "composeVersion" }
 androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+google-accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontrollerVersion" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinAndroidxCompose" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinAndroidxCompose" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }

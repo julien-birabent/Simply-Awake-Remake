@@ -1,5 +1,6 @@
 package com.example.simplyawakeremake.screens
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -39,6 +40,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.example.simplyawakeremake.R
 import com.example.simplyawakeremake.extensions.formatToMinuteAndSeconds
@@ -48,6 +50,7 @@ import com.example.simplyawakeremake.viewmodel.PlayerUIState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(UnstableApi::class)
 @Composable
 fun NowPlayingScreen(
     navController: NavController,

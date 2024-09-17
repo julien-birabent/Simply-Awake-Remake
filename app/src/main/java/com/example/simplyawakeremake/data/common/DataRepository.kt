@@ -12,8 +12,18 @@ abstract class DataRepository<UiModel, DTO, DB> {
 
     fun getAll(): Flowable<ResultState<List<UiModel>>> =
         Flowable.concatDelayError(listOf(loadSavedData(), fetchAllRemotely()))
-            .onErrorReturn {
-                ResultState.Error(it, null)
+            .onErrorResumeNext { throwable ->
+                loadSavedData().map { resultState ->
+                    when {
+                        resultState is ResultState.Success && resultState.data.isNotEmpty() -> {
+                            resultState
+                        }
+
+                        else -> {
+                            ResultState.Error(throwable, null)
+                        }
+                    }
+                }
             }
 
     private fun fetchAllRemotely(): Flowable<ResultState<List<UiModel>>> =
@@ -25,6 +35,16 @@ abstract class DataRepository<UiModel, DTO, DB> {
 
     private fun loadSavedData(): Flowable<ResultState<List<UiModel>>> {
         val cachedData = saver.loadAll().toFlowable()
-        return cachedData.map { ResultState.Loading(it.map(dbToUiModelMapper)) }
+        return cachedData.map {
+            when {
+                it.isEmpty() -> {
+                    ResultState.Loading(null)
+                }
+
+                else -> {
+                    ResultState.Success(it.map(dbToUiModelMapper))
+                }
+            }
+        }
     }
 }

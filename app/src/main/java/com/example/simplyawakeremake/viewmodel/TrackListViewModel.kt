@@ -5,19 +5,30 @@ import com.example.simplyawakeremake.UiTrack
 import com.example.simplyawakeremake.data.common.ResultState
 import com.example.simplyawakeremake.data.track.TrackRepository
 import io.reactivex.rxjava3.core.Flowable
+import io.reactivex.rxjava3.processors.BehaviorProcessor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class TrackListViewModel : ViewModel(), KoinComponent {
 
     private val trackRepository: TrackRepository by inject()
+    private val retryProcessor: BehaviorProcessor<Unit> = BehaviorProcessor.createDefault(Unit)
+    private val playListRequest: Flowable<ResultState<List<UiTrack>>>
+        get() = trackRepository.getAll()
 
-    val screenState: Flowable<PlayerListUIState> = trackRepository.getAll().map { resultState ->
-        when (resultState) {
-            is ResultState.Error -> PlayerListUIState.Error(resultState.throwable)
-            is ResultState.Loading -> PlayerListUIState.Loading
-            is ResultState.Success -> PlayerListUIState.Tracks(resultState.data.sortedBy { it.ordinal })
-        }
+    val screenState: Flowable<PlayerListUIState> =
+        retryProcessor.flatMap { playListRequest }
+            .map { resultState ->
+                when (resultState) {
+                    is ResultState.Error -> PlayerListUIState.Error(resultState.throwable)
+                    is ResultState.Loading -> PlayerListUIState.Loading
+                    is ResultState.Success -> PlayerListUIState.Tracks(resultState.data.sortedBy { it.ordinal })
+                }
+            }
+
+    fun retryLoadingPlaylist() {
+        retryProcessor.onNext(Unit)
+
     }
 }
 

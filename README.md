@@ -24,6 +24,9 @@ We decided to rebuild the app because maintaining the previous version had becom
 ## Design Philosophy
 
 The design stays true to the original app, aiming for practicality and simplicity. Since the app’s primary focus is on meditation and awakening, the interface is intentionally straightforward and user-friendly, avoiding unnecessary complexity in both form and function.
-![Screenshot_20240918_143632_Simply Awake](https://github.com/user-attachments/assets/7fd941d9-bad5-48c4-8076-afbc7320d89f)
-![Screenshot_20240918_143619_Simply Awake](https://github.com/user-attachments/assets/b6fcfd1d-10bc-4969-8a42-4381eee139b1)
-![Screenshot_20240918_143613_Simply Awake](https://github.com/user-attachments/assets/1fc6ab47-10ba-4398-b32f-f39a7f4555bd)
+<div style="display: flex; justify-content: space-between;">
+  <img src="https://github.com/user-attachments/assets/7fd941d9-bad5-48c4-8076-afbc7320d89f" alt="Screenshot_20240918_143632_Simply Awake" width="30%" />
+  <img src="https://github.com/user-attachments/assets/b6fcfd1d-10bc-4969-8a42-4381eee139b1" alt="Screenshot_20240918_143619_Simply Awake" width="30%" />
+  <img src="https://github.com/user-attachments/assets/1fc6ab47-10ba-4398-b32f-f39a7f4555bd" alt="Screenshot_20240918_143613_Simply Awake" width="30%" />
+</div>
+

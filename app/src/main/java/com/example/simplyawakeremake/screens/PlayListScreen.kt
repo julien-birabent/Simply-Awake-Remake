@@ -1,5 +1,6 @@
 package com.example.simplyawakeremake.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,14 +18,19 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rxjava3.subscribeAsState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.simplyawakeremake.R
 import com.example.simplyawakeremake.UiTrack
+import com.example.simplyawakeremake.extensions.isOnline
 import com.example.simplyawakeremake.navigation.Screen
 import com.example.simplyawakeremake.viewmodel.PlayerListUIState
 import com.example.simplyawakeremake.viewmodel.TrackListViewModel
@@ -81,7 +88,11 @@ fun PlayListScreen(navController: NavController, viewModel: TrackListViewModel =
                     )
                 }
                 Spacer(modifier = Modifier.size(12.dp))
-                Playlist(tracks = (uiState as PlayerListUIState.Tracks).items, navController)
+                Playlist(
+                    tracks = (uiState as PlayerListUIState.Tracks).items,
+                    navController,
+                    viewModel.app
+                )
             }
         }
     }
@@ -148,7 +159,28 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
 }
 
 @Composable
-fun Playlist(tracks: List<UiTrack>, navController: NavController) {
+fun QuickDismissAlertDialog(
+    onDismissRequest: () -> Unit,
+    dialogTitle: String,
+    dialogText: String
+) {
+    AlertDialog(
+        title = { Text(text = dialogTitle) },
+        text = { Text(text = dialogText) },
+        onDismissRequest = { onDismissRequest() },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = { onDismissRequest() }
+            ) {
+                Text("Dismiss")
+            }
+        }
+    )
+}
+
+@Composable
+fun Playlist(tracks: List<UiTrack>, navController: NavController, context: Context) {
+    var showNoInternetDialog by remember { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -156,10 +188,20 @@ fun Playlist(tracks: List<UiTrack>, navController: NavController) {
             count = tracks.size,
             key = { tracks[it].id },
             itemContent = { index ->
-                TrackItem(tracks[index]) { id -> navController.navigate(Screen.NOW_PLAYING.name + "/${id}") }
+                TrackItem(tracks[index]) { id ->
+                    showNoInternetDialog = !context.isOnline()
+                    if (!showNoInternetDialog) navController.navigate(Screen.NOW_PLAYING.name + "/${id}")
+                }
                 if (index < tracks.lastIndex)
                     HorizontalDivider(color = Color.White, thickness = 1.dp)
             }
+        )
+    }
+    if (showNoInternetDialog) {
+        QuickDismissAlertDialog(
+            onDismissRequest = { showNoInternetDialog = false },
+            dialogTitle = "Whoops",
+            dialogText = "The content of the meditation cannot be loaded because you're device seems to be offline."
         )
     }
 }

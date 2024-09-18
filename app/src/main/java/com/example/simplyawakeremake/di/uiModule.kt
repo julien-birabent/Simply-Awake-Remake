@@ -15,6 +15,6 @@ val uiModule = module {
 
     single { TrackUriProvider(androidApplication().getString(R.string.baseCDNUrl)) }
     single { ExoPlayer.Builder(androidApplication()).build() }
-    viewModel { TrackListViewModel() }
+    viewModel { TrackListViewModel(androidApplication()) }
     viewModel { NowPlayingViewModel(androidApplication()) }
 }

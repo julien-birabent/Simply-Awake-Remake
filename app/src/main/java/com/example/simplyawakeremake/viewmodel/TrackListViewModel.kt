@@ -1,6 +1,7 @@
 package com.example.simplyawakeremake.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import com.example.simplyawakeremake.UiTrack
 import com.example.simplyawakeremake.data.common.ResultState
 import com.example.simplyawakeremake.data.track.TrackRepository
@@ -9,7 +10,7 @@ import io.reactivex.rxjava3.processors.BehaviorProcessor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class TrackListViewModel : ViewModel(), KoinComponent {
+class TrackListViewModel(val app: Application) : AndroidViewModel(app), KoinComponent {
 
     private val trackRepository: TrackRepository by inject()
     private val retryProcessor: BehaviorProcessor<Unit> = BehaviorProcessor.createDefault(Unit)

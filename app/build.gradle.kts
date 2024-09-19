@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "org.julienbirabent.android.simplyawakeremake"
+        applicationId = "org.marklackey.android.awake"
         minSdk = 24
         targetSdk = 34
         versionCode = 7

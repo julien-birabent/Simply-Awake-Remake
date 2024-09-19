@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "org.marklackey.android.awake"
+    namespace = "com.example.simplyawakeremake"
     compileSdk = 34
 
     defaultConfig {

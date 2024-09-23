@@ -1,12 +1,11 @@
 package com.simplyawakeremake.di
 
-import com.simplyawakeremake.R
-import com.simplyawakeremake.data.track.TrackService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.simplyawakeremake.BuildConfig
+import com.simplyawakeremake.data.track.TrackService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
@@ -39,7 +38,7 @@ val dataModule = module {
         val rxAdapter = RxJava3CallAdapterFactory.create()
         Retrofit.Builder()
             .client(get())
-            .baseUrl(androidContext().getString(R.string.baseCDNUrl))
+            .baseUrl(BuildConfig.baseServerUrl)
             .addCallAdapterFactory(rxAdapter)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

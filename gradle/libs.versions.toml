@@ -23,6 +23,7 @@ navigationCompose = "2.8.0"
 retrofit = "2.11.0"
 rxandroid = "3.0.2"
 rxkotlinVersion = "3.0.1"
+secretsGradlePluginVersion = "2.0.1"
 uiTooling = "1.7.1"
 media3Exoplayer = "1.4.1"
 
@@ -58,6 +59,7 @@ retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit
 rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxandroid" }
 rxjava3-rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxkotlinVersion" }
 androidx-media3-exoplayer = { group = "androidx.media3", name = "media3-exoplayer", version.ref = "media3Exoplayer" }
+secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

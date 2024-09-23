@@ -2,7 +2,7 @@ package com.simplyawakeremake.di
 
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.simplyawakeremake.R
+import com.simplyawakeremake.BuildConfig
 import com.simplyawakeremake.data.track.TrackUriProvider
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
 import com.simplyawakeremake.viewmodel.TrackListViewModel
@@ -13,7 +13,7 @@ import org.koin.dsl.module
 @UnstableApi
 val uiModule = module {
 
-    single { TrackUriProvider(androidApplication().getString(R.string.baseCDNUrl)) }
+    single { TrackUriProvider(BuildConfig.baseServerUrl) }
     single { ExoPlayer.Builder(androidApplication()).build() }
     viewModel { TrackListViewModel(androidApplication()) }
     viewModel { NowPlayingViewModel(androidApplication()) }

@@ -64,18 +64,22 @@ class NowPlayingViewModel(private val app: Application) :
                     PlayerUIState.Error
                 }
             }
-        }.share()
+        }.onErrorReturnItem(PlayerUIState.Error).share()
 
     private val onPlayerUpdate = playerProcessor
         .flatMap { playerListener!!.playerUpdates() }
+        .onErrorComplete()
         .share()
 
     val totalDurationInMs = onPlayerUpdate
         .filter { it.playbackState == Player.STATE_READY }
         .map { it.duration }
+        .onErrorReturnItem(0L)
         .distinctUntilChanged()
 
-    val isPlaying = onPlayerUpdate.map { it.isPlaying }.distinctUntilChanged()
+    val isPlaying = onPlayerUpdate.map { it.isPlaying }
+        .onErrorReturnItem(false)
+        .distinctUntilChanged()
 
     private val secondsCounter =
         Flowable.interval(1, TimeUnit.SECONDS, AndroidSchedulers.mainThread())
@@ -88,6 +92,7 @@ class NowPlayingViewModel(private val app: Application) :
         }
             .filter { it.playbackState == Player.STATE_READY }
             .map { it.currentPosition }
+            .onErrorReturnItem(0L)
             .subscribeOn(Schedulers.computation())
 
     init {

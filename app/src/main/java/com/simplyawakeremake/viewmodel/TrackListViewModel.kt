@@ -29,7 +29,6 @@ class TrackListViewModel(val app: Application) : AndroidViewModel(app), KoinComp
 
     fun retryLoadingPlaylist() {
         retryProcessor.onNext(Unit)
-
     }
 }
 

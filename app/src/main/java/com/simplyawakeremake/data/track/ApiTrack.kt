@@ -37,7 +37,6 @@ data class ApiTrack(
     val audioSourceUri : Uri by lazy { Uri.parse("media/audio/${id}.mp3") }
 }
 
-//TODO To be updated at a later stage when I know what the UI needs data wise and in which format.
 fun ApiTrack.toUiTrack(): UiTrack = UiTrack(
     id = id,
     name = name,

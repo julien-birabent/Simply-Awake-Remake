@@ -14,6 +14,8 @@ import org.koin.core.qualifier.named
 
 class TrackRepository: DataRepository<UiTrack, ApiTrack, ApiTrack>(), KoinComponent {
 
+    class TrackNotFoundException(id: String) : Exception("The track with id $id was not found")
+
     private val trackService: TrackService by inject()
     override val fetchAllCall: () -> Single<List<ApiTrack>>
         get() = { trackService.fetchAll() }
@@ -28,7 +30,7 @@ class TrackRepository: DataRepository<UiTrack, ApiTrack, ApiTrack>(), KoinCompon
     private fun selectTrackResult(id: String): Flowable<ResultState<UiTrack>> =
         Flowables.create(mode = BackpressureStrategy.LATEST) { emitter ->
             when (val trackSelected = saver.select(id)) {
-                null -> emitter.onNext(ResultState.Error(Exception("TODO"), null))
+                null -> emitter.onNext(ResultState.Error(TrackNotFoundException(id), null))
                 else -> emitter.onNext(ResultState.Success(trackSelected.toUiTrack()))
             }
         }

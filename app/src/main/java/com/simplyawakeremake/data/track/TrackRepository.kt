@@ -12,7 +12,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 
-class TrackRepository: DataRepository<UiTrack, ApiTrack, ApiTrack>(), KoinComponent {
+class TrackRepository : DataRepository<UiTrack, ApiTrack, ApiTrack>(), TrackRepositoryInterface,
+    KoinComponent {
 
     class TrackNotFoundException(id: String) : Exception("The track with id $id was not found")
 
@@ -24,7 +25,7 @@ class TrackRepository: DataRepository<UiTrack, ApiTrack, ApiTrack>(), KoinCompon
     override val dtoToDbMapper: (ApiTrack) -> ApiTrack = { it -> it }
     override val dbToUiModelMapper: (ApiTrack) -> UiTrack = { it.toUiTrack() }
 
-    fun getTrackBy(id: String): Flowable<ResultState<UiTrack>> =
+    override fun getTrackBy(id: String): Flowable<ResultState<UiTrack>> =
         Flowable.concat(Flowable.just(ResultState.Loading(null)), selectTrackResult(id))
 
     private fun selectTrackResult(id: String): Flowable<ResultState<UiTrack>> =

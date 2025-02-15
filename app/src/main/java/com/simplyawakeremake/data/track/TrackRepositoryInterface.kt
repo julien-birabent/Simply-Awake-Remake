@@ -7,4 +7,6 @@ import io.reactivex.rxjava3.core.Flowable
 interface TrackRepositoryInterface {
 
     fun getTrackBy(id: String): Flowable<ResultState<UiTrack>>
+
+    fun getAllTracks() : Flowable<ResultState<List<UiTrack>>>
 }

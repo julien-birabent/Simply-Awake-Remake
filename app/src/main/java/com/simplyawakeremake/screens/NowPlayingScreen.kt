@@ -23,6 +23,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -114,7 +115,7 @@ fun PlayerSlider(player: Player, duration: Long) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged by interactionSource.collectIsDraggedAsState()
-    val isInteracting = isPressed || isDragged
+    val isInteracting by remember { derivedStateOf { isPressed || isDragged } }
     var sliderPosition by remember { mutableFloatStateOf(0f) }
 
     // Coroutine to update the slider position

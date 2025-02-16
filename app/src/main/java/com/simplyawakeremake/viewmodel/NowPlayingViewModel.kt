@@ -23,6 +23,7 @@ import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.screens.ControlButtons
 import com.simplyawakeremake.service.PlaybackService
 import com.google.common.util.concurrent.MoreExecutors
+import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
@@ -32,11 +33,10 @@ import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
 
 @UnstableApi
-class NowPlayingViewModel(private val app: Application) :
+class NowPlayingViewModel(private val app: Application, trackRepository: TrackRepositoryInterface) :
     AndroidViewModel(app), KoinComponent {
 
     private val trackUriProvider: TrackUriProvider by inject()
-    private val trackRepository: TrackRepository by inject()
 
     private lateinit var player: Player
     private val trackIdProcessor: BehaviorProcessor<String> = BehaviorProcessor.create()

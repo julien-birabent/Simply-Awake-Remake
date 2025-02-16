@@ -28,6 +28,8 @@ class TrackRepository : DataRepository<UiTrack, ApiTrack, ApiTrack>(), TrackRepo
     override fun getTrackBy(id: String): Flowable<ResultState<UiTrack>> =
         Flowable.concat(Flowable.just(ResultState.Loading(null)), selectTrackResult(id))
 
+    override fun getAllTracks(): Flowable<ResultState<List<UiTrack>>> = getAll()
+
     private fun selectTrackResult(id: String): Flowable<ResultState<UiTrack>> =
         Flowables.create(mode = BackpressureStrategy.LATEST) { emitter ->
             when (val trackSelected = saver.select(id)) {

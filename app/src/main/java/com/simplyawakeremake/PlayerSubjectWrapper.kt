@@ -15,7 +15,6 @@ class PlayerSubjectWrapper(private val player: Player):  Player.Listener {
     override fun onPlaybackStateChanged(playbackState: Int) {
         super.onPlaybackStateChanged(playbackState)
         subject.onNext(player)
-        subject.onComplete()
     }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -25,7 +24,7 @@ class PlayerSubjectWrapper(private val player: Player):  Player.Listener {
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
-        subject.onComplete()
+        subject.onNext(player)
     }
 
     override fun onPlayerError(error: PlaybackException) {

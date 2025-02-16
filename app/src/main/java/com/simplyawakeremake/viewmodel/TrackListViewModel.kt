@@ -4,18 +4,16 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.TrackRepository
+import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
-class TrackListViewModel(val app: Application) : AndroidViewModel(app), KoinComponent {
+class TrackListViewModel(val app: Application, private val trackRepository: TrackRepositoryInterface) : AndroidViewModel(app), KoinComponent {
 
-    private val trackRepository: TrackRepository by inject()
     private val retryProcessor: BehaviorProcessor<Unit> = BehaviorProcessor.createDefault(Unit)
     private val playListRequest: Flowable<ResultState<List<UiTrack>>>
-        get() = trackRepository.getAll()
+        get() = trackRepository.getAllTracks()
 
     val screenState: Flowable<PlayerListUIState> =
         retryProcessor.flatMap { playListRequest }

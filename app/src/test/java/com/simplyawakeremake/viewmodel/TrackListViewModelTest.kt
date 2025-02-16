@@ -25,7 +25,6 @@ import java.util.concurrent.TimeUnit
 @ExperimentalCoroutinesApi
 class TrackListViewModelTest {
 
-    // Dependencies
     private lateinit var viewModel: TrackListViewModel
     private val application: Application = mockk(relaxed = true)
     private val trackRepository: TrackRepository = mockk(relaxed = true)

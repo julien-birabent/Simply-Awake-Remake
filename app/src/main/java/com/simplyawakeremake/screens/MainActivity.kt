@@ -31,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.navigation.AppNavHost
+import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
 
 class MainActivity : ComponentActivity() {
@@ -67,7 +68,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             actions = {
-                                IconButton(onClick = { /* Handle search action */ }) {
+                                IconButton(onClick = { navController.navigate(Screen.RECENT_HISTORY.name) }) {
                                     Icon(Icons.Filled.History, contentDescription = "History")
                                 }
                             }

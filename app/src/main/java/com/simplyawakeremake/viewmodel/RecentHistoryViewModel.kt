@@ -27,7 +27,7 @@ class RecentHistoryViewModel(
         getRecentHistoryUseCase.execute(historyLimit)
             .map { result ->
                 when (result) {
-                    is ResultState.Success -> RecentHistoryUIState.RecentHistoryLoaded(result.data.sortedBy { it.playedTimestamp })
+                    is ResultState.Success -> RecentHistoryUIState.RecentHistoryLoaded(result.data.sortedByDescending { it.playedTimestamp })
                     is ResultState.Error -> RecentHistoryUIState.Error(result.throwable)
                     is ResultState.Loading -> RecentHistoryUIState.Loading
                 }

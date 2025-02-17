@@ -4,7 +4,7 @@ import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.UiTrack
 import kotlinx.coroutines.flow.Flow
 
-internal interface TrackHistoryRepositoryInterface {
+interface TrackHistoryRepositoryInterface {
 
     val maxAmountStored : Int
 

@@ -69,7 +69,6 @@ fun <T> ItemList(
                 }) {
                     itemContent(item)
                 }
-                divider()
                 if (index < items.lastIndex) divider()
             }
         )

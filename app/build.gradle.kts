@@ -63,6 +63,11 @@ dependencies {
     implementation (libs.androidx.navigation.compose)
     implementation(libs.androidx.activity.compose)
     implementation (libs.google.accompanist.systemuicontroller)
+    implementation (libs.jetbrains.kotlinx.coroutines.rx3)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.kotlinx.coroutines.android)
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

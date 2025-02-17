@@ -2,7 +2,7 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.data.track.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import io.reactivex.rxjava3.core.Flowable

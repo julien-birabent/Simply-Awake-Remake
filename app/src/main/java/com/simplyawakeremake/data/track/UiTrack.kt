@@ -1,4 +1,4 @@
-package com.simplyawakeremake
+package com.simplyawakeremake.data.track
 
 data class UiTrack(
     val id: String,

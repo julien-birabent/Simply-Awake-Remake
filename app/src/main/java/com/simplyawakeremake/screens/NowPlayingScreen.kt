@@ -46,9 +46,11 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
+import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.PlayerUIState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -69,7 +71,8 @@ fun NowPlayingScreen(
 
     when (uiState) {
         PlayerUIState.Error -> {
-            Text(text = "Error")
+            val error = (uiState as PlayerListUIState.Error).throwable
+            CommonErrorView(throwable = error)
         }
 
         PlayerUIState.Loading -> {

@@ -15,9 +15,8 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.data.track.UiTrack
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.TrackRepository
 import com.simplyawakeremake.data.track.TrackUriProvider
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.screens.ControlButtons

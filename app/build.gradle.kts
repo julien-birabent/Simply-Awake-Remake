@@ -92,6 +92,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.rxandroid)
     testImplementation(libs.androidx.core.testing)
+    testImplementation(libs.turbine)
 
 
     // External libraries

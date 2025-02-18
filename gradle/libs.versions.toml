@@ -28,6 +28,7 @@ retrofit = "2.11.0"
 rxandroid = "3.0.2"
 rxkotlinVersion = "3.0.1"
 secretsGradlePluginVersion = "2.0.1"
+turbineVersion = "0.12.1"
 uiTooling = "1.7.1"
 media3Exoplayer = "1.4.1"
 kotlinx-coroutines = "1.8.0"
@@ -74,6 +75,7 @@ secrets-gradle-plugin = { module = "com.google.android.libraries.mapsplatform.se
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "androidx-core-testing" }
+turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

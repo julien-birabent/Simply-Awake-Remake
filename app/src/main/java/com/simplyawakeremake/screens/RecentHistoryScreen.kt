@@ -47,7 +47,7 @@ fun RecentHistoryScreen(
             ) {
                 Text(
                     text = "Recently played meditations",
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                     style = MaterialTheme.typography.titleLarge
                 )
                 ItemList(

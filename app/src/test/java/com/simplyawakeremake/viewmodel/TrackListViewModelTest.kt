@@ -5,6 +5,7 @@ import com.simplyawakeremake.MainCoroutineRule
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepository
+import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import io.mockk.every
 import io.mockk.mockk
 import io.reactivex.rxjava3.core.Flowable
@@ -27,7 +28,7 @@ class TrackListViewModelTest {
 
     private lateinit var viewModel: TrackListViewModel
     private val application: Application = mockk(relaxed = true)
-    private val trackRepository: TrackRepository = mockk(relaxed = true)
+    private val trackRepository: TrackRepositoryInterface = mockk(relaxed = true)
 
     @get:Rule
     val testCoroutineRule = MainCoroutineRule()
@@ -41,7 +42,7 @@ class TrackListViewModelTest {
                 }
             )
         }
-        viewModel = TrackListViewModel(application)
+        viewModel = TrackListViewModel(trackRepository)
     }
 
     @Test
@@ -49,7 +50,7 @@ class TrackListViewModelTest {
         // Given
         val testTracks = UiTrackTestData.listOfTracks
 
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
+        every { trackRepository.getAllTracks() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
 
         // When
         val testObserver = viewModel.screenState.test()
@@ -66,7 +67,7 @@ class TrackListViewModelTest {
         // Given
         val testTracks = UiTrackTestData.listOfTracks.reversed()
 
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
+        every { trackRepository.getAllTracks() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
 
         // When
         val testObserver = viewModel.screenState.test()
@@ -81,7 +82,7 @@ class TrackListViewModelTest {
     fun `test GIVEN the tracks are fetched WHEN an error is caught at any point THEN track retrieval fails`() = runTest {
         // Given
         val error = UnknownHostException("UnknownHostException")
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Error(error, null))
+        every { trackRepository.getAllTracks() } returns Flowable.just(ResultState.Error(error, null))
 
         // When
         val testObserver = viewModel.screenState.test()
@@ -96,14 +97,14 @@ class TrackListViewModelTest {
     fun `test GIVEN the tracks are fetched and an error happens WHEN the retry method is called and no error happens ths time THEN track retrieval works`() = runTest {
         // Given
         val error = UnknownHostException("UnknownHostException")
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Error(error, null))
+        every { trackRepository.getAllTracks() } returns Flowable.just(ResultState.Error(error, null))
 
         val testObserver = viewModel.screenState.test()
         testObserver.assertValues(
             PlayerListUIState.Error(error)
         )
         val testTracks = UiTrackTestData.listOfTracks.reversed()
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
+        every { trackRepository.getAllTracks() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
 
         // WHEN
         viewModel.retryLoadingPlaylist()
@@ -118,7 +119,7 @@ class TrackListViewModelTest {
     fun `test GIVEN multiple errors WHEN retry is called THEN track retrieval works after multiple failures`() = runTest {
         // Given
         val error = UnknownHostException("Network issue")
-        every { trackRepository.getAll() } returnsMany listOf(
+        every { trackRepository.getAllTracks() } returnsMany listOf(
             Flowable.just(ResultState.Error(error, null)),  // First attempt fails
             Flowable.just(ResultState.Error(error, null)),  // Second attempt fails
             Flowable.just(ResultState.Loading(null), ResultState.Success(UiTrackTestData.listOfTracks)) // Third attempt succeeds
@@ -145,7 +146,7 @@ class TrackListViewModelTest {
         val testScheduler = TestScheduler()
 
         // Given
-        every { trackRepository.getAll() } returns Flowable.concat(
+        every { trackRepository.getAllTracks() } returns Flowable.concat(
             Flowable.just(ResultState.Loading(null)).delay(500, TimeUnit.MILLISECONDS, testScheduler),
             Flowable.just(ResultState.Success(UiTrackTestData.listOfTracks))
         )
@@ -169,7 +170,7 @@ class TrackListViewModelTest {
     @Test
     fun `test GIVEN an empty list of tracks THEN screenState emits Loading then empty track list`() = runTest {
         // Given
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(emptyList()))
+        every { trackRepository.getAllTracks() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(emptyList()))
 
         // When
         val testObserver = viewModel.screenState.test()

@@ -1,49 +1,46 @@
 package com.simplyawakeremake.data.common
 
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.core.Single
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 abstract class DataRepository<UiModel, DTO, DB> {
 
-    protected abstract val fetchAllCall: () -> Single<List<DTO>>
+    protected abstract val fetchAllCall: suspend () -> List<DTO>
     protected abstract val saver: DataSaver<DB>
     protected abstract val dtoToDbMapper: (DTO) -> DB
     protected abstract val dbToUiModelMapper: (DB) -> UiModel
 
-    fun getAll(): Flowable<ResultState<List<UiModel>>> =
-        Flowable.concatDelayError(listOf(loadSavedData(), fetchAllRemotely()))
-            .onErrorResumeNext { throwable ->
-                loadSavedData().map { resultState ->
-                    when {
-                        resultState is ResultState.Success && resultState.data.isNotEmpty() -> {
-                            resultState
-                        }
+    fun getAll(): Flow<ResultState<List<UiModel>>> = flow {
+        val savedData = loadSavedData()
+        emit(savedData)
 
-                        else -> {
-                            ResultState.Error(throwable, null)
-                        }
-                    }
-                }
+        try {
+            emit(fetchAllRemotely())
+        } catch (e: Exception) {
+            emit(
+                if (savedData is ResultState.Success && savedData.data.isNotEmpty()) savedData
+                else ResultState.Error(e, null)
+            )
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private suspend fun fetchAllRemotely(): ResultState<List<UiModel>> {
+        val fetchedTracks = fetchAllCall()
+        saver.persist(fetchedTracks.map(dtoToDbMapper))
+        return ResultState.Success(saver.loadAll().map(dbToUiModelMapper))
+    }
+
+    private suspend fun loadSavedData(): ResultState<List<UiModel>> {
+        val cachedData = saver.loadAll()
+        return when {
+            cachedData.isEmpty() -> {
+                ResultState.Loading(null)
             }
 
-    private fun fetchAllRemotely(): Flowable<ResultState<List<UiModel>>> =
-        fetchAllCall()
-            .map { dtoList -> saver.persist(dtoList.map(dtoToDbMapper)) }
-            .flatMap { saver.loadAll() }.toFlowable()
-            .map { dbObjects -> dbObjects.map { dbToUiModelMapper(it) } }
-            .map { ResultState.Success(it) }
-
-    private fun loadSavedData(): Flowable<ResultState<List<UiModel>>> {
-        val cachedData = saver.loadAll().toFlowable()
-        return cachedData.map {
-            when {
-                it.isEmpty() -> {
-                    ResultState.Loading(null)
-                }
-
-                else -> {
-                    ResultState.Success(it.map(dbToUiModelMapper))
-                }
+            else -> {
+                ResultState.Success(cachedData.map(dbToUiModelMapper))
             }
         }
     }

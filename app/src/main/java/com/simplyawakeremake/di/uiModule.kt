@@ -5,6 +5,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.simplyawakeremake.BuildConfig
 import com.simplyawakeremake.data.track.TrackUriProvider
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
+import com.simplyawakeremake.viewmodel.RecentHistoryViewModel
 import com.simplyawakeremake.viewmodel.TrackListViewModel
 import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -15,6 +16,7 @@ val uiModule = module {
 
     single { TrackUriProvider(BuildConfig.baseServerUrl) }
     single { ExoPlayer.Builder(androidApplication()).build() }
-    viewModel { TrackListViewModel(androidApplication(), get()) }
-    viewModel { NowPlayingViewModel(androidApplication(), get()) }
+    viewModel { TrackListViewModel(get()) }
+    viewModel { NowPlayingViewModel(androidApplication(), get(), get()) }
+    viewModel { RecentHistoryViewModel(get()) }
 }

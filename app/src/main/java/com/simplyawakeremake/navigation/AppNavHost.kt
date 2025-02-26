@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.simplyawakeremake.screens.NowPlayingScreen
 import com.simplyawakeremake.screens.PlayListScreen
+import com.simplyawakeremake.screens.RecentHistoryScreen
 
 @Composable
 fun AppNavHost(
@@ -30,5 +31,6 @@ fun AppNavHost(
         ) { backStackEntry ->
             NowPlayingScreen(navController, backStackEntry.arguments?.getString("trackId") ?: "")
         }
+        composable(Screen.RECENT_HISTORY.name) { RecentHistoryScreen(navController) }
     }
 }

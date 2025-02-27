@@ -23,6 +23,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -63,10 +64,10 @@ fun NowPlayingScreen(
         viewModel.setupTrackId(trackId)
     }
 
-    val isPlayingState by viewModel.isPlaying.subscribeAsState(false)
-    val totalDurationState by viewModel.totalDurationInMs.subscribeAsState(initial = 0L)
-    val currentPositionState by viewModel.playerPositionUpdates.subscribeAsState(0L)
-    val uiState by viewModel.uiState.subscribeAsState(initial = PlayerUIState.Loading)
+    val isPlayingState by viewModel.isPlaying.collectAsState(false)
+    val totalDurationState by viewModel.totalDurationInMs.collectAsState(initial = 0L)
+    val currentPositionState by viewModel.playerPositionUpdates.collectAsState(0L)
+    val uiState by viewModel.uiState.collectAsState(initial = PlayerUIState.Loading)
 
     when (uiState) {
         PlayerUIState.Error -> {

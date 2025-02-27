@@ -2,31 +2,50 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.processors.BehaviorProcessor
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import org.koin.core.component.KoinComponent
 
-class TrackListViewModel(val app: Application, private val trackRepository: TrackRepositoryInterface) : AndroidViewModel(app), KoinComponent {
+class TrackListViewModel(
+    val app: Application,
+    private val trackRepository: TrackRepositoryInterface
+) : AndroidViewModel(app), KoinComponent {
 
-    private val retryProcessor: BehaviorProcessor<Unit> = BehaviorProcessor.createDefault(Unit)
-    private val playListRequest: Flowable<ResultState<List<UiTrack>>>
-        get() = trackRepository.getAllTracks()
+    private val retryTrigger: MutableStateFlow<Unit> = MutableStateFlow(Unit)
 
-    val screenState: Flowable<PlayerListUIState> =
-        retryProcessor.flatMap { playListRequest }
-            .map { resultState ->
-                when (resultState) {
-                    is ResultState.Error -> PlayerListUIState.Error(resultState.throwable)
-                    is ResultState.Loading -> PlayerListUIState.Loading
-                    is ResultState.Success -> PlayerListUIState.Tracks(resultState.data.sortedBy { it.ordinal })
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val screenState: StateFlow<PlayerListUIState> =
+        retryTrigger.flatMapLatest {
+            fetchTrackList()
+        }.stateIn(viewModelScope, SharingStarted.Lazily, PlayerListUIState.Loading)
+
+    private fun fetchTrackList(): Flow<PlayerListUIState> =
+        trackRepository.getAllTracks()
+            .map { result ->
+                when (result) {
+                    is ResultState.Success -> PlayerListUIState.Tracks(result.data.sortedBy { it.ordinal })
+                    is ResultState.Error -> PlayerListUIState.Error(result.throwable)
+                    else -> PlayerListUIState.Loading
                 }
             }
+            .onStart { emit(PlayerListUIState.Loading) }
+            .catch { emit(PlayerListUIState.Error(it)) }
+
 
     fun retryLoadingPlaylist() {
-        retryProcessor.onNext(Unit)
+        retryTrigger.value = Unit
     }
 }
 

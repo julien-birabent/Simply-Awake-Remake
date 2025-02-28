@@ -1,9 +1,9 @@
 package com.simplyawakeremake.data.track
 
 import android.net.Uri
-import com.simplyawakeremake.UiTrack
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
+import com.simplyawakeremake.UiTrack
 
 
 data class ApiTrack(

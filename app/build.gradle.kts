@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation (libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
+    implementation (libs.accompanist.permissions)
 
     // Media 3
     implementation(libs.androidx.media3.exoplayer)

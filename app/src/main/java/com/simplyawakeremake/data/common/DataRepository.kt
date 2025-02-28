@@ -28,8 +28,9 @@ abstract class DataRepository<UiModel, DTO, DB> {
 
     private suspend fun fetchAllRemotely(): ResultState<List<UiModel>> {
         val fetchedTracks = fetchAllCall()
-        saver.persist(fetchedTracks.map(dtoToDbMapper))
-        return ResultState.Success(saver.loadAll().map(dbToUiModelMapper))
+        val trackSaved = fetchedTracks.map(dtoToDbMapper)
+        saver.persist(trackSaved)
+        return ResultState.Success(trackSaved.map(dbToUiModelMapper))
     }
 
     private suspend fun loadSavedData(): ResultState<List<UiModel>> {

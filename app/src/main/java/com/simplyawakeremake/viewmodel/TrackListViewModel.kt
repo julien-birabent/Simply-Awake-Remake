@@ -8,7 +8,7 @@ import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -23,13 +23,15 @@ class TrackListViewModel(
     private val trackRepository: TrackRepositoryInterface
 ) : AndroidViewModel(app), KoinComponent {
 
-    private val retryTrigger: MutableStateFlow<Unit> = MutableStateFlow(Unit)
+    private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val screenState: StateFlow<PlayerListUIState> =
-        retryTrigger.flatMapLatest {
-            fetchTrackList()
-        }.stateIn(viewModelScope, SharingStarted.Lazily, PlayerListUIState.Loading)
+        retryTrigger
+            .onStart { emit(Unit) }
+            .flatMapLatest {
+                fetchTrackList()
+            }.stateIn(viewModelScope, SharingStarted.Lazily, PlayerListUIState.Loading)
 
     private fun fetchTrackList(): Flow<PlayerListUIState> =
         trackRepository.getAllTracks()
@@ -45,7 +47,7 @@ class TrackListViewModel(
 
 
     fun retryLoadingPlaylist() {
-        retryTrigger.value = Unit
+        retryTrigger.tryEmit(Unit)
     }
 }
 

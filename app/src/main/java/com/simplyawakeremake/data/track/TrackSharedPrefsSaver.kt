@@ -3,7 +3,8 @@ package com.simplyawakeremake.data.track
 import android.content.SharedPreferences
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.extensions.dataCollection
-import io.reactivex.rxjava3.core.Single
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class TrackSharedPrefsSaver(sharedPreferences: SharedPreferences) : DataSaver<ApiTrack> {
 
@@ -13,9 +14,7 @@ class TrackSharedPrefsSaver(sharedPreferences: SharedPreferences) : DataSaver<Ap
         tracks = objects
     }
 
-    override fun loadAll(): Single<List<ApiTrack>> {
-        return Single.just(tracks)
-    }
+    override suspend fun loadAll(): List<ApiTrack> = withContext(Dispatchers.IO) { tracks }
 
     override fun select(id: String): ApiTrack? {
         return tracks.firstOrNull { it.id == id }

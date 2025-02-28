@@ -85,7 +85,6 @@ dependencies {
     androidTestImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
-    testImplementation(libs.rxandroid)
     testImplementation(libs.androidx.core.testing)
 
 
@@ -94,13 +93,9 @@ dependencies {
     implementation(libs.insert.koin.koin.core)
     implementation(platform(libs.koin.bom))
     implementation(libs.logging.interceptor)
-    implementation(libs.androidx.runtime.rxjava3)
-    implementation (libs.rxandroid)
     implementation(libs.koin.android)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
-    implementation (libs.adapter.rxjava3)
-    implementation(libs.rxjava3.rxkotlin)
     implementation (libs.glide)
 
 }

@@ -25,11 +25,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rxjava3.subscribeAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +57,7 @@ import com.simplyawakeremake.screens.LoadingIndicator as LoadingIndicator1
 @Composable
 fun PlayListScreen(navController: NavController, viewModel: TrackListViewModel = koinViewModel()) {
 
-    val uiState by viewModel.screenState.subscribeAsState(initial = PlayerListUIState.Loading)
+    val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
 
     when (uiState) {
         is PlayerListUIState.Error -> {

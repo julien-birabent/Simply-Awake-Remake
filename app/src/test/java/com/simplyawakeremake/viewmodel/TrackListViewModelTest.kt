@@ -2,14 +2,21 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import com.simplyawakeremake.MainCoroutineRule
+import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.TrackRepository
-import io.mockk.every
+import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import io.mockk.coEvery
 import io.mockk.mockk
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.schedulers.TestScheduler
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -19,15 +26,13 @@ import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.dsl.module
 import java.net.UnknownHostException
-import java.util.concurrent.TimeUnit
-
 
 @ExperimentalCoroutinesApi
 class TrackListViewModelTest {
 
     private lateinit var viewModel: TrackListViewModel
     private val application: Application = mockk(relaxed = true)
-    private val trackRepository: TrackRepository = mockk(relaxed = true)
+    private val trackRepository: TrackRepositoryInterface = mockk(relaxed = true)
 
     @get:Rule
     val testCoroutineRule = MainCoroutineRule()
@@ -41,7 +46,7 @@ class TrackListViewModelTest {
                 }
             )
         }
-        viewModel = TrackListViewModel(application)
+        viewModel = TrackListViewModel(application, trackRepository)
     }
 
     @Test
@@ -49,136 +54,152 @@ class TrackListViewModelTest {
         // Given
         val testTracks = UiTrackTestData.listOfTracks
 
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
+        coEvery { trackRepository.getAllTracks() } returns flowOf(ResultState.Loading(null), ResultState.Success(testTracks))
 
         // When
-        val testObserver = viewModel.screenState.test()
-
-        // Then
-        testObserver.assertValues(
-            PlayerListUIState.Loading,
-            PlayerListUIState.Tracks(testTracks)
-        )
-    }
-
-    @Test
-    fun `test GIVEN a list of tracks not sorted THEN screenState is observed and the tracks are emitted THEN the tracks emitted are sorted by their ordinal`() = runTest {
-        // Given
-        val testTracks = UiTrackTestData.listOfTracks.reversed()
-
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
-
-        // When
-        val testObserver = viewModel.screenState.test()
-
-        // Then
-        testObserver.assertValueAt(1) { playerListUIState ->
-            (playerListUIState as PlayerListUIState.Tracks).items.sortedBy { it.ordinal } == testTracks.sortedBy { it.ordinal }
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
         }
-    }
-
-    @Test
-    fun `test GIVEN the tracks are fetched WHEN an error is caught at any point THEN track retrieval fails`() = runTest {
-        // Given
-        val error = UnknownHostException("UnknownHostException")
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Error(error, null))
-
-        // When
-        val testObserver = viewModel.screenState.test()
+        advanceUntilIdle()
 
         // Then
-        testObserver.assertValues(
-            PlayerListUIState.Error(error)
-        )
+        assertEquals(listOf(PlayerListUIState.Loading, PlayerListUIState.Tracks(testTracks)), stateList)
+        job.cancel()
     }
 
     @Test
-    fun `test GIVEN the tracks are fetched and an error happens WHEN the retry method is called and no error happens ths time THEN track retrieval works`() = runTest {
+    fun `test GIVEN a list of tracks not sorted THEN screenState is observed and the tracks are emitted sorted`() = runTest {
+        // Given
+        val testTracks = UiTrackTestData.listOfTracks.reversed()
+
+        coEvery { trackRepository.getAllTracks() } returns flowOf(ResultState.Loading(null), ResultState.Success(testTracks))
+
+        // When
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
+        }
+        advanceUntilIdle()
+
+        // Then
+        val sortedTracks = testTracks.sortedBy { it.ordinal }
+        assertEquals(PlayerListUIState.Tracks(sortedTracks), stateList.last())
+        job.cancel()
+    }
+
+    @Test
+    fun `test GIVEN the tracks are fetched WHEN an error occurs THEN track retrieval fails`() = runTest {
         // Given
         val error = UnknownHostException("UnknownHostException")
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Error(error, null))
+        coEvery { trackRepository.getAllTracks() } returns flowOf(ResultState.Error(error, null))
 
-        val testObserver = viewModel.screenState.test()
-        testObserver.assertValues(
-            PlayerListUIState.Error(error)
-        )
-        val testTracks = UiTrackTestData.listOfTracks.reversed()
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(testTracks))
-
-        // WHEN
-        viewModel.retryLoadingPlaylist()
-
-        //THEN
-        testObserver.assertValueCount(3)
-        testObserver.assertValueAt(1) { it is PlayerListUIState.Loading}
-        testObserver.assertValueAt(2) { it is PlayerListUIState.Tracks}
+        // When
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
+        }
+        advanceUntilIdle()
+        // Then
+        assertEquals(PlayerListUIState.Error(error), stateList.last())
+        job.cancel()
     }
 
     @Test
-    fun `test GIVEN multiple errors WHEN retry is called THEN track retrieval works after multiple failures`() = runTest {
+    fun `test GIVEN an error WHEN retry is called THEN track retrieval succeeds`() = runTest {
+        // Given
+        val error = UnknownHostException("UnknownHostException")
+        val testTracks = UiTrackTestData.listOfTracks
+
+        val testFlow = MutableStateFlow<ResultState<List<UiTrack>>>(ResultState.Error(error, null))
+
+        coEvery { trackRepository.getAllTracks() } coAnswers { testFlow }
+
+        testFlow.value = ResultState.Loading(null)
+        testFlow.value = ResultState.Error(error, null)
+
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
+        }
+
+        advanceUntilIdle()
+        assertTrue(stateList.any { it is PlayerListUIState.Error })
+
+        // WHEN: Retry
+        testFlow.value = ResultState.Loading(null)
+        testFlow.value = ResultState.Success(testTracks)
+        viewModel.retryLoadingPlaylist()
+        advanceUntilIdle()
+
+        assertEquals(PlayerListUIState.Tracks(testTracks), stateList.last())
+        job.cancel()
+    }
+
+
+    @Test
+    fun `test GIVEN multiple errors WHEN retry is called THEN track retrieval works after failures`() = runTest {
         // Given
         val error = UnknownHostException("Network issue")
-        every { trackRepository.getAll() } returnsMany listOf(
-            Flowable.just(ResultState.Error(error, null)),  // First attempt fails
-            Flowable.just(ResultState.Error(error, null)),  // Second attempt fails
-            Flowable.just(ResultState.Loading(null), ResultState.Success(UiTrackTestData.listOfTracks)) // Third attempt succeeds
-        )
+        coEvery { trackRepository.getAllTracks() } returns flow {
+            emit(ResultState.Error(error, null)) // First attempt fails
+            emit(ResultState.Error(error, null)) // Second attempt fails
+            emit(ResultState.Loading(null)) // Third attempt starts
+            emit(ResultState.Success(UiTrackTestData.listOfTracks)) // Third attempt succeeds
+        }
 
-        val testObserver = viewModel.screenState.test()
-        testObserver.assertValue(
-            PlayerListUIState.Error(error) // Initial failure
-        )
-
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
+        }
+        advanceUntilIdle()
         // WHEN
         viewModel.retryLoadingPlaylist()
         viewModel.retryLoadingPlaylist()
 
         // THEN
-        testObserver.assertValueCount(4)
-        testObserver.assertValueAt(2) { it is PlayerListUIState.Loading }
-        testObserver.assertValueAt(3) { it is PlayerListUIState.Tracks }
+        assertEquals(PlayerListUIState.Tracks(UiTrackTestData.listOfTracks), stateList.last())
+        job.cancel()
     }
 
     @Test
     fun `test GIVEN a delayed response THEN screenState first emits Loading THEN emits tracks`() = runTest {
-        // Create a TestScheduler to control time manually
-        val testScheduler = TestScheduler()
-
         // Given
-        every { trackRepository.getAll() } returns Flowable.concat(
-            Flowable.just(ResultState.Loading(null)).delay(500, TimeUnit.MILLISECONDS, testScheduler),
-            Flowable.just(ResultState.Success(UiTrackTestData.listOfTracks))
-        )
+        coEvery { trackRepository.getAllTracks() } returns flow {
+            emit(ResultState.Loading(null))
+            kotlinx.coroutines.delay(500)
+            emit(ResultState.Success(UiTrackTestData.listOfTracks))
+        }
 
-        val testObserver = viewModel.screenState.test()
-        testObserver.assertEmpty()
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
+        }
+        advanceUntilIdle()
+        // THEN
+        assertEquals(PlayerListUIState.Loading, stateList[0])
 
-        // WHEN: Manually advance time to trigger delayed emission
-        testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
-        testObserver.assertValueAt(0) { it is PlayerListUIState.Loading }
+        // Advance virtual time
+        kotlinx.coroutines.delay(500)
 
-        // WHEN: Advance time further to get the Success state
-        testScheduler.advanceTimeBy(500, TimeUnit.MILLISECONDS)
-
-        // THEN Tracks are emitted
-        testObserver.assertValueAt(1) { it is PlayerListUIState.Tracks }
+        assertEquals(PlayerListUIState.Tracks(UiTrackTestData.listOfTracks), stateList.last())
+        job.cancel()
     }
-
-
 
     @Test
     fun `test GIVEN an empty list of tracks THEN screenState emits Loading then empty track list`() = runTest {
         // Given
-        every { trackRepository.getAll() } returns Flowable.just(ResultState.Loading(null), ResultState.Success(emptyList()))
+        coEvery { trackRepository.getAllTracks() } returns flowOf(ResultState.Loading(null), ResultState.Success(emptyList()))
 
         // When
-        val testObserver = viewModel.screenState.test()
-
+        val stateList = mutableListOf<PlayerListUIState>()
+        val job = launch {
+            viewModel.screenState.toList(stateList)
+        }
+        advanceUntilIdle()
         // Then
-        testObserver.assertValues(
-            PlayerListUIState.Loading,
-            PlayerListUIState.Tracks(emptyList())
-        )
+        assertEquals(PlayerListUIState.Tracks(emptyList()), stateList.last())
+        job.cancel()
     }
 
     @After

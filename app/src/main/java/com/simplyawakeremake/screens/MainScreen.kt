@@ -1,0 +1,67 @@
+package com.simplyawakeremake.screens
+
+import android.util.Log
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavHostController
+import com.simplyawakeremake.navigation.AppNavHost
+import com.simplyawakeremake.viewmodel.MainViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    navController: NavHostController,
+    canNavigateBack: Boolean = false,
+    viewModel: MainViewModel
+) {
+    val toolbarConfig by rememberUpdatedState(newValue = viewModel.toolbarConfig.collectAsState().value)
+
+    Scaffold(
+        topBar = {
+            if (toolbarConfig.showToolbar) {
+                Log.d("MainViewModel", "Toolbar updated: ${toolbarConfig.title}")
+                TopAppBar(
+                    title = { Text(stringResource(id = toolbarConfig.title)) },
+                    navigationIcon = {
+                        if (toolbarConfig.showBackButton && canNavigateBack) {
+                            run { BackButton(navController = navController) }
+                        }
+                    },
+                    actions = {
+                        toolbarConfig.actions.forEach { action ->
+                            IconButton(onClick = action.onClick) {
+                                Icon(action.icon, contentDescription = action.contentDescription)
+                            }
+                        }
+                    }
+                )
+            }
+        }
+    ) { paddingValues ->
+        AppNavHost(
+            modifier = Modifier.padding(paddingValues),
+            navController = navController,
+            mainViewModel = viewModel
+        )
+    }
+}
+
+@Composable
+fun BackButton(navController: NavHostController) {
+    IconButton(onClick = { navController.popBackStack() }) {
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+    }
+}

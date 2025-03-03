@@ -35,17 +35,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
-import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
+import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
 import com.simplyawakeremake.viewmodel.PlayerUIState
 import kotlinx.coroutines.delay
@@ -55,9 +54,15 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun NowPlayingScreen(
     navController: NavController,
+    mainViewModel: MainViewModel,
     trackId: String,
     viewModel: NowPlayingViewModel = koinViewModel()
 ) {
+    val toolbarConfig = ToolbarConfig(showToolbar = false)
+
+    LaunchedEffect(Unit) {
+        mainViewModel.updateToolbar(toolbarConfig)
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.setupTrackId(trackId)
@@ -124,7 +129,8 @@ fun PlayerSlider(player: Player, duration: Long) {
             // Check if the player is ready and playing
             if (player.duration > 0 && !isInteracting) {
                 val currentPosition = player.currentPosition.toFloat()
-                sliderPosition = currentPosition.div(player.duration).times(100f) // Normalize the position between 0 and 100
+                sliderPosition = currentPosition.div(player.duration)
+                    .times(100f) // Normalize the position between 0 and 100
             }
             delay(1000L) // Update every second
         }
@@ -142,17 +148,6 @@ fun PlayerSlider(player: Player, duration: Long) {
             valueRange = 0f..100f, // Slider range is normalized from 0 to 100,
             interactionSource = interactionSource,
             modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun NowPlayingPreview() {
-    SimplyAwakeRemakeTheme {
-        NowPlayingScreen(
-            navController = NavController(context = LocalContext.current),
-            trackId = ""
         )
     }
 }

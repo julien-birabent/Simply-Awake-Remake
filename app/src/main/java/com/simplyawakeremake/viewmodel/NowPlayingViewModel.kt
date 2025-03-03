@@ -2,8 +2,6 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import android.content.ComponentName
-import android.net.Uri
-import android.os.Environment
 import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.AndroidViewModel
@@ -21,7 +19,6 @@ import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackFileManager
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
-import com.simplyawakeremake.data.track.TrackUriProvider
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.screens.ControlButtons
 import com.simplyawakeremake.service.PlaybackService
@@ -151,7 +148,7 @@ class NowPlayingViewModel(
     }
 
     private suspend fun createMediaItem(track: UiTrack): MediaItem = withContext(Dispatchers.IO) {
-        val trackUri = trackFileManager.getTrackUri(track) // Runs in background thread
+        val trackUri = trackFileManager.getTrackUri(track.id)
 
         val mediaMetaData = androidx.media3.common.MediaMetadata.Builder()
             .setTitle(track.displayName)

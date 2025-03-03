@@ -6,67 +6,85 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import androidx.core.content.ContextCompat
-import com.simplyawakeremake.UiTrack
 import java.io.File
 
+/*
+* This class could be more abstract and extensible for further use but as of now it answers to all the
+* needs of the app.
+* */
 class TrackFileManager(
-    private val context: Context,
-    private val trackUriProvider: TrackUriProvider
+    context: Context,
+    private val trackUriProvider: (String) -> String
 ) {
 
+    private val parentMusicDir: File = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!
+    private val meditationsDir: File = File(parentMusicDir, "Meditations")
     private val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    private val downloads = mutableMapOf<Long, (File?) -> Unit>() // Map downloadId to callback
+    private val downloads = mutableMapOf<Long, (File?) -> Unit>()
 
     init {
+        initMeditationFolder()
         // Register broadcast receiver to listen for download completion
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
-                val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: return
-                downloads[id]?.invoke(getDownloadedFile(id))
-                downloads.remove(id)
+                intent?.onDownloadCompletionUpdate()
             }
         }
-        ContextCompat.registerReceiver(context, receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+        ContextCompat.registerReceiver(
+            context, receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
+    }
+
+    private fun initMeditationFolder() {
+        if (!meditationsDir.exists()) {
+            meditationsDir.mkdirs()
+        }
+    }
+
+    private fun Intent.onDownloadCompletionUpdate() {
+        val id = this.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: return
+        downloads[id]?.invoke(getDownloadedFile(id))
+        downloads.remove(id)
     }
 
     /**
      * Returns the URI of the downloaded file if available, otherwise returns the streaming URL.
      */
-    fun getTrackUri(track: UiTrack): Uri {
-        val localFile = File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), "${track.id}.mp3")
+    fun getTrackUri(trackId: String): Uri {
+        val localFile = File(meditationsDir, "$trackId.mp3")
         return if (localFile.exists()) {
             Uri.fromFile(localFile) // Use local file URI
         } else {
-            Uri.parse(trackUriProvider.trackUri(track.id)) // Use streaming URL
+            Uri.parse(trackUriProvider(trackId)) // Use streaming URL
         }
-    }
-
-    private fun isTrackDownloaded(track: UiTrack): Boolean {
-        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), "${track.id}.mp3")
-        return file.exists()
     }
 
     /**
      * Downloads a single track if not already downloaded.
      */
-    fun downloadTrack(track: UiTrack, onComplete: (File?) -> Unit) {
-        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), "${track.id}.mp3")
+    fun downloadTrack(trackId: String, trackTitle: String, onComplete: (File?) -> Unit) {
+        val file = File(meditationsDir, "$trackId.mp3")
 
         if (file.exists()) {
             onComplete(file)
             return
         }
 
-        val url = trackUriProvider.trackUri(track.id)
+        val url = trackUriProvider(trackId)
         val request = DownloadManager.Request(Uri.parse(url))
             .setDestinationUri(Uri.fromFile(file))
-            .setTitle(track.displayName)
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
-
+            .setTitle(trackTitle)
+            .apply {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+                } else {
+                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
+                }
+            }
         val downloadId = downloadManager.enqueue(request)
         downloads[downloadId] = onComplete
     }
@@ -74,11 +92,11 @@ class TrackFileManager(
     /**
      * Downloads all tracks in the playlist when the user requests.
      */
-    fun downloadAllTracks(tracks: List<UiTrack>, onComplete: (List<File>) -> Unit) {
+    fun downloadAllTracks(tracks: List<Pair<String, String>>, onComplete: (List<File>) -> Unit) {
         val downloadedFiles = mutableListOf<File>()
 
-        tracks.forEach { track ->
-            downloadTrack(track) { file ->
+        tracks.forEach { (trackId, trackTitle) ->
+            downloadTrack(trackId, trackTitle) { file ->
                 file?.let { downloadedFiles.add(it) }
                 if (downloadedFiles.size == tracks.size) {
                     onComplete(downloadedFiles)
@@ -87,48 +105,28 @@ class TrackFileManager(
         }
     }
 
-    fun deleteTrack(track: UiTrack): Boolean {
-        val file = File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC), "${track.id}.mp3")
-        return if (file.exists()) {
-            file.delete()
-        } else {
-            false
-        }
+    fun deleteTrack(trackId: String): Boolean {
+        return File(meditationsDir, "$trackId.mp3")
+            .takeIf { it.exists() }
+            ?.delete() ?: false
     }
 
     fun deleteAllTracks(): Boolean {
-        val musicDir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        if (musicDir == null || !musicDir.exists()) {
-            return false
-        }
-
-        val files = musicDir.listFiles()
-        if (files.isNullOrEmpty()) {
-            return false
-        }
-
-        var success = true
-        files.forEach { file ->
-            if (file.isFile && file.name.endsWith(".mp3")) {
-                if (!file.delete()) {
-                    success = false
-                }
-            }
-        }
-        return success
+        return meditationsDir.takeIf { it.exists() }?.listFiles()
+            .orEmpty()
+            .filter { it.isFile && it.name.endsWith(".mp3") }
+            .all { it.delete() }
     }
 
     private fun getDownloadedFile(downloadId: Long): File? {
         val query = DownloadManager.Query().setFilterById(downloadId)
         return downloadManager.query(query).use { cursor ->
-            if (cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-                if (columnIndex != -1) {
-                    val fileUri = cursor.getString(columnIndex)
-                    return File(Uri.parse(fileUri).path ?: return null)
-                }
-            }
-            null
+            cursor.takeIf { it.moveToFirst() }
+                ?.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
+                ?.takeIf { it != -1 }
+                ?.let { cursor.getString(it) }
+                ?.let { Uri.parse(it).path }
+                ?.let { File(it) }
         }
     }
 }

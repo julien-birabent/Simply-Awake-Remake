@@ -18,5 +18,5 @@ val appModule = module {
     single<SharedPreferences> { androidContext().getSharedPreferences("private_shared_preferences_tracks", Context.MODE_PRIVATE)}
     single<DataSaver<ApiTrack>> (named("tracks")){ TrackSharedPrefsSaver(get()) }
     single { TrackUriProvider(BuildConfig.baseServerUrl) }
-    single <TrackFileManager>{ TrackFileManager(androidContext(), get()) }
+    single <TrackFileManager>{ TrackFileManager(androidContext(), get<TrackUriProvider>()::trackUri) }
 }

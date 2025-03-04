@@ -30,7 +30,7 @@ class TrackListViewModel(
     private val downloadTrackListUseCase: DownloadTrackListUseCase
 ) : AndroidViewModel(app), KoinComponent {
 
-    private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow()
+    private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
     private val _downloadState = MutableStateFlow<DownloadProgress>(DownloadProgress.Idle)
     val downloadState: StateFlow<DownloadProgress> = _downloadState
 

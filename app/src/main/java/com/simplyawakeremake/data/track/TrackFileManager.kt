@@ -99,6 +99,12 @@ class TrackFileManager(
         onEachTrackDownloaded: (progressPercentage: Int) -> Unit,
         onComplete: (List<File>) -> Unit
     ) {
+
+        if (areAllTracksDownloaded(tracks)) {
+            onComplete(tracks.map { (trackId, _) -> getTrackFile(trackId) })
+            return
+        }
+
         val downloadedFiles = mutableListOf<File>()
         tracks.forEachIndexed { _, (trackId, trackTitle) ->
             downloadTrack(trackId, trackTitle) { file ->
@@ -114,6 +120,13 @@ class TrackFileManager(
         }
     }
 
+    private fun areAllTracksDownloaded(tracks: List<Pair<String, String>>): Boolean {
+        return tracks.all { (trackId, _) -> getTrackFile(trackId).exists() }
+    }
+
+    private fun getTrackFile(trackId: String): File {
+        return File(meditationsDir, "$trackId.mp3")
+    }
 
     fun deleteTrack(trackId: String): Boolean {
         return File(meditationsDir, "$trackId.mp3")

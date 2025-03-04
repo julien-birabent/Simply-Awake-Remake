@@ -62,6 +62,7 @@ dependencies {
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.navigation.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material.icons.extended)
     implementation (libs.google.accompanist.systemuicontroller)
 
     implementation(libs.androidx.core.ktx)

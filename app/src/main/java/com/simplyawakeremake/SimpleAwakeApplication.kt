@@ -3,6 +3,7 @@ package com.simplyawakeremake
 import android.app.Application
 import com.simplyawakeremake.di.appModule
 import com.simplyawakeremake.di.dataModule
+import com.simplyawakeremake.di.domainModule
 import com.simplyawakeremake.di.repositoryModule
 import com.simplyawakeremake.di.uiModule
 import org.koin.android.ext.koin.androidContext
@@ -15,7 +16,7 @@ class SimpleAwakeApplication : Application() {
 
         startKoin {
             androidContext(this@SimpleAwakeApplication)
-            modules(appModule, dataModule, repositoryModule, uiModule)
+            modules(appModule, dataModule, repositoryModule, domainModule, uiModule)
         }
 
     }

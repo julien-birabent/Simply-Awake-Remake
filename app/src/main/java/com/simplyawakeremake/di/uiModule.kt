@@ -14,6 +14,6 @@ val uiModule = module {
 
     single { ExoPlayer.Builder(androidApplication()).build() }
     viewModel { MainViewModel(androidApplication()) }
-    viewModel { TrackListViewModel(androidApplication(), get()) }
+    viewModel { TrackListViewModel(androidApplication(), get(), get()) }
     viewModel { NowPlayingViewModel(androidApplication(), get()) }
 }

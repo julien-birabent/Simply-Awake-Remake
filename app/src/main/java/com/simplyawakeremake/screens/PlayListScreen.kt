@@ -1,9 +1,11 @@
 package com.simplyawakeremake.screens
 
-import android.content.Context
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,12 +18,13 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,9 +46,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.UiTrack
-import com.simplyawakeremake.extensions.isOnline
 import com.simplyawakeremake.navigation.Screen
+import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.TrackListViewModel
@@ -60,39 +64,58 @@ fun PlayListScreen(
     mainViewModel: MainViewModel,
     viewModel: TrackListViewModel = koinViewModel()
 ) {
-    val toolbarConfig = ToolbarConfig(actions = emptyList(), showToolbar = true)
+    val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
+    val downloadState by viewModel.downloadState.collectAsState()
+
+    val toolbarConfig = ToolbarConfig(
+        actions = listOf(
+            ToolbarAction(Icons.Outlined.FileDownload, contentDescription = "Download") {
+                if (uiState is PlayerListUIState.Tracks) {
+                    val tracks = (uiState as PlayerListUIState.Tracks).items
+                    viewModel.downloadAllTracks(tracks)
+                }
+            }
+        ),
+        showToolbar = true
+    )
+
     LaunchedEffect(Unit) {
         mainViewModel.updateToolbar(toolbarConfig)
     }
 
-    val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
-
-    when (uiState) {
-        is PlayerListUIState.Error -> {
-            when (val error = (uiState as PlayerListUIState.Error).throwable) {
-                is UnknownHostException -> {
-                    NoInternetScreen { viewModel.retryLoadingPlaylist() }
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (uiState) {
+            is PlayerListUIState.Error -> {
+                when (val error = (uiState as PlayerListUIState.Error).throwable) {
+                    is UnknownHostException -> {
+                        NoInternetScreen { viewModel.retryLoadingPlaylist() }
+                    }
+                    else -> {
+                        CommonErrorView(throwable = error)
+                    }
                 }
-
-                else -> {
-                    CommonErrorView(throwable = error)
+            }
+            PlayerListUIState.Loading -> {
+                LoadingIndicator1()
+            }
+            is PlayerListUIState.Tracks -> {
+                Playlist(
+                    modifier = Modifier.fillMaxSize(),
+                    tracks = (uiState as PlayerListUIState.Tracks).items,
+                    navController
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    DownloadProgressIndicator(downloadState = downloadState)
                 }
             }
         }
-
-        PlayerListUIState.Loading -> {
-            LoadingIndicator1()
-        }
-
-        is PlayerListUIState.Tracks -> {
-            Playlist(
-                tracks = (uiState as PlayerListUIState.Tracks).items,
-                navController,
-                viewModel.app
-            )
-        }
     }
 }
+
 
 @Composable
 private fun NoInternetScreen(tryAgainAction: () -> Unit) {
@@ -155,49 +178,24 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
 }
 
 @Composable
-fun QuickDismissAlertDialog(
-    onDismissRequest: () -> Unit,
-    dialogTitle: String,
-    dialogText: String
+fun Playlist(
+    modifier: Modifier = Modifier,
+    tracks: List<UiTrack>,
+    navController: NavController,
 ) {
-    AlertDialog(
-        title = { Text(text = dialogTitle) },
-        text = { Text(text = dialogText) },
-        onDismissRequest = { onDismissRequest() },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = { onDismissRequest() }
-            ) {
-                Text("Dismiss")
-            }
-        }
-    )
-}
-
-@Composable
-fun Playlist(tracks: List<UiTrack>, navController: NavController, context: Context) {
-    var showNoInternetDialog by remember { mutableStateOf(false) }
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         items(
             count = tracks.size,
             key = { tracks[it].id },
             itemContent = { index ->
                 TrackItem(tracks[index]) { id ->
-                    showNoInternetDialog = !context.isOnline()
-                    if (!showNoInternetDialog) navController.navigate(Screen.NOW_PLAYING.name + "/${id}")
+                    navController.navigate(Screen.NOW_PLAYING.name + "/${id}")
                 }
                 if (index < tracks.lastIndex)
                     HorizontalDivider(color = Color.White, thickness = 1.dp)
             }
-        )
-    }
-    if (showNoInternetDialog) {
-        QuickDismissAlertDialog(
-            onDismissRequest = { showNoInternetDialog = false },
-            dialogTitle = "Whoops",
-            dialogText = "The content of the meditation cannot be loaded because you're device seems to be offline."
         )
     }
 }
@@ -245,6 +243,66 @@ fun TrackItem(track: UiTrack, navigateToTrack: (id: String) -> Unit) {
         }
     }
 }
+
+@Composable
+fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: DownloadProgress) {
+    var isVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(downloadState) {
+        if (downloadState is DownloadProgress.InProgress) {
+            isVisible = true
+        }
+    }
+
+    AnimatedVisibility(visible = isVisible && downloadState !is DownloadProgress.Idle) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            when (downloadState) {
+                is DownloadProgress.InProgress -> {
+                    Text(
+                        text = "Downloading... ${downloadState.percentage}%",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = {
+                            downloadState.percentage / 100f
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                is DownloadProgress.Success -> {
+                    Text(
+                        text = "Download Complete!",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { isVisible = false }) {
+                        Text("Dismiss")
+                    }
+                }
+                is DownloadProgress.Failure -> {
+                    Text(
+                        text = "Download Failed: ${downloadState.error.message}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(onClick = { isVisible = false }) {
+                        Text("Dismiss")
+                    }
+                }
+                DownloadProgress.Idle -> Unit
+            }
+        }
+    }
+}
+
 
 @Composable
 @Preview(showBackground = true, backgroundColor = 0xFFFFFF)

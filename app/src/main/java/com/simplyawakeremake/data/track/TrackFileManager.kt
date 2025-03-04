@@ -35,7 +35,7 @@ class TrackFileManager(
         }
         ContextCompat.registerReceiver(
             context, receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            ContextCompat.RECEIVER_NOT_EXPORTED
+            ContextCompat.RECEIVER_EXPORTED
         )
     }
 
@@ -46,7 +46,9 @@ class TrackFileManager(
     }
 
     private fun Intent.onDownloadCompletionUpdate() {
-        val id = this.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: return
+        val id = getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+        if (id == -1L) return
+
         downloads[id]?.invoke(getDownloadedFile(id))
         downloads.remove(id)
     }
@@ -66,7 +68,7 @@ class TrackFileManager(
     /**
      * Downloads a single track if not already downloaded.
      */
-    fun downloadTrack(trackId: String, trackTitle: String, onComplete: (File?) -> Unit) {
+    private fun downloadTrack(trackId: String, trackTitle: String, onComplete: (File?) -> Unit) {
         val file = File(meditationsDir, "$trackId.mp3")
 
         if (file.exists()) {
@@ -92,18 +94,26 @@ class TrackFileManager(
     /**
      * Downloads all tracks in the playlist when the user requests.
      */
-    fun downloadAllTracks(tracks: List<Pair<String, String>>, onComplete: (List<File>) -> Unit) {
+    fun downloadTracks(
+        tracks: List<Pair<String, String>>,
+        onEachTrackDownloaded: (progressPercentage: Int) -> Unit,
+        onComplete: (List<File>) -> Unit
+    ) {
         val downloadedFiles = mutableListOf<File>()
-
-        tracks.forEach { (trackId, trackTitle) ->
+        tracks.forEachIndexed { _, (trackId, trackTitle) ->
             downloadTrack(trackId, trackTitle) { file ->
-                file?.let { downloadedFiles.add(it) }
+                file?.let {
+                    downloadedFiles.add(it)
+                    onEachTrackDownloaded((downloadedFiles.size * 100) / tracks.size)
+                }
+
                 if (downloadedFiles.size == tracks.size) {
                     onComplete(downloadedFiles)
                 }
             }
         }
     }
+
 
     fun deleteTrack(trackId: String): Boolean {
         return File(meditationsDir, "$trackId.mp3")

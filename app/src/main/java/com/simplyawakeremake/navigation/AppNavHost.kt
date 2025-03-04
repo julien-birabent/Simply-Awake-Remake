@@ -16,7 +16,7 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     startDestination: String = Screen.PLAYLIST.name,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
 ) {
     NavHost(
         modifier = modifier,

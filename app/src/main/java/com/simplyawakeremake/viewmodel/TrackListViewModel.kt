@@ -6,24 +6,33 @@ import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import com.simplyawakeremake.usecases.DownloadProgress
+import com.simplyawakeremake.usecases.DownloadTrackListUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 
 class TrackListViewModel(
     val app: Application,
-    private val trackRepository: TrackRepositoryInterface
+    private val trackRepository: TrackRepositoryInterface,
+    private val downloadTrackListUseCase: DownloadTrackListUseCase
 ) : AndroidViewModel(app), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow()
+    private val _downloadState = MutableStateFlow<DownloadProgress>(DownloadProgress.Idle)
+    val downloadState: StateFlow<DownloadProgress> = _downloadState
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val screenState: StateFlow<PlayerListUIState> =
@@ -45,9 +54,23 @@ class TrackListViewModel(
             .onStart { emit(PlayerListUIState.Loading) }
             .catch { emit(PlayerListUIState.Error(it)) }
 
-
     fun retryLoadingPlaylist() {
         retryTrigger.tryEmit(Unit)
+    }
+
+    fun downloadAllTracks(tracks: List<UiTrack>) {
+        if (_downloadState.value is DownloadProgress.InProgress) return
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                downloadTrackListUseCase.execute(tracks.map { it.id to it.displayName })
+                    .distinctUntilChanged()
+                    .collect { progress ->
+                        _downloadState.value = progress
+                    }
+            } catch (e: Exception) {
+                _downloadState.value = DownloadProgress.Failure(e)
+            }
+        }
     }
 }
 

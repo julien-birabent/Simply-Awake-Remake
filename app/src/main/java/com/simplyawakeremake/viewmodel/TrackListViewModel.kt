@@ -67,7 +67,6 @@ class TrackListViewModel(
             try {
                 val tracks = (screenState.value as PlayerListUIState.Tracks).items
                 downloadTrackListUseCase.execute(tracks)
-                    .distinctUntilChanged()
                     .collect { progress ->
                         _downloadState.value = progress
                     }

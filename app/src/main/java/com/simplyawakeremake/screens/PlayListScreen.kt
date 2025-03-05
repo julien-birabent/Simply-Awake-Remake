@@ -116,6 +116,7 @@ private fun SetupToolbar(
 
     if (showDownloadConfirmationDialog) {
         DownloadConfirmationDialog(onConfirmSelected = {
+            viewModel.downloadAllTracks()
             showDownloadConfirmationDialog = false
         }, onDismiss = { showDownloadConfirmationDialog = false })
     }
@@ -131,19 +132,6 @@ private fun SetupToolbar(
 
     LaunchedEffect(Unit) {
         mainViewModel.updateToolbar(toolbarConfig)
-    }
-}
-
-@Composable
-private fun ManageDownloadActionFlow() {
-    var showDownloadConfirmationDialog by rememberSaveable { mutableStateOf(false) }
-    var askForStoragePermission by rememberSaveable { mutableStateOf(false) }
-
-    if (showDownloadConfirmationDialog) {
-        DownloadConfirmationDialog(onConfirmSelected = {
-            askForStoragePermission = true
-            showDownloadConfirmationDialog = false
-        }, onDismiss = { showDownloadConfirmationDialog = false })
     }
 }
 

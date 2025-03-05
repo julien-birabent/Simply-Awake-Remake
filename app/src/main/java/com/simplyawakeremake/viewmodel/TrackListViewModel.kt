@@ -34,6 +34,9 @@ class TrackListViewModel(
     private val _downloadState = MutableStateFlow<DownloadProgress>(DownloadProgress.Idle)
     val downloadState: StateFlow<DownloadProgress> = _downloadState
 
+    private val _showConfirmationDialogState = MutableStateFlow(false)
+    val showConfirmationDialogState: StateFlow<Boolean> = _showConfirmationDialogState
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val screenState: StateFlow<PlayerListUIState> =
         retryTrigger
@@ -58,11 +61,12 @@ class TrackListViewModel(
         retryTrigger.tryEmit(Unit)
     }
 
-    fun downloadAllTracks(tracks: List<UiTrack>) {
-        if (_downloadState.value is DownloadProgress.InProgress) return
+    fun downloadAllTracks() {
+        if (_downloadState.value is DownloadProgress.InProgress || screenState.value !is PlayerListUIState.Tracks) return
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                downloadTrackListUseCase.execute(tracks.map { it.id to it.displayName })
+                val tracks = (screenState.value as PlayerListUIState.Tracks).items
+                downloadTrackListUseCase.execute(tracks)
                     .distinctUntilChanged()
                     .collect { progress ->
                         _downloadState.value = progress
@@ -71,6 +75,10 @@ class TrackListViewModel(
                 _downloadState.value = DownloadProgress.Failure(e)
             }
         }
+    }
+
+    fun manageDownloadConfirmationDialog(isVisible: Boolean) {
+        _showConfirmationDialogState.value = isVisible
     }
 }
 

@@ -32,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,21 +68,7 @@ fun PlayListScreen(
     val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
 
-    val toolbarConfig = ToolbarConfig(
-        actions = listOf(
-            ToolbarAction(Icons.Outlined.FileDownload, contentDescription = "Download") {
-                if (uiState is PlayerListUIState.Tracks) {
-                    val tracks = (uiState as PlayerListUIState.Tracks).items
-                    viewModel.downloadAllTracks(tracks)
-                }
-            }
-        ),
-        showToolbar = true
-    )
-
-    LaunchedEffect(Unit) {
-        mainViewModel.updateToolbar(toolbarConfig)
-    }
+    SetupToolbar(viewModel, mainViewModel, downloadState)
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
@@ -90,14 +77,17 @@ fun PlayListScreen(
                     is UnknownHostException -> {
                         NoInternetScreen { viewModel.retryLoadingPlaylist() }
                     }
+
                     else -> {
                         CommonErrorView(throwable = error)
                     }
                 }
             }
+
             PlayerListUIState.Loading -> {
                 LoadingIndicator1()
             }
+
             is PlayerListUIState.Tracks -> {
                 Playlist(
                     modifier = Modifier.fillMaxSize(),
@@ -116,6 +106,67 @@ fun PlayListScreen(
     }
 }
 
+@Composable
+private fun SetupToolbar(
+    viewModel: TrackListViewModel,
+    mainViewModel: MainViewModel,
+    downloadState: DownloadProgress
+) {
+    var showDownloadConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showDownloadConfirmationDialog) {
+        DownloadConfirmationDialog(onConfirmSelected = {
+            showDownloadConfirmationDialog = false
+        }, onDismiss = { showDownloadConfirmationDialog = false })
+    }
+
+    val toolbarConfig = ToolbarConfig(
+        actions = listOf(
+            tracksDownloadAction {
+                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog = true
+            }
+        ),
+        showToolbar = true
+    )
+
+    LaunchedEffect(Unit) {
+        mainViewModel.updateToolbar(toolbarConfig)
+    }
+}
+
+@Composable
+private fun ManageDownloadActionFlow() {
+    var showDownloadConfirmationDialog by rememberSaveable { mutableStateOf(false) }
+    var askForStoragePermission by rememberSaveable { mutableStateOf(false) }
+
+    if (showDownloadConfirmationDialog) {
+        DownloadConfirmationDialog(onConfirmSelected = {
+            askForStoragePermission = true
+            showDownloadConfirmationDialog = false
+        }, onDismiss = { showDownloadConfirmationDialog = false })
+    }
+}
+
+@Composable
+private fun tracksDownloadAction(onClick: () -> Unit): ToolbarAction {
+    return ToolbarAction(Icons.Outlined.FileDownload, contentDescription = "Download") {
+        onClick()
+    }
+}
+
+@Composable
+private fun DownloadConfirmationDialog(
+    onConfirmSelected: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ConfirmationDialog(
+        title = "Confirm Download",
+        message = "This action will download all the tracks to your device. Do you want to proceed?",
+        confirmButtonText = "Start Download",
+        dismissButtonText = "Cancel",
+        onDismiss = onDismiss,
+        onConfirm = { onConfirmSelected() })
+}
 
 @Composable
 private fun NoInternetScreen(tryAgainAction: () -> Unit) {
@@ -223,7 +274,7 @@ fun TrackItem(track: UiTrack, navigateToTrack: (id: String) -> Unit) {
                 textAlign = TextAlign.Start
             )
             Text(
-                text = "${track.duration}",
+                text = track.duration,
                 textAlign = TextAlign.Right,
                 style = MaterialTheme.typography.bodyLarge
             )
@@ -276,6 +327,7 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+
                 is DownloadProgress.Success -> {
                     Text(
                         text = "Download Complete!",
@@ -286,6 +338,7 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
                         Text("Dismiss")
                     }
                 }
+
                 is DownloadProgress.Failure -> {
                     Text(
                         text = "Download Failed: ${downloadState.error.message}",
@@ -297,6 +350,7 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
                         Text("Dismiss")
                     }
                 }
+
                 DownloadProgress.Idle -> Unit
             }
         }

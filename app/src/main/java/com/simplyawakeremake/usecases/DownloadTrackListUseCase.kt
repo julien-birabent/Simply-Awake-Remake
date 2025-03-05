@@ -1,5 +1,6 @@
 package com.simplyawakeremake.usecases
 
+import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.track.TrackFileManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -12,10 +13,10 @@ import java.io.File
 
 class DownloadTrackListUseCase(private val trackFileManager: TrackFileManager) {
 
-    fun execute(tracks: List<Pair<String, String>>): Flow<DownloadProgress> = callbackFlow {
+    fun execute(tracks: List<UiTrack>): Flow<DownloadProgress> = callbackFlow {
         trySend(DownloadProgress.InProgress(0))
         try {
-            trackFileManager.downloadTracks(tracks, { progressPercentage ->
+            trackFileManager.downloadTracks(tracks.map { it.id to it.displayName }, { progressPercentage ->
                 trySend(DownloadProgress.InProgress(progressPercentage))
             }) { downloadedFiles ->
                 trySend(DownloadProgress.Success(downloadedFiles))

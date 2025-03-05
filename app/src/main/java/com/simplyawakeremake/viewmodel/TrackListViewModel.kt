@@ -1,7 +1,6 @@
 package com.simplyawakeremake.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -25,17 +23,13 @@ import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 
 class TrackListViewModel(
-    val app: Application,
     private val trackRepository: TrackRepositoryInterface,
     private val downloadTrackListUseCase: DownloadTrackListUseCase
-) : AndroidViewModel(app), KoinComponent {
+) : ViewModel(), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
     private val _downloadState = MutableStateFlow<DownloadProgress>(DownloadProgress.Idle)
     val downloadState: StateFlow<DownloadProgress> = _downloadState
-
-    private val _showConfirmationDialogState = MutableStateFlow(false)
-    val showConfirmationDialogState: StateFlow<Boolean> = _showConfirmationDialogState
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val screenState: StateFlow<PlayerListUIState> =
@@ -74,10 +68,6 @@ class TrackListViewModel(
                 _downloadState.value = DownloadProgress.Failure(e)
             }
         }
-    }
-
-    fun manageDownloadConfirmationDialog(isVisible: Boolean) {
-        _showConfirmationDialogState.value = isVisible
     }
 }
 

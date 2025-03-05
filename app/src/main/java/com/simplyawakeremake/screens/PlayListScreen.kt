@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,10 +38,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,6 +60,7 @@ import com.simplyawakeremake.viewmodel.TrackListViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.net.UnknownHostException
+import java.util.Locale
 import com.simplyawakeremake.screens.LoadingIndicator as LoadingIndicator1
 
 @Composable
@@ -124,7 +128,8 @@ private fun SetupToolbar(
     val toolbarConfig = ToolbarConfig(
         actions = listOf(
             tracksDownloadAction {
-                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog = true
+                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog =
+                    true
             }
         ),
         showToolbar = true
@@ -293,21 +298,33 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
         }
     }
 
+    val dismissButton = @Composable {
+        Button(
+            onClick = { isVisible = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RectangleShape
+        ) {
+            Text("Dismiss".uppercase(Locale.ROOT), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+
     AnimatedVisibility(visible = isVisible && downloadState !is DownloadProgress.Idle) {
         Column(
             modifier = modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
+                .padding(top = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (downloadState) {
                 is DownloadProgress.InProgress -> {
                     Text(
                         text = "Downloading... ${downloadState.percentage}%",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     LinearProgressIndicator(
                         progress = {
                             downloadState.percentage / 100f
@@ -321,10 +338,8 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
                         text = "Download Complete!",
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = { isVisible = false }) {
-                        Text("Dismiss")
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    dismissButton()
                 }
 
                 is DownloadProgress.Failure -> {
@@ -333,10 +348,8 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(onClick = { isVisible = false }) {
-                        Text("Dismiss")
-                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    dismissButton()
                 }
 
                 DownloadProgress.Idle -> Unit

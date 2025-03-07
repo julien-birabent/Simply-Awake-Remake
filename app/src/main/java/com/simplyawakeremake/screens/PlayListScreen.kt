@@ -25,6 +25,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -101,7 +102,11 @@ fun PlayListScreen(
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
                 ) {
-                    DownloadProgressIndicator(downloadState = downloadState)
+                    DownloadProgressIndicator(
+                        downloadState = downloadState,
+                        onDismiss = viewModel::resetDownloadState,
+                        onCancelClick = viewModel::cancelDownload
+                    )
                 }
             }
         }
@@ -287,18 +292,24 @@ fun TrackItem(track: UiTrack, navigateToTrack: (id: String) -> Unit) {
 }
 
 @Composable
-fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: DownloadProgress) {
+fun DownloadProgressIndicator(
+    modifier: Modifier = Modifier,
+    downloadState: DownloadProgress,
+    onDismiss: () -> Unit,
+    onCancelClick: () -> Unit
+) {
     var isVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(downloadState) {
-        if (downloadState is DownloadProgress.InProgress) {
-            isVisible = true
-        }
+        isVisible = downloadState !is DownloadProgress.Idle
     }
 
     val dismissButton = @Composable {
         Button(
-            onClick = { isVisible = false },
+            onClick = {
+                onDismiss()
+                isVisible = false
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -318,16 +329,32 @@ fun DownloadProgressIndicator(modifier: Modifier = Modifier, downloadState: Down
         ) {
             when (downloadState) {
                 is DownloadProgress.InProgress -> {
-                    Text(
-                        text = "Downloading... ${downloadState.percentage}%",
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Downloading... ${downloadState.percentage}%",
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(
+                            onClick = onCancelClick,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                        }
+
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = {
-                            downloadState.percentage / 100f
-                        },
-                        modifier = Modifier.fillMaxWidth(),
+                        progress = { downloadState.percentage / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .padding(horizontal = 16.dp),
                     )
                 }
 

@@ -9,6 +9,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import androidx.core.content.ContextCompat
+import com.simplyawakeremake.extensions.deleteFileByDownloadId
+import com.simplyawakeremake.extensions.getDownloadedFile
+import com.simplyawakeremake.extensions.isDownloadComplete
 import java.io.File
 
 /*
@@ -22,7 +25,8 @@ class TrackFileManager(
 
     private val parentMusicDir: File = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC)!!
     private val meditationsDir: File = File(parentMusicDir, "Meditations")
-    private val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+    private val downloadManager =
+        context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     private val downloads = mutableMapOf<Long, (File?) -> Unit>()
 
     init {
@@ -39,6 +43,14 @@ class TrackFileManager(
         )
     }
 
+    fun cancelAllDownloads() {
+        val downloadIds = downloads.keys.toLongArray()
+        if (downloadIds.isNotEmpty()) {
+            downloadManager.remove(*downloadIds)
+            downloads.clear()
+        }
+    }
+
     private fun initMeditationFolder() {
         if (!meditationsDir.exists()) {
             meditationsDir.mkdirs()
@@ -49,7 +61,13 @@ class TrackFileManager(
         val id = getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
         if (id == -1L) return
 
-        downloads[id]?.invoke(getDownloadedFile(id))
+        val file: File? = if (downloadManager.isDownloadComplete(id)) {
+            downloadManager.getDownloadedFile(id)
+        } else {
+            downloadManager.deleteFileByDownloadId(id)
+            null
+        }
+        downloads[id]?.invoke(file)
         downloads.remove(id)
     }
 
@@ -57,7 +75,7 @@ class TrackFileManager(
      * Returns the URI of the downloaded file if available, otherwise returns the streaming URL.
      */
     fun getTrackUri(trackId: String): Uri {
-        val localFile = File(meditationsDir, "$trackId.mp3")
+        val localFile = getTrackFile(trackId)
         return if (localFile.exists()) {
             Uri.fromFile(localFile) // Use local file URI
         } else {
@@ -68,11 +86,16 @@ class TrackFileManager(
     /**
      * Downloads a single track if not already downloaded.
      */
-    private fun downloadTrack(trackId: String, trackTitle: String, onComplete: (File?) -> Unit) {
-        val file = File(meditationsDir, "$trackId.mp3")
+    private fun downloadTrack(
+        trackId: String,
+        trackTitle: String,
+        onDownloadCanceled: () -> Unit,
+        onTrackDownloaded: (File?) -> Unit
+    ) {
+        val file = getTrackFile(trackId)
 
         if (file.exists()) {
-            onComplete(file)
+            onTrackDownloaded(file)
             return
         }
 
@@ -88,7 +111,12 @@ class TrackFileManager(
                 }
             }
         val downloadId = downloadManager.enqueue(request)
-        downloads[downloadId] = onComplete
+
+        downloads[downloadId] = { resultFile ->
+            if (resultFile == null) {
+                onDownloadCanceled()
+            } else onTrackDownloaded(resultFile)
+        }
     }
 
     /**
@@ -96,6 +124,7 @@ class TrackFileManager(
      */
     fun downloadTracks(
         tracks: List<Pair<String, String>>,
+        onDownloadCanceled: () -> Unit,
         onEachTrackDownloaded: (progressPercentage: Int) -> Unit,
         onComplete: (List<File>) -> Unit
     ) {
@@ -107,7 +136,7 @@ class TrackFileManager(
 
         val downloadedFiles = mutableListOf<File>()
         tracks.forEachIndexed { _, (trackId, trackTitle) ->
-            downloadTrack(trackId, trackTitle) { file ->
+            downloadTrack(trackId, trackTitle, onDownloadCanceled) { file ->
                 file?.let {
                     downloadedFiles.add(it)
                     onEachTrackDownloaded((downloadedFiles.size * 100) / tracks.size)
@@ -129,7 +158,7 @@ class TrackFileManager(
     }
 
     fun deleteTrack(trackId: String): Boolean {
-        return File(meditationsDir, "$trackId.mp3")
+        return getTrackFile(trackId)
             .takeIf { it.exists() }
             ?.delete() ?: false
     }
@@ -139,17 +168,5 @@ class TrackFileManager(
             .orEmpty()
             .filter { it.isFile && it.name.endsWith(".mp3") }
             .all { it.delete() }
-    }
-
-    private fun getDownloadedFile(downloadId: Long): File? {
-        val query = DownloadManager.Query().setFilterById(downloadId)
-        return downloadManager.query(query).use { cursor ->
-            cursor.takeIf { it.moveToFirst() }
-                ?.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI)
-                ?.takeIf { it != -1 }
-                ?.let { cursor.getString(it) }
-                ?.let { Uri.parse(it).path }
-                ?.let { File(it) }
-        }
     }
 }

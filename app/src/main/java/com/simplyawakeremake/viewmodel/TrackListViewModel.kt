@@ -1,5 +1,6 @@
 package com.simplyawakeremake.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.UiTrack
@@ -43,7 +44,7 @@ class TrackListViewModel(
         trackRepository.getAllTracks()
             .map { result ->
                 when (result) {
-                    is ResultState.Success -> PlayerListUIState.Tracks(result.data.sortedBy { it.ordinal })
+                    is ResultState.Success -> PlayerListUIState.Tracks(result.data.sortedBy { it.ordinal }.take(10))
                     is ResultState.Error -> PlayerListUIState.Error(result.throwable)
                     else -> PlayerListUIState.Loading
                 }
@@ -68,6 +69,16 @@ class TrackListViewModel(
                 _downloadState.value = DownloadProgress.Failure(e)
             }
         }
+    }
+
+    fun cancelDownload(){
+        viewModelScope.launch(Dispatchers.IO){
+            downloadTrackListUseCase.cancelDownloads()
+        }
+    }
+
+    fun resetDownloadState() {
+        _downloadState.value = DownloadProgress.Idle
     }
 }
 

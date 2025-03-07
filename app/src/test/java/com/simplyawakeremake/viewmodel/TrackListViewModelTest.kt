@@ -1,11 +1,12 @@
 package com.simplyawakeremake.viewmodel
 
-import android.app.Application
 import com.simplyawakeremake.MainCoroutineRule
 import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
+import com.simplyawakeremake.usecases.DownloadTrackListUseCase
 import io.mockk.coEvery
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -31,8 +32,9 @@ import java.net.UnknownHostException
 class TrackListViewModelTest {
 
     private lateinit var viewModel: TrackListViewModel
-    private val application: Application = mockk(relaxed = true)
     private val trackRepository: TrackRepositoryInterface = mockk(relaxed = true)
+    private val downloadTrackListUseCase: DownloadTrackListUseCase = mockk(relaxed = true)
+    private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase = mockk(relaxed = true)
 
     @get:Rule
     val testCoroutineRule = MainCoroutineRule()
@@ -46,7 +48,7 @@ class TrackListViewModelTest {
                 }
             )
         }
-        viewModel = TrackListViewModel(application, trackRepository)
+        viewModel = TrackListViewModel(trackRepository, downloadTrackListUseCase, checkTrackDownloadStatusUseCase)
     }
 
     @Test

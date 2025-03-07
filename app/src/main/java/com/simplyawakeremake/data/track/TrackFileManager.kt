@@ -61,14 +61,15 @@ class TrackFileManager(
         val id = getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
         if (id == -1L) return
 
-        val file: File? = if (downloadManager.isDownloadComplete(id)) {
+        if (downloadManager.isDownloadComplete(id)) {
             downloadManager.getDownloadedFile(id)
         } else {
             downloadManager.deleteFileByDownloadId(id)
             null
+        }.also {
+            downloads[id]?.invoke(it)
+            downloads.remove(id)
         }
-        downloads[id]?.invoke(file)
-        downloads.remove(id)
     }
 
     /**
@@ -125,9 +126,6 @@ class TrackFileManager(
         return request
     }
 
-    /**
-     * Downloads all tracks in the playlist when the user requests.
-     */
     fun downloadTracks(
         tracks: List<Pair<String, String>>,
         onDownloadCanceled: () -> Unit,
@@ -161,18 +159,5 @@ class TrackFileManager(
 
     fun getTrackFile(trackId: String): File {
         return File(meditationsDir, "$trackId.mp3")
-    }
-
-    fun deleteTrack(trackId: String): Boolean {
-        return getTrackFile(trackId)
-            .takeIf { it.exists() }
-            ?.delete() ?: false
-    }
-
-    fun deleteAllTracks(): Boolean {
-        return meditationsDir.takeIf { it.exists() }?.listFiles()
-            .orEmpty()
-            .filter { it.isFile && it.name.endsWith(".mp3") }
-            .all { it.delete() }
     }
 }

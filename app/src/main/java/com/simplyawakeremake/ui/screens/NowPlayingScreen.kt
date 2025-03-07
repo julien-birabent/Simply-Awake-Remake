@@ -1,4 +1,4 @@
-package com.simplyawakeremake.screens
+package com.simplyawakeremake.ui.screens
 
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image

@@ -1,6 +1,6 @@
 package com.simplyawakeremake.data.track
 
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import kotlinx.coroutines.flow.Flow
 

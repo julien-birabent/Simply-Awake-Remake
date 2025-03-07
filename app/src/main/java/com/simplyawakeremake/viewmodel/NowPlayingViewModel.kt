@@ -15,12 +15,12 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
 import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackFileManager
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
-import com.simplyawakeremake.screens.ControlButtons
+import com.simplyawakeremake.ui.screens.ControlButtons
 import com.simplyawakeremake.service.PlaybackService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

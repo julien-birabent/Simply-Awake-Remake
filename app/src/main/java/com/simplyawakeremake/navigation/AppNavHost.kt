@@ -7,8 +7,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.simplyawakeremake.screens.NowPlayingScreen
-import com.simplyawakeremake.screens.PlayListScreen
+import com.simplyawakeremake.ui.screens.NowPlayingScreen
+import com.simplyawakeremake.ui.screens.PlayListScreen
 import com.simplyawakeremake.viewmodel.MainViewModel
 
 @Composable

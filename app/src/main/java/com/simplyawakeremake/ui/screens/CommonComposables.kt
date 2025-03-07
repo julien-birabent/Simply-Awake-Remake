@@ -1,4 +1,4 @@
-package com.simplyawakeremake.screens
+package com.simplyawakeremake.ui.screens
 
 import android.Manifest
 import android.os.Build

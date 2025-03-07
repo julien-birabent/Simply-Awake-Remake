@@ -1,6 +1,6 @@
 package com.simplyawakeremake.usecases
 
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.data.track.TrackFileManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

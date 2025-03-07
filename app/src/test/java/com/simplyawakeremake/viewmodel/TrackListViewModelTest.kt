@@ -1,7 +1,7 @@
 package com.simplyawakeremake.viewmodel
 
 import com.simplyawakeremake.MainCoroutineRule
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface

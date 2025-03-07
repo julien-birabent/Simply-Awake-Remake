@@ -1,4 +1,4 @@
-package com.simplyawakeremake.screens
+package com.simplyawakeremake.ui.screens
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -50,7 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.ToolbarAction
@@ -64,7 +64,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.net.UnknownHostException
 import java.util.Locale
-import com.simplyawakeremake.screens.LoadingIndicator as LoadingIndicator1
+import com.simplyawakeremake.ui.screens.LoadingIndicator as LoadingIndicator1
 
 @Composable
 fun PlayListScreen(

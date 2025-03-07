@@ -2,7 +2,7 @@ package com.simplyawakeremake.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase

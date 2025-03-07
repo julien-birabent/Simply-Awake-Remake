@@ -1,4 +1,4 @@
-package com.simplyawakeremake.screens
+package com.simplyawakeremake.ui.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

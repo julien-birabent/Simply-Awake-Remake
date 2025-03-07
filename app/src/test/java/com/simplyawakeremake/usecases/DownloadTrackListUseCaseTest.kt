@@ -4,26 +4,18 @@ package com.simplyawakeremake.usecases
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.track.TrackFileManager
 import io.mockk.clearMocks
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.io.File
-import kotlin.coroutines.cancellation.CancellationException
 
 @ExperimentalCoroutinesApi
 class DownloadTrackListUseCaseTest {

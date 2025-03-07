@@ -1,5 +1,6 @@
 package com.simplyawakeremake.screens
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,15 +41,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
 import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
@@ -56,6 +59,7 @@ import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.TrackListViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.net.UnknownHostException
@@ -95,7 +99,8 @@ fun PlayListScreen(
                 Playlist(
                     modifier = Modifier.fillMaxSize(),
                     tracks = (uiState as PlayerListUIState.Tracks).items,
-                    navController
+                    navController,
+                    viewModel
                 )
                 Box(
                     modifier = Modifier
@@ -224,12 +229,15 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
     }
 }
 
+@ExperimentalCoroutinesApi
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
     tracks: List<UiTrack>,
     navController: NavController,
+    viewModel: TrackListViewModel
 ) {
+    val connectionState by connectionState()
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -237,7 +245,7 @@ fun Playlist(
             count = tracks.size,
             key = { tracks[it].id },
             itemContent = { index ->
-                TrackItem(tracks[index]) { id ->
+                TrackItem(tracks[index], viewModel, connectionState) { id ->
                     navController.navigate(Screen.NOW_PLAYING.name + "/${id}")
                 }
                 if (index < tracks.lastIndex)
@@ -248,13 +256,31 @@ fun Playlist(
 }
 
 @Composable
-fun TrackItem(track: UiTrack, navigateToTrack: (id: String) -> Unit) {
+fun TrackItem(
+    track: UiTrack,
+    viewModel: TrackListViewModel,
+    connectionState: ConnectionState,
+    navigateToTrack: (id: String) -> Unit
+) {
+
+    val context = LocalContext.current
+    var currentToast by remember { mutableStateOf<Toast?>(null) }
+
+    val showToast = {
+        currentToast?.cancel()
+        currentToast = Toast.makeText(context, "No internet & track not downloaded!", Toast.LENGTH_LONG)
+        currentToast?.show()
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentSize(Alignment.Center)
-            .clickable(onClick = { navigateToTrack(track.id) })
+            .clickable(onClick = {
+                if(viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available){
+                    navigateToTrack(track.id)
+                } else showToast()
+            })
             .padding(12.dp)
     ) {
         Row(
@@ -381,19 +407,4 @@ fun DownloadProgressIndicator(
             }
         }
     }
-}
-
-
-@Composable
-@Preview(showBackground = true, backgroundColor = 0xFFFFFF)
-fun TrackItemPreview() {
-    TrackItem(
-        track = UiTrack(
-            "",
-            "011 Track Name",
-            100,
-            "Mindlessness, FOMO",
-            "12:00"
-        )
-    ) {}
 }

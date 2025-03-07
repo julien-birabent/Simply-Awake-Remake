@@ -1,11 +1,11 @@
 package com.simplyawakeremake.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.usecases.DownloadTrackListUseCase
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +25,8 @@ import org.koin.core.component.KoinComponent
 
 class TrackListViewModel(
     private val trackRepository: TrackRepositoryInterface,
-    private val downloadTrackListUseCase: DownloadTrackListUseCase
+    private val downloadTrackListUseCase: DownloadTrackListUseCase,
+    private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase
 ) : ViewModel(), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
@@ -44,7 +45,7 @@ class TrackListViewModel(
         trackRepository.getAllTracks()
             .map { result ->
                 when (result) {
-                    is ResultState.Success -> PlayerListUIState.Tracks(result.data.sortedBy { it.ordinal }.take(10))
+                    is ResultState.Success -> PlayerListUIState.Tracks(result.data.sortedBy { it.ordinal })
                     is ResultState.Error -> PlayerListUIState.Error(result.throwable)
                     else -> PlayerListUIState.Loading
                 }
@@ -79,6 +80,10 @@ class TrackListViewModel(
 
     fun resetDownloadState() {
         _downloadState.value = DownloadProgress.Idle
+    }
+
+    fun isTrackDownloaded(trackId: String): Boolean {
+        return checkTrackDownloadStatusUseCase.execute(trackId)
     }
 }
 

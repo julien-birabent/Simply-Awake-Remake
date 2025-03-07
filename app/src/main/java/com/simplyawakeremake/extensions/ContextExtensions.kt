@@ -12,16 +12,28 @@ import androidx.core.content.ContextCompat
 
 const val REQUEST_STORAGE_PERMISSION = 1001
 
-fun Context.askForStoragePermission(activity: Activity, onGranted: () -> Unit, onDenied: () -> Unit) {
+fun Context.askForStoragePermission(
+    activity: Activity,
+    onGranted: () -> Unit,
+    onDenied: () -> Unit
+) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         // API 29+ does not require external storage permission for app-specific directories
         onGranted()
     } else {
         val permission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                permission
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             onGranted()
         } else {
-            ActivityCompat.requestPermissions(activity, arrayOf(permission), REQUEST_STORAGE_PERMISSION)
+            ActivityCompat.requestPermissions(
+                activity,
+                arrayOf(permission),
+                REQUEST_STORAGE_PERMISSION
+            )
         }
     }
 }

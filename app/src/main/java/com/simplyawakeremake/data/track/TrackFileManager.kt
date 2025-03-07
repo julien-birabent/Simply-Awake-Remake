@@ -98,7 +98,19 @@ class TrackFileManager(
             onTrackDownloaded(file)
             return
         }
+        val downloadId = downloadManager.enqueue(createRequest(trackId, file, trackTitle))
+        downloads[downloadId] = { resultFile ->
+            if (resultFile == null) {
+                onDownloadCanceled()
+            } else onTrackDownloaded(resultFile)
+        }
+    }
 
+    private fun createRequest(
+        trackId: String,
+        file: File,
+        trackTitle: String
+    ): DownloadManager.Request? {
         val url = trackUriProvider(trackId)
         val request = DownloadManager.Request(Uri.parse(url))
             .setDestinationUri(Uri.fromFile(file))
@@ -110,13 +122,7 @@ class TrackFileManager(
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN)
                 }
             }
-        val downloadId = downloadManager.enqueue(request)
-
-        downloads[downloadId] = { resultFile ->
-            if (resultFile == null) {
-                onDownloadCanceled()
-            } else onTrackDownloaded(resultFile)
-        }
+        return request
     }
 
     /**
@@ -153,7 +159,7 @@ class TrackFileManager(
         return tracks.all { (trackId, _) -> getTrackFile(trackId).exists() }
     }
 
-    private fun getTrackFile(trackId: String): File {
+    fun getTrackFile(trackId: String): File {
         return File(meditationsDir, "$trackId.mp3")
     }
 

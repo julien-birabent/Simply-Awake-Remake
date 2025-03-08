@@ -1,6 +1,6 @@
 package com.simplyawakeremake.usecases
 
-import com.simplyawakeremake.data.track.TrackFileManager
+import com.simplyawakeremake.data.download.track.TrackFileManager
 
 class CheckTrackDownloadStatusUseCase(private val trackFileManager: TrackFileManager) {
     fun execute(trackId: String): Boolean {

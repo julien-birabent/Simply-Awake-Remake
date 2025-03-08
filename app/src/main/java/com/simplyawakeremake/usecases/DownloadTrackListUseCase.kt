@@ -1,7 +1,7 @@
 package com.simplyawakeremake.usecases
 
 import com.simplyawakeremake.ui.model.UiTrack
-import com.simplyawakeremake.data.track.TrackFileManager
+import com.simplyawakeremake.data.download.track.TrackFileManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -49,8 +49,8 @@ class DownloadTrackListUseCase(private val trackFileManager: TrackFileManager) {
     }.flowOn(Dispatchers.IO)
 
     fun cancelDownloads() {
-        trackFileManager.cancelAllDownloads()
         currentJob?.cancel()
+        trackFileManager.cancelAllDownloads()
     }
 }
 

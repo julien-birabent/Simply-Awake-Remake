@@ -17,7 +17,7 @@ import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
 import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.TrackFileManager
+import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.ui.screens.ControlButtons

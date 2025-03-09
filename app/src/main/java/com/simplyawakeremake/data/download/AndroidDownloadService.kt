@@ -58,14 +58,6 @@ class AndroidDownloadService(context: Context) : DownloadService {
         }
     }
 
-    override fun isDownloadComplete(id: Long): Boolean {
-        return downloadManager.isDownloadComplete(id)
-    }
-
-    override fun getDownloadedFile(id: Long): File? {
-        return downloadManager.getDownloadedFile(id)
-    }
-
     private fun handleDownloadCompletion(intent: Intent) {
         val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
         if (id == -1L) return

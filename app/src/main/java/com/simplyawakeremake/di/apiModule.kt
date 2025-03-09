@@ -12,8 +12,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 val dataModule = module {
-
-
     single<Gson> {
         GsonBuilder()
             .disableHtmlEscaping()

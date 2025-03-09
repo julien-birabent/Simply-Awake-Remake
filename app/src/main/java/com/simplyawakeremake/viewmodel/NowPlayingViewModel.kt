@@ -18,6 +18,7 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.service.PlaybackService
 import com.simplyawakeremake.ui.model.UiTrack
@@ -38,6 +39,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -49,8 +51,10 @@ import org.koin.core.component.inject
 @UnstableApi
 class NowPlayingViewModel(
     private val app: Application,
-    private val trackRepository: TrackRepositoryInterface
-) : AndroidViewModel(app), KoinComponent {
+    trackRepository: TrackRepositoryInterface,
+    private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase
+) :
+    AndroidViewModel(app), KoinComponent {
 
     private val trackFileManager: TrackFileManager by inject()
 
@@ -62,6 +66,7 @@ class NowPlayingViewModel(
     private val trackFlow: Flow<ResultState<UiTrack>> = trackIdFlow
         .filterNotNull()
         .flatMapLatest { id -> trackRepository.getTrackBy(id) }
+        .onEach { result -> if (result is ResultState.Success) { addToHistory(result.data) } }
         .flowOn(Dispatchers.IO)
 
     private val tickerFlow = flow {
@@ -87,7 +92,8 @@ class NowPlayingViewModel(
     }
         .catch { error ->
             Log.e(NowPlayingViewModel::class.simpleName, error.message.orEmpty())
-            emit(PlayerUIState.Error) }
+            emit(PlayerUIState.Error)
+        }
         .stateIn(viewModelScope, SharingStarted.Lazily, PlayerUIState.Loading)
 
 
@@ -137,6 +143,10 @@ class NowPlayingViewModel(
 
     fun setupTrackId(id: String) {
         trackIdFlow.value = id
+    }
+
+    private fun addToHistory(uiTrack: UiTrack) = viewModelScope.launch(Dispatchers.IO) {
+        addTrackToRecentHistoryUseCase.execute(uiTrack)
     }
 
     fun onControlPressed(controlPressed: ControlButtons) {

@@ -8,6 +8,6 @@ data class UiTrack(
     val duration: String
 ) {
     val ordinal: Int = name.substring(0, 3).removeRange(0, 1).toInt()
-    val displayName: String = name.replace(Regex("\\d"),"").trim()
+    val displayName: String = name.replace(Regex("\\d"), "").trim()
 }
 

@@ -62,6 +62,7 @@ dependencies {
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.navigation.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material.icons.extended)
     implementation (libs.google.accompanist.systemuicontroller)
 
     implementation(libs.androidx.core.ktx)
@@ -71,6 +72,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation (libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
+    implementation (libs.accompanist.permissions)
 
     // Media 3
     implementation(libs.androidx.media3.exoplayer)
@@ -80,6 +82,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.junit)
@@ -97,5 +100,6 @@ dependencies {
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.glide)
+    implementation(kotlin("test"))
 
 }

@@ -2,7 +2,7 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import android.content.ComponentName
-import android.net.Uri
+import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -15,13 +15,13 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
 import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
-import com.simplyawakeremake.UiTrack
 import com.simplyawakeremake.data.common.ResultState
+import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
-import com.simplyawakeremake.data.track.TrackUriProvider
 import com.simplyawakeremake.extensions.toByteArray
-import com.simplyawakeremake.screens.ControlButtons
 import com.simplyawakeremake.service.PlaybackService
+import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.ui.screens.ControlButtons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -51,7 +52,7 @@ class NowPlayingViewModel(
     private val trackRepository: TrackRepositoryInterface
 ) : AndroidViewModel(app), KoinComponent {
 
-    private val trackUriProvider: TrackUriProvider by inject()
+    private val trackFileManager: TrackFileManager by inject()
 
     private lateinit var player: Player
     private val trackIdFlow = MutableStateFlow<String?>(null)
@@ -84,7 +85,9 @@ class NowPlayingViewModel(
             is ResultState.Error -> PlayerUIState.Error
         }
     }
-        .catch { emit(PlayerUIState.Error) }
+        .catch { error ->
+            Log.e(NowPlayingViewModel::class.simpleName, error.message.orEmpty())
+            emit(PlayerUIState.Error) }
         .stateIn(viewModelScope, SharingStarted.Lazily, PlayerUIState.Loading)
 
 
@@ -144,7 +147,9 @@ class NowPlayingViewModel(
         }
     }
 
-    private fun createMediaItem(track: UiTrack): MediaItem {
+    private suspend fun createMediaItem(track: UiTrack): MediaItem = withContext(Dispatchers.IO) {
+        val trackUri = trackFileManager.getTrackUri(track.id)
+
         val mediaMetaData = androidx.media3.common.MediaMetadata.Builder()
             .setTitle(track.displayName)
             .setArtist("Simply Awake : " + track.tagString)
@@ -154,8 +159,7 @@ class NowPlayingViewModel(
             )
             .build()
 
-        val trackUri = Uri.parse(trackUriProvider.trackUri(track.id))
-        return MediaItem.Builder()
+        return@withContext MediaItem.Builder()
             .setUri(trackUri)
             .setMediaId(track.id)
             .setMediaMetadata(mediaMetaData)

@@ -1,5 +1,7 @@
 package com.simplyawakeremake
 
+import com.simplyawakeremake.ui.model.UiTrack
+
 object UiTrackTestData {
 
     // List of tracks already sorted by ordinal

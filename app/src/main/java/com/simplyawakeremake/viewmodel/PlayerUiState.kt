@@ -1,7 +1,7 @@
 package com.simplyawakeremake.viewmodel
 
 import androidx.media3.common.Player
-import com.simplyawakeremake.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 
 sealed interface PlayerUIState {
     data class ReadyToPlay(val track: UiTrack, val player: Player) : PlayerUIState

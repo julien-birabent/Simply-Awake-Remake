@@ -2,14 +2,17 @@ package com.simplyawakeremake.di
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.simplyawakeremake.BuildConfig
 import com.simplyawakeremake.data.track.TrackService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 val dataModule = module {
+
 
     single<Gson> {
         GsonBuilder()
@@ -30,6 +33,15 @@ val dataModule = module {
             .build()
 
     }
+
+    single<Retrofit> {
+        Retrofit.Builder()
+            .client(get())
+            .baseUrl(BuildConfig.baseServerUrl)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
 
     fun <T> Retrofit.getService(serviceClass : Class<T>) : T = create(serviceClass)
 

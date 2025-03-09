@@ -21,6 +21,7 @@ class TrackFileManager(
 
     fun cancelAllDownloads() {
         session?.cancel()
+        session = null
         downloadService.cancelDownloads()
     }
 

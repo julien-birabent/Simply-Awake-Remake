@@ -1,8 +1,8 @@
 package com.simplyawakeremake.data.download.track
 
 import android.net.Uri
-import android.util.Log
 import com.simplyawakeremake.data.download.DownloadService
+import com.simplyawakeremake.data.download.DownloadSession
 import com.simplyawakeremake.data.download.FileStorage
 import java.io.File
 
@@ -16,12 +16,11 @@ class TrackFileManager(
         fileStorage.ensureDirectoriesExist()
     }
 
-    private var pendingDownloads: MutableList<Pair<String, String>> = mutableListOf()
-    private val downloadedFiles = mutableListOf<File>()
+    private var session: DownloadSession? = null
     private val batchSize = 4
 
     fun cancelAllDownloads() {
-        pendingDownloads.clear()
+        session?.cancel()
         downloadService.cancelDownloads()
     }
 
@@ -37,51 +36,37 @@ class TrackFileManager(
         onEachTrackDownloaded: (Int) -> Unit,
         onComplete: (List<File>) -> Unit
     ) {
+        if (session != null) throw IllegalStateException("A download session is already in progress. Call cancelAllDownloads() first.")
+
         if (areAllTracksDownloaded(tracks)) {
             onComplete(tracks.map { (id, _) -> fileStorage.getTrackFile(id) })
             return
         }
 
-        pendingDownloads = tracks.toMutableList()
-        downloadedFiles.clear()
-        startNextBatch(onDownloadCanceled, onEachTrackDownloaded, onComplete)
+        session = DownloadSession(
+            pendingDownloads = tracks.toMutableList(),
+            onDownloadCanceled = onDownloadCanceled,
+            onEachDownloaded = onEachTrackDownloaded,
+            onComplete = onComplete
+        )
+        session?.startNextBatch(batchSize, ::enqueueSingleDownload)
     }
 
-    private fun startNextBatch(
-        onDownloadCanceled: () -> Unit,
-        onEachTrackDownloaded: (Int) -> Unit,
-        onComplete: (List<File>) -> Unit
+    private fun enqueueSingleDownload(
+        session: DownloadSession,
+        track: Pair<String, String>
     ) {
-        if (pendingDownloads.isEmpty()) {
-            onComplete(downloadedFiles)
-            return
-        }
+        val (trackId, trackTitle) = track
+        val filePath = fileStorage.getTrackFile(trackId)
 
-        val batch = pendingDownloads.take(batchSize)
-        var batchCount = batch.size
-        pendingDownloads = pendingDownloads.drop(batchSize).toMutableList()
-
-        batch.forEach { (trackId, trackTitle) ->
-            val filePath = fileStorage.getTrackFile(trackId)
-            downloadService.enqueueDownload(
-                url = trackUriProvider(trackId),
-                destination = filePath,
-                title = trackTitle,
-                onCancel = {
-                    pendingDownloads.clear()
-                    onDownloadCanceled()
-                }
-            ) { resultFile ->
-                batchCount -= 1
-                resultFile?.let {
-                    downloadedFiles.add(it)
-                    onEachTrackDownloaded((downloadedFiles.size * 100) / (downloadedFiles.size + pendingDownloads.size))
-                }
-                if (pendingDownloads.isEmpty()) {
-                    onComplete(downloadedFiles)
-                } else if(batchCount == 0){
-                    startNextBatch(onDownloadCanceled, onEachTrackDownloaded, onComplete)
-                }
+        downloadService.enqueueDownload(
+            url = trackUriProvider(trackId),
+            destination = filePath,
+            title = trackTitle,
+            onCancel = session::cancel
+        ) { resultFile ->
+            session.handleDownloadResult(resultFile) {
+                session.startNextBatch(batchSize, ::enqueueSingleDownload)
             }
         }
     }
@@ -91,4 +76,3 @@ class TrackFileManager(
 
     fun getTrackFile(trackId: String): File = fileStorage.getTrackFile(trackId)
 }
-

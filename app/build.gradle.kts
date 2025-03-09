@@ -82,6 +82,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.junit)
@@ -99,5 +100,6 @@ dependencies {
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
     implementation (libs.glide)
+    implementation(kotlin("test"))
 
 }

@@ -50,11 +50,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
-import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState

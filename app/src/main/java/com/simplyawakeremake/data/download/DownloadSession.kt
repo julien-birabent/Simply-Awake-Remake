@@ -3,7 +3,7 @@ package com.simplyawakeremake.data.download
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class DownloadSession(
+class DownloadSession(
     var pendingDownloads: MutableList<Pair<String, String>>,
     private val onDownloadCanceled: () -> Unit,
     private val onEachDownloaded: (Int) -> Unit,
@@ -26,14 +26,17 @@ internal class DownloadSession(
             return
         }
 
-        val batch = pendingDownloads.take(batchSize)
-        pendingDownloads = pendingDownloads.drop(batchSize).toMutableList()
+        val batchSizeAdjusted = minimumBatchSizeNeeded(batchSize)
+        val batch = pendingDownloads.take(batchSizeAdjusted)
+
+        pendingDownloads = pendingDownloads.drop(batch.size).toMutableList()
         batchCounter = AtomicInteger(batch.size)
 
-        batch.forEach { track ->
-            enqueue(this, track)
-        }
+        batch.forEach { track -> enqueue(this, track) }
     }
+
+    private fun minimumBatchSizeNeeded(batchSize: Int) =
+        if (batchSize > pendingDownloads.size) pendingDownloads.size else batchSize
 
     fun handleDownloadResult(
         resultFile: File?,
@@ -44,11 +47,8 @@ internal class DownloadSession(
             onEachDownloaded(calculateProgress())
         }
 
-        if (pendingDownloads.isEmpty()) {
-            onComplete(downloadedFiles)
-        } else if (batchCounter.decrementAndGet() == 0) {
-            onBatchComplete()
-        }
+        if (batchCounter.decrementAndGet() <= 0) { onBatchComplete() }
+
     }
 
     private fun calculateProgress(): Int {

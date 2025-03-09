@@ -1,9 +1,9 @@
 package com.simplyawakeremake.data.track
 
-import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.data.common.DataRepository
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.data.common.ResultState
+import com.simplyawakeremake.ui.model.UiTrack
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.koin.core.component.KoinComponent

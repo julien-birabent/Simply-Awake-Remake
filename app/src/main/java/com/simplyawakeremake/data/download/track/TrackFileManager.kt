@@ -24,6 +24,8 @@ class TrackFileManager(
         downloadService.cancelDownloads()
     }
 
+    fun getTrackFile(trackId: String): File = fileStorage.getTrackFile(trackId)
+
     fun getTrackUri(trackId: String): Uri {
         val localFile = fileStorage.getTrackFile(trackId)
         return if (localFile.exists()) Uri.fromFile(localFile)
@@ -73,6 +75,4 @@ class TrackFileManager(
 
     private fun areAllTracksDownloaded(tracks: List<Pair<String, String>>) =
         tracks.all { (id, _) -> fileStorage.getTrackFile(id).exists() }
-
-    fun getTrackFile(trackId: String): File = fileStorage.getTrackFile(trackId)
 }

@@ -17,14 +17,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -33,7 +28,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
-import com.simplyawakeremake.extensions.isOnline
 
 @Composable
 fun LoadingIndicator() {
@@ -62,14 +56,13 @@ fun CommonErrorView(throwable: Throwable) {
 
 @Composable
 fun <T> ItemList(
+    modifier: Modifier = Modifier,
     items: List<T>,
     keySelector: ((index: Int) -> Any) = {},
     onclick: (T) -> Unit,
     divider : @Composable () -> Unit,
     itemContent: @Composable (T) -> Unit
 ) {
-    var showNoInternetDialog by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
     ) {
@@ -78,23 +71,11 @@ fun <T> ItemList(
             key = { keySelector(it) },
             itemContent = { index ->
                 val item = items[index]
-                Surface(Modifier.wrapContentSize().clickable {
-                    showNoInternetDialog = !context.isOnline()
-                    if (!showNoInternetDialog) {
-                        onclick(item)
-                    }
-                }) {
+                Surface(Modifier.wrapContentSize().clickable { onclick(item) }) {
                     itemContent(item)
                 }
                 if (index < items.lastIndex) divider()
             }
-        )
-    }
-    if (showNoInternetDialog) {
-        QuickDismissAlertDialog(
-            onDismissRequest = { showNoInternetDialog = false },
-            dialogTitle = "Whoops",
-            dialogText = "The content of the meditation cannot be loaded because you're device seems to be offline."
         )
     }
 }

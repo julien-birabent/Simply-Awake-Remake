@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
 import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.usecases.DownloadTrackListUseCase
@@ -26,7 +27,8 @@ import org.koin.core.component.KoinComponent
 class TrackListViewModel(
     private val trackRepository: TrackRepositoryInterface,
     private val downloadTrackListUseCase: DownloadTrackListUseCase,
-    private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase
+    private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase,
+    private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase
 ) : ViewModel(), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
@@ -84,6 +86,10 @@ class TrackListViewModel(
 
     fun isTrackDownloaded(trackId: String): Boolean {
         return checkTrackDownloadStatusUseCase.execute(trackId)
+    }
+
+    fun addToHistory(uiTrack: UiTrack) = viewModelScope.launch(Dispatchers.IO) {
+        addTrackToRecentHistoryUseCase.execute(uiTrack)
     }
 }
 

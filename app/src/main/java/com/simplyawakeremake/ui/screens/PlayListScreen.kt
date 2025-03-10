@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,10 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
@@ -75,7 +74,7 @@ fun PlayListScreen(
     val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
 
-    SetupToolbar(viewModel, mainViewModel, downloadState)
+    SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
@@ -122,7 +121,8 @@ fun PlayListScreen(
 private fun SetupToolbar(
     viewModel: TrackListViewModel,
     mainViewModel: MainViewModel,
-    downloadState: DownloadProgress
+    downloadState: DownloadProgress,
+    navController : NavController
 ) {
     var showDownloadConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -136,8 +136,10 @@ private fun SetupToolbar(
     val toolbarConfig = ToolbarConfig(
         actions = listOf(
             tracksDownloadAction {
-                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog =
-                    true
+                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog = true
+            },
+            ToolbarAction(Icons.Outlined.History, "Recent History") {
+                navController.navigate(Screen.RECENT_HISTORY.name)
             }
         ),
         showToolbar = true
@@ -237,50 +239,37 @@ fun Playlist(
     navController: NavController,
     viewModel: TrackListViewModel
 ) {
-    val connectionState by connectionState()
-    LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        items(
-            count = tracks.size,
-            key = { tracks[it].id },
-            itemContent = { index ->
-                TrackItem(tracks[index], viewModel, connectionState) { id ->
-                    navController.navigate(Screen.NOW_PLAYING.name + "/${id}")
-                }
-                if (index < tracks.lastIndex)
-                    HorizontalDivider(color = Color.White, thickness = 1.dp)
-            }
-        )
-    }
-}
-
-@Composable
-fun TrackItem(
-    track: UiTrack,
-    viewModel: TrackListViewModel,
-    connectionState: ConnectionState,
-    navigateToTrack: (id: String) -> Unit
-) {
-
     val context = LocalContext.current
     var currentToast by remember { mutableStateOf<Toast?>(null) }
 
     val showToast = {
         currentToast?.cancel()
-        currentToast = Toast.makeText(context, "No internet & track not downloaded!", Toast.LENGTH_LONG)
+        currentToast =
+            Toast.makeText(context, "No internet & track not downloaded!", Toast.LENGTH_LONG)
         currentToast?.show()
     }
+    val connectionState by connectionState()
 
+    ItemList(
+        modifier = modifier,
+        tracks,
+        { index -> tracks[index].id },
+        { track ->
+            if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
+                viewModel.addToHistory(track)
+                navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
+            } else showToast()
+        },
+        divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
+    ) { track -> TrackItem(track = track) }
+}
+
+@Composable
+fun TrackItem(track: UiTrack) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .wrapContentSize(Alignment.Center)
-            .clickable(onClick = {
-                if(viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available){
-                    navigateToTrack(track.id)
-                } else showToast()
-            })
             .padding(12.dp)
     ) {
         Row(

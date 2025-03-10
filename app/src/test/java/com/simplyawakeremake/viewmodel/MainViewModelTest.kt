@@ -10,7 +10,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.any
 
 @ExperimentalCoroutinesApi
 class MainViewModelTest {
@@ -36,7 +35,7 @@ class MainViewModelTest {
     fun `test updateToolbar updates the state correctly`() = runTest {
         // Given
         val actionIcon = mockk<ImageVector>() // Mock an actual Int value if necessary
-        val newAction = ToolbarAction(icon = actionIcon, contentDescription  = "Action", onClick = { })
+        val newAction = ToolbarAction(icon = actionIcon, contentDescription = "Action") { }
         val newConfig = ToolbarConfig(actions = listOf(newAction), showToolbar = false)
 
         // When

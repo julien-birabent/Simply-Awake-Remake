@@ -51,8 +51,7 @@ import org.koin.core.component.inject
 @UnstableApi
 class NowPlayingViewModel(
     private val app: Application,
-    trackRepository: TrackRepositoryInterface,
-    private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase
+    trackRepository: TrackRepositoryInterface
 ) :
     AndroidViewModel(app), KoinComponent {
 
@@ -66,7 +65,6 @@ class NowPlayingViewModel(
     private val trackFlow: Flow<ResultState<UiTrack>> = trackIdFlow
         .filterNotNull()
         .flatMapLatest { id -> trackRepository.getTrackBy(id) }
-        .onEach { result -> if (result is ResultState.Success) { addToHistory(result.data) } }
         .flowOn(Dispatchers.IO)
 
     private val tickerFlow = flow {
@@ -143,10 +141,6 @@ class NowPlayingViewModel(
 
     fun setupTrackId(id: String) {
         trackIdFlow.value = id
-    }
-
-    private fun addToHistory(uiTrack: UiTrack) = viewModelScope.launch(Dispatchers.IO) {
-        addTrackToRecentHistoryUseCase.execute(uiTrack)
     }
 
     fun onControlPressed(controlPressed: ControlButtons) {

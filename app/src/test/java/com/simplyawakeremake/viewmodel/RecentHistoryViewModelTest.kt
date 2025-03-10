@@ -37,7 +37,7 @@ class RecentHistoryViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher) // Use test dispatcher for coroutines
         every { getRecentHistoryUseCase.execute(any()) } returns flowOf(ResultState.Loading(emptyList()))
-        viewModel = RecentHistoryViewModel(getRecentHistoryUseCase)
+        viewModel = RecentHistoryViewModel(getRecentHistoryUseCase, mockk(relaxed = true))
     }
 
     @After
@@ -56,7 +56,7 @@ class RecentHistoryViewModelTest {
         coEvery { getRecentHistoryUseCase.execute(any()) } returns flowOf(ResultState.Success(mockHistory))
 
         // When
-        viewModel = RecentHistoryViewModel(getRecentHistoryUseCase)
+        viewModel = RecentHistoryViewModel(getRecentHistoryUseCase, mockk(relaxed = true))
 
         // Then
         viewModel.uiState.test {
@@ -75,7 +75,7 @@ class RecentHistoryViewModelTest {
         coEvery { getRecentHistoryUseCase.execute(any()) } returns flowOf(ResultState.Error(exception, null))
 
         // When
-        viewModel = RecentHistoryViewModel(getRecentHistoryUseCase)
+        viewModel = RecentHistoryViewModel(getRecentHistoryUseCase, mockk(relaxed = true))
 
         // Then
         viewModel.uiState.test {

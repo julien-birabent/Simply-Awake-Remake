@@ -57,7 +57,8 @@ class TrackListViewModelTest {
         viewModel = TrackListViewModel(
             trackRepository,
             downloadTrackListUseCase,
-            checkTrackDownloadStatusUseCase
+            checkTrackDownloadStatusUseCase,
+            mockk(relaxed = true)
         )
     }
 

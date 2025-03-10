@@ -1,6 +1,6 @@
 package com.simplyawakeremake
 
-import com.simplyawakeremake.data.track.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 
 object UiTrackTestData {
 

@@ -1,4 +1,4 @@
-package com.simplyawakeremake.domain
+package com.simplyawakeremake.usecases
 
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.history.TrackHistoryRepositoryInterface

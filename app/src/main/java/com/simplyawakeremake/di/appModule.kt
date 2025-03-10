@@ -2,11 +2,18 @@ package com.simplyawakeremake.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.simplyawakeremake.BuildConfig
 import com.simplyawakeremake.data.common.DataSaver
+import com.simplyawakeremake.data.download.AndroidDownloadService
+import com.simplyawakeremake.data.download.DownloadService
+import com.simplyawakeremake.data.download.FileStorage
+import com.simplyawakeremake.data.download.track.LocalTrackFileStorage
+import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.history.TrackHistorySaver
 import com.simplyawakeremake.data.history.UiTrackHistory
 import com.simplyawakeremake.data.track.ApiTrack
 import com.simplyawakeremake.data.track.TrackSharedPrefsSaver
+import com.simplyawakeremake.data.track.TrackUriProvider
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -17,4 +24,9 @@ val appModule = module {
     single<SharedPreferences> { androidContext().getSharedPreferences("private_shared_preferences_tracks", Context.MODE_PRIVATE)}
     single<DataSaver<ApiTrack>> (named("tracks")){ TrackSharedPrefsSaver(get()) }
     single<DataSaver<UiTrackHistory>> (named("track_history")){ TrackHistorySaver(get()) }
+    single { TrackUriProvider(BuildConfig.baseServerUrl) }
+
+    single<FileStorage>(named("tracks")) { LocalTrackFileStorage(androidContext()) }
+    single<DownloadService> { AndroidDownloadService(androidContext()) }
+    single<TrackFileManager> { TrackFileManager(get(), get(named("tracks")), get<TrackUriProvider>()::trackUri) }
 }

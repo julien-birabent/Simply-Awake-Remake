@@ -62,8 +62,8 @@ dependencies {
     implementation (libs.koin.androidx.compose)
     implementation (libs.androidx.navigation.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.material.icons.extended)
     implementation (libs.google.accompanist.systemuicontroller)
-    implementation (libs.jetbrains.kotlinx.coroutines.rx3)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.kotlinx.coroutines.android)
@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation (libs.androidx.ui.tooling)
     implementation(libs.androidx.material3)
+    implementation (libs.accompanist.permissions)
 
     // Media 3
     implementation(libs.androidx.media3.exoplayer)
@@ -85,12 +86,12 @@ dependencies {
 
     // Testing
     testImplementation(libs.junit)
+    testImplementation(kotlin("test"))
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
-    testImplementation(libs.rxandroid)
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.turbine)
 
@@ -100,13 +101,10 @@ dependencies {
     implementation(libs.insert.koin.koin.core)
     implementation(platform(libs.koin.bom))
     implementation(libs.logging.interceptor)
-    implementation(libs.androidx.runtime.rxjava3)
-    implementation (libs.rxandroid)
     implementation(libs.koin.android)
     implementation (libs.retrofit)
     implementation (libs.converter.gson)
-    implementation (libs.adapter.rxjava3)
-    implementation(libs.rxjava3.rxkotlin)
     implementation (libs.glide)
+    implementation(kotlin("test"))
 
 }

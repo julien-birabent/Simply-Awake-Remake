@@ -8,12 +8,10 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
 import retrofit2.Retrofit
-import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 val dataModule = module {
-
     single<Gson> {
         GsonBuilder()
             .disableHtmlEscaping()
@@ -35,14 +33,13 @@ val dataModule = module {
     }
 
     single<Retrofit> {
-        val rxAdapter = RxJava3CallAdapterFactory.create()
         Retrofit.Builder()
             .client(get())
             .baseUrl(BuildConfig.baseServerUrl)
-            .addCallAdapterFactory(rxAdapter)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
+
 
     fun <T> Retrofit.getService(serviceClass : Class<T>) : T = create(serviceClass)
 

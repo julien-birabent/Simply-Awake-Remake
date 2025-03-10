@@ -1,7 +1,7 @@
-package com.simplyawakeremake.domain
+package com.simplyawakeremake.usecases
 
 import com.simplyawakeremake.data.history.TrackHistoryRepositoryInterface
-import com.simplyawakeremake.data.track.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 
 class AddTrackToRecentHistoryUseCase(private val historyRepository: TrackHistoryRepositoryInterface) {
 

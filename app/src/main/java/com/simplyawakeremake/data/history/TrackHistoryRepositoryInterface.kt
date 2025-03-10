@@ -1,7 +1,7 @@
 package com.simplyawakeremake.data.history
 
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.UiTrack
+import com.simplyawakeremake.ui.model.UiTrack
 import kotlinx.coroutines.flow.Flow
 
 interface TrackHistoryRepositoryInterface {

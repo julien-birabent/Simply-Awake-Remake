@@ -4,7 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.history.UiTrackHistory
-import com.simplyawakeremake.domain.GetRecentHistoryUseCase
+import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
+import com.simplyawakeremake.usecases.GetRecentHistoryUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +16,8 @@ import org.koin.core.component.KoinComponent
 private const val MAX_HISTORY_LIMIT = 20
 
 class RecentHistoryViewModel(
-    private val getRecentHistoryUseCase: GetRecentHistoryUseCase
+    private val getRecentHistoryUseCase: GetRecentHistoryUseCase,
+    private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase
 ) : ViewModel(), KoinComponent {
 
     private var historyLimit: Int = MAX_HISTORY_LIMIT
@@ -32,6 +34,10 @@ class RecentHistoryViewModel(
                     is ResultState.Loading -> RecentHistoryUIState.Loading
                 }
             }
+
+    fun isTrackDownloaded(trackId: String): Boolean {
+        return checkTrackDownloadStatusUseCase.execute(trackId)
+    }
 
     sealed interface RecentHistoryUIState {
         data object Loading : RecentHistoryUIState

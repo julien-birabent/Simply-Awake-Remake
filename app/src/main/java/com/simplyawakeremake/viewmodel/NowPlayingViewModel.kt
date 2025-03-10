@@ -2,13 +2,11 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import android.content.ComponentName
-import android.net.Uri
-import androidx.annotation.OptIn
+import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MediaMetadata.PICTURE_TYPE_MEDIA
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -18,105 +16,123 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.common.ResultState
+import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.TrackRepositoryInterface
-import com.simplyawakeremake.data.track.TrackUriProvider
-import com.simplyawakeremake.data.track.UiTrack
-import com.simplyawakeremake.domain.AddTrackToRecentHistoryUseCase
+import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.extensions.toByteArray
-import com.simplyawakeremake.screens.ControlButtons
 import com.simplyawakeremake.service.PlaybackService
-import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
-import io.reactivex.rxjava3.core.Flowable
-import io.reactivex.rxjava3.processors.BehaviorProcessor
-import io.reactivex.rxjava3.schedulers.Schedulers
+import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.ui.screens.ControlButtons
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.util.concurrent.TimeUnit
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @UnstableApi
 class NowPlayingViewModel(
     private val app: Application,
-    trackRepository: TrackRepositoryInterface,
-    private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase
+    trackRepository: TrackRepositoryInterface
 ) :
     AndroidViewModel(app), KoinComponent {
 
-    private val trackUriProvider: TrackUriProvider by inject()
+    private val trackFileManager: TrackFileManager by inject()
 
     private lateinit var player: Player
-    private val trackIdProcessor: BehaviorProcessor<String> = BehaviorProcessor.create()
-    private val playerProcessor: BehaviorProcessor<Player> = BehaviorProcessor.create<Player>()
+    private val trackIdFlow = MutableStateFlow<String?>(null)
+    private val playerFlow = MutableStateFlow<Player?>(null)
     private var playerListener: PlayerSubjectWrapper? = null
 
-    private val getTrackRequest =
-        trackIdProcessor.flatMap { trackRepository.getTrackBy(it) }.doOnNext { result ->
-            if(result is ResultState.Success) {
-                addToHistory(result.data)
+    private val trackFlow: Flow<ResultState<UiTrack>> = trackIdFlow
+        .filterNotNull()
+        .flatMapLatest { id -> trackRepository.getTrackBy(id) }
+        .flowOn(Dispatchers.IO)
+
+    private val tickerFlow = flow {
+        while (true) {
+            emit(Unit)
+            delay(1000L)
+        }
+    }
+
+    val uiState: StateFlow<PlayerUIState> = combine(
+        playerFlow.filterNotNull(), trackFlow
+    ) { player, resultState ->
+        when (resultState) {
+            is ResultState.Loading -> PlayerUIState.Loading
+            is ResultState.Success -> {
+                player.setMediaItem(createMediaItem(resultState.data))
+                player.prepare()
+                PlayerUIState.ReadyToPlay(resultState.data, player)
             }
-        }.share()
 
-    val uiState: Flowable<PlayerUIState> =
-        Flowable.combineLatest(playerProcessor.share(), getTrackRequest) { player, requestResults ->
-            player to requestResults
-        }.map { (player, resultState) ->
-            when (resultState) {
-                is ResultState.Loading -> {
-                    PlayerUIState.Loading
-                }
+            is ResultState.Error -> PlayerUIState.Error
+        }
+    }
+        .catch { error ->
+            Log.e(NowPlayingViewModel::class.simpleName, error.message.orEmpty())
+            emit(PlayerUIState.Error)
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, PlayerUIState.Loading)
 
-                is ResultState.Success -> {
-                    player.setMediaItem(createMediaItem(resultState.data))
-                    player.prepare()
-                    PlayerUIState.ReadyToPlay(resultState.data, player)
-                }
 
-                is ResultState.Error -> {
-                    PlayerUIState.Error
-                }
-            }
-        }.onErrorReturnItem(PlayerUIState.Error).share()
+    private val onPlayerUpdate: Flow<Player> = playerFlow
+        .filterNotNull()
+        .flatMapLatest { playerListener!!.playerUpdates }
+        .shareIn(viewModelScope, SharingStarted.Lazily, 0)
 
-    private val onPlayerUpdate = playerProcessor
-        .flatMap { playerListener!!.playerUpdates() }
-        .onErrorComplete()
-        .share()
-
-    val totalDurationInMs = onPlayerUpdate
+    val totalDurationInMs: StateFlow<Long> = onPlayerUpdate
         .filter { it.playbackState == Player.STATE_READY }
         .map { it.duration }
-        .onErrorReturnItem(0L)
         .distinctUntilChanged()
+        .catch { emit(0L) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, 0L)
 
-    val isPlaying = onPlayerUpdate.map { it.isPlaying }
-        .onErrorReturnItem(false)
+    val isPlaying: StateFlow<Boolean> = onPlayerUpdate
+        .map { it.isPlaying }
         .distinctUntilChanged()
+        .catch { emit(false) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
-    private val secondsCounter =
-        Flowable.interval(1, TimeUnit.SECONDS, AndroidSchedulers.mainThread())
-
-    // Emit the current position of the playback each seconds in the format of a Long in Milliseconds
-    // As long as the player is currently playing
-    val playerPositionUpdates =
-        Flowable.combineLatest(secondsCounter, onPlayerUpdate) { _, player ->
-            player
-        }
-            .filter { it.playbackState == Player.STATE_READY }
-            .map { it.currentPosition }
-            .onErrorReturnItem(0L)
-            .subscribeOn(Schedulers.computation())
+    val playerPositionUpdates: StateFlow<Long> = combine(tickerFlow, onPlayerUpdate) { _, player ->
+        player
+    }.filter { it.playbackState == Player.STATE_READY }
+        .map { it.currentPosition }
+        .catch { emit(0L) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, 0L)
 
     init {
         val sessionToken = SessionToken(app, ComponentName(app, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(app, sessionToken).buildAsync()
+
         controllerFuture.addListener(
             {
-                if (!::player.isInitialized) {
-                    player = controllerFuture.get()
-                    playerListener = PlayerSubjectWrapper(player)
-                    player.addListener(playerListener!!)
-                    playerProcessor.onNext(player)
+                viewModelScope.launch {
+                    if (!::player.isInitialized) {
+                        player = controllerFuture.get()
+                        playerListener = PlayerSubjectWrapper(player)
+                        player.addListener(playerListener!!)
+                        playerFlow.emit(player)
+                    }
                 }
             },
             MoreExecutors.directExecutor()
@@ -124,11 +140,7 @@ class NowPlayingViewModel(
     }
 
     fun setupTrackId(id: String) {
-        trackIdProcessor.onNext(id)
-    }
-
-    private fun addToHistory(uiTrack: UiTrack) = viewModelScope.launch(Dispatchers.IO) {
-        addTrackToRecentHistoryUseCase.execute(uiTrack)
+        trackIdFlow.value = id
     }
 
     fun onControlPressed(controlPressed: ControlButtons) {
@@ -139,9 +151,10 @@ class NowPlayingViewModel(
         }
     }
 
-    @OptIn(UnstableApi::class)
-    private fun createMediaItem(track: UiTrack): MediaItem {
-        val mediaMetaData = MediaMetadata.Builder()
+    private suspend fun createMediaItem(track: UiTrack): MediaItem = withContext(Dispatchers.IO) {
+        val trackUri = trackFileManager.getTrackUri(track.id)
+
+        val mediaMetaData = androidx.media3.common.MediaMetadata.Builder()
             .setTitle(track.displayName)
             .setArtist("Simply Awake : " + track.tagString)
             .setArtworkData(
@@ -150,8 +163,7 @@ class NowPlayingViewModel(
             )
             .build()
 
-        val trackUri = Uri.parse(trackUriProvider.trackUri(track.id))
-        return MediaItem.Builder()
+        return@withContext MediaItem.Builder()
             .setUri(trackUri)
             .setMediaId(track.id)
             .setMediaMetadata(mediaMetaData)

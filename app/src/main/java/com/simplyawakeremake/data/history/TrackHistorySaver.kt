@@ -3,7 +3,6 @@ package com.simplyawakeremake.data.history
 import android.content.SharedPreferences
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.extensions.dataCollection
-import io.reactivex.rxjava3.core.Single
 
 class TrackHistorySaver(sharedPreferences: SharedPreferences) : DataSaver<UiTrackHistory> {
 
@@ -13,8 +12,8 @@ class TrackHistorySaver(sharedPreferences: SharedPreferences) : DataSaver<UiTrac
         tracks = objects
     }
 
-    override fun loadAll(): Single<List<UiTrackHistory>> {
-        return Single.just(tracks)
+    override suspend fun loadAll(): List<UiTrackHistory> {
+        return tracks
     }
 
     override fun select(id: String): UiTrackHistory? {

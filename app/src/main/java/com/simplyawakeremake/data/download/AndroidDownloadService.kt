@@ -69,7 +69,6 @@ class AndroidDownloadService(context: Context) : DownloadService {
             null
         }.also {
             downloads[id]?.invoke(it)
-            downloadManager.remove(id)
         }
     }
 }

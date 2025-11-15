@@ -13,8 +13,8 @@ android {
         applicationId = "org.marklackey.android.awake"
         minSdk = 24
         targetSdk = 34
-        versionCode = 8
-        versionName = "2.1.0"
+        versionCode = 10
+        versionName = "10.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

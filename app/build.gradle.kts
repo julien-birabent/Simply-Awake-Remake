@@ -1,16 +1,13 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
+    alias(libs.plugins.kotlinCompose)
+    alias(libs.plugins.secretsGradle)
 }
 
 android {
     namespace = "com.simplyawakeremake"
     compileSdk = 34
-
-    buildFeatures {
-        buildConfig = true
-    }
 
     defaultConfig {
         applicationId = "org.marklackey.android.awake"
@@ -25,6 +22,15 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/julbi/upload-key.jks")
+            storePassword = "Android01"
+            keyAlias = "upload"
+            keyPassword = "Android01"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -32,8 +38,15 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            signingConfig = signingConfigs.getByName("release")
+        }
+
+        debug {
+
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -41,12 +54,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
     buildFeatures {
+        buildConfig = true
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -55,56 +68,58 @@ android {
 }
 
 dependencies {
-    // Android
+    // --- Compose / Android ---
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
-    implementation (libs.koin.androidx.compose)
-    implementation (libs.androidx.navigation.compose)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.material.icons.extended)
-    implementation (libs.google.accompanist.systemuicontroller)
-    implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.kotlinx.coroutines.android)
-
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.navigation.compose)
+
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation (libs.androidx.ui.tooling)
-    implementation(libs.androidx.material3)
-    implementation (libs.accompanist.permissions)
+    implementation(libs.androidx.ui.tooling)
 
-    // Media 3
+    implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.google.accompanist.systemuicontroller)
+    implementation(libs.accompanist.permissions)
+
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // --- Media3 ---
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
 
-    // Testing
+    // --- DI / Koin ---
+    implementation(platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+
+    // --- Réseau / Images ---
+    implementation(libs.logging.interceptor)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.glide)
+
+    // --- Tests unitaires ---
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.turbine)
 
-
-    // External libraries
-    implementation(libs.koin.core)
-    implementation(libs.insert.koin.koin.core)
-    implementation(platform(libs.koin.bom))
-    implementation(libs.logging.interceptor)
-    implementation(libs.koin.android)
-    implementation (libs.retrofit)
-    implementation (libs.converter.gson)
-    implementation (libs.glide)
-    implementation(kotlin("test"))
-
+    // --- Tests instrumentés ---
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,12 +38,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.ToolbarConfig
@@ -50,7 +57,6 @@ import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.PlayerUIState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
-
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -75,47 +81,80 @@ fun NowPlayingScreen(
     val currentPositionState by viewModel.playerPositionUpdates.collectAsState(0L)
     val uiState by viewModel.uiState.collectAsState(initial = PlayerUIState.Loading)
 
-    when (uiState) {
-        PlayerUIState.Error -> {
-            val error = (uiState as PlayerListUIState.Error).throwable
-            CommonErrorView(throwable = error)
-        }
-
-        PlayerUIState.Loading -> {
-            LoadingIndicator()
-        }
-
-        is PlayerUIState.ReadyToPlay -> {
-            val track = (uiState as PlayerUIState.ReadyToPlay).track
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Black)
-                    .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.SpaceEvenly,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.enzo),
-                    contentDescription = "Description of the image",
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .weight(0.5f, false),
-                    contentScale = ContentScale.Fit
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = Color.White
                 )
-                TrackInformationSection(track.displayName, track.tagString)
-                Spacer(modifier = Modifier.size(12.dp))
-                PlayerControlsView(
-                    (uiState as PlayerUIState.ReadyToPlay).player,
-                    totalDurationState,
-                    currentPositionState,
-                    isPlayingState
-                ) { controlButtons -> viewModel.onControlPressed(controlButtons) }
-                Spacer(modifier = Modifier.size(12.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
+            when (uiState) {
+                PlayerUIState.Error -> {
+                    val error = (uiState as PlayerListUIState.Error).throwable
+                    CommonErrorView(throwable = error)
+                }
+
+                PlayerUIState.Loading -> {
+                    LoadingIndicator()
+                }
+
+                is PlayerUIState.ReadyToPlay -> {
+                    val readyState = uiState as PlayerUIState.ReadyToPlay
+                    val track = readyState.track
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.enzo),
+                            contentDescription = "Track artwork",
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .weight(0.5f, fill = false),
+                            contentScale = ContentScale.Fit
+                        )
+                        TrackInformationSection(track.displayName, track.tagString)
+                        Spacer(modifier = Modifier.size(12.dp))
+                        PlayerControlsView(
+                            exoPlayer = readyState.player,
+                            totalDuration = totalDurationState,
+                            currentPosition = currentPositionState,
+                            isPlaying = isPlayingState
+                        ) { controlButtons ->
+                            viewModel.onControlPressed(controlButtons)
+                        }
+                        Spacer(modifier = Modifier.size(12.dp))
+                    }
+                }
             }
         }
     }
-
 }
 
 @Composable
@@ -126,29 +165,27 @@ fun PlayerSlider(player: Player, duration: Long) {
     val isInteracting by remember { derivedStateOf { isPressed || isDragged } }
     var sliderPosition by remember { mutableFloatStateOf(0f) }
 
-    // Coroutine to update the slider position
     LaunchedEffect(player) {
         while (true) {
-            // Check if the player is ready and playing
             if (player.duration > 0 && !isInteracting) {
                 val currentPosition = player.currentPosition.toFloat()
-                sliderPosition = currentPosition.div(player.duration)
-                    .times(100f) // Normalize the position between 0 and 100
+                sliderPosition = currentPosition
+                    .div(player.duration)
+                    .times(100f)
             }
-            delay(1000L) // Update every second
+            delay(1000L)
         }
     }
+
     Column {
-        // Slider to reflect and control playback position
         Slider(
             value = sliderPosition,
             onValueChange = { newSliderPosition -> sliderPosition = newSliderPosition },
             onValueChangeFinished = {
-                // When the user finishes sliding, seek to the new position in the ExoPlayer
-                val newPosition = (sliderPosition / 100) * duration
+                val newPosition = (sliderPosition / 100f) * duration
                 player.seekTo(newPosition.toLong())
             },
-            valueRange = 0f..100f, // Slider range is normalized from 0 to 100,
+            valueRange = 0f..100f,
             interactionSource = interactionSource,
             modifier = Modifier.fillMaxWidth()
         )
@@ -173,16 +210,6 @@ fun TrackInformationSection(trackName: String, tags: String) {
     }
 }
 
-/**
- * Composable function to display the player controls.
- * This composable displays controls for managing audio playback, including a slider for track progress,
- * buttons for rewinding, playing/pausing, and skipping tracks, and current track information.
- * @param totalDuration The total duration of the current track.
- * @param currentPosition The current position within the track.
- * @param isPlaying Whether the track is currently playing or paused.
- * @param navigateTrack Function to navigate to the next or previous track.
- * @param seekPosition Function to seek to a specific position within the track.
- */
 @Composable
 fun PlayerControlsView(
     exoPlayer: Player,
@@ -196,9 +223,8 @@ fun PlayerControlsView(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        PlayerSlider(player = exoPlayer, totalDuration)
+        PlayerSlider(player = exoPlayer, duration = totalDuration)
 
-        // Display current position and total duration
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -208,14 +234,11 @@ fun PlayerControlsView(
             Text(text = totalDuration.formatToMinuteAndSeconds(), color = Color.White)
         }
 
-        // Row for control buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // Play/pause button
             IconButton(
                 modifier = Modifier
                     .size(64.dp)

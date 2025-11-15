@@ -22,6 +22,10 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
+      - name: Create local.properties for CI
+        run: |
+          echo "baseServerUrl=${{ secrets.BASE_SERVER_URL }}" > local.properties
+
       - name: Run unit tests
         run: ./gradlew test
 

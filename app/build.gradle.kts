@@ -24,10 +24,26 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("C:/Users/julbi/upload-key.jks")
-            storePassword = "Android01"
-            keyAlias = "upload"
-            keyPassword = "Android01"
+            // Try Gradle properties first, then env vars
+            val keystorePath: String? =
+                (project.findProperty("RELEASE_STORE_FILE") as String?) ?: System.getenv("RELEASE_STORE_FILE")
+            val keystorePassword: String? =
+                (project.findProperty("RELEASE_STORE_PASSWORD") as String?) ?: System.getenv("RELEASE_STORE_PASSWORD")
+            val keyAliasProp: String? =
+                (project.findProperty("RELEASE_KEY_ALIAS") as String?) ?: System.getenv("RELEASE_KEY_ALIAS")
+            val keyPasswordProp: String? =
+                (project.findProperty("RELEASE_KEY_PASSWORD") as String?) ?: System.getenv("RELEASE_KEY_PASSWORD")
+
+            // Only configure signing if everything is present
+            if (keystorePath != null && keystorePassword != null && keyAliasProp != null && keyPasswordProp != null) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp
+            } else {
+                // Optional: log a warning – release will be unsigned in this env
+                println("⚠️ Release signing not fully configured: missing keystore properties.")
+            }
         }
     }
 

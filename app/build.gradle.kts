@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.simplyawakeremake"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "org.marklackey.android.awake"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 10
         versionName = "10.0.0"
 

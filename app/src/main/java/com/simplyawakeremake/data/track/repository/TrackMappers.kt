@@ -1,8 +1,9 @@
 package com.simplyawakeremake.data.track.repository
 
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
-import com.simplyawakeremake.data.track.Track
+import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
 
 fun TrackDto.toEntity(): TrackEntity = TrackEntity(
@@ -17,18 +18,27 @@ fun TrackDto.toEntity(): TrackEntity = TrackEntity(
     duration = duration,
 )
 
-fun TrackEntity.toUiTrack(): Track = Track(
+fun TrackEntity.toTrack(): Track = Track(
     id = id,
     name = name,
     lengthInSeconds = lengthInSeconds,
     tagString = tagString,
     duration = duration,
+    season = season,
+    year = year
 )
 
-fun TrackDto.toUiTrack(): Track = Track(
-    id = id,
-    name = name,
-    lengthInSeconds = lengthInSeconds,
-    tagString = tagString,
-    duration = duration
-)
+
+fun TrackEntity.toTrack(user: UserTrackEntity?): Track =
+    Track(
+        id = id,
+        name = name,
+        lengthInSeconds = lengthInSeconds,
+        tagString = tagString,
+        duration = duration,
+        season = season,
+        year = year,
+        isFavorite = user?.isFavorite ?: false,
+        playCount = user?.playCount ?: 0,
+        lastPlayedAt = user?.lastPlayedAt,
+    )

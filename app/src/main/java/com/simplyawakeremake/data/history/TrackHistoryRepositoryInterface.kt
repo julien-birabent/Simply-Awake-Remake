@@ -6,9 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface TrackHistoryRepositoryInterface {
 
-    val maxAmountStored : Int
+    val maxAmountStored: Int
 
-    fun getRecentlyPlayedHistory(historyLimit : Int) : Flow<ResultState<List<UiTrackHistory>>>
+    fun getRecentlyPlayedHistory(historyLimit: Int): Flow<ResultState<List<UiTrackHistory>>>
 
     suspend fun addToHistory(track: Track)
 }

@@ -3,10 +3,10 @@ package com.simplyawakeremake.data.track.repository
 import com.simplyawakeremake.data.common.DataRepository
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.data.common.ResultState
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
 import com.simplyawakeremake.data.track.remote.TrackService
-import com.simplyawakeremake.data.track.Track
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.koin.core.component.KoinComponent
@@ -31,7 +31,7 @@ class TrackRepository : DataRepository<Track, TrackDto, TrackEntity>(),
     }
 
     override val dbToUiModelMapper: (TrackEntity) -> Track = { entity ->
-        entity.toUiTrack()
+        entity.toTrack()
     }
 
     override fun getTrackBy(id: String): Flow<ResultState<Track>> = flow {
@@ -46,7 +46,7 @@ class TrackRepository : DataRepository<Track, TrackDto, TrackEntity>(),
         return if (trackSelected == null) {
             ResultState.Error(TrackNotFoundException(id), null)
         } else {
-            ResultState.Success(trackSelected.toUiTrack())
+            ResultState.Success(trackSelected.toTrack())
         }
     }
 }

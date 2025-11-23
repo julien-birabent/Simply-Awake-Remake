@@ -60,7 +60,7 @@ fun <T> ItemList(
     items: List<T>,
     keySelector: ((index: Int) -> Any) = {},
     onclick: (T) -> Unit,
-    divider : @Composable () -> Unit,
+    divider: @Composable () -> Unit,
     itemContent: @Composable (T) -> Unit
 ) {
     LazyColumn(
@@ -71,7 +71,9 @@ fun <T> ItemList(
             key = { keySelector(it) },
             itemContent = { index ->
                 val item = items[index]
-                Surface(Modifier.wrapContentSize().clickable { onclick(item) }) {
+                Surface(Modifier
+                    .wrapContentSize()
+                    .clickable { onclick(item) }) {
                     itemContent(item)
                 }
                 if (index < items.lastIndex) divider()

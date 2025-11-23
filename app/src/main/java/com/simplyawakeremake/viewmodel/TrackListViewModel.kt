@@ -3,8 +3,8 @@ package com.simplyawakeremake.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.data.track.Track
+import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
@@ -74,8 +74,8 @@ class TrackListViewModel(
         }
     }
 
-    fun cancelDownload(){
-        viewModelScope.launch(Dispatchers.IO){
+    fun cancelDownload() {
+        viewModelScope.launch(Dispatchers.IO) {
             downloadTrackListUseCase.cancelDownloads()
         }
     }

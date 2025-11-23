@@ -8,5 +8,5 @@ interface TrackRepositoryInterface {
 
     fun getTrackBy(id: String): Flow<ResultState<Track>>
 
-    fun getAllTracks() : Flow<ResultState<List<Track>>>
+    fun getAllTracks(): Flow<ResultState<List<Track>>>
 }

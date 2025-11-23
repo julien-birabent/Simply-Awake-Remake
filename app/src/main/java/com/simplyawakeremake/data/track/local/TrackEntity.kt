@@ -1,5 +1,8 @@
 package com.simplyawakeremake.data.track.local
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 
 @Entity(tableName = "tracks")
 data class TrackEntity(

@@ -41,7 +41,7 @@ val dataModule = module {
     }
 
 
-    fun <T> Retrofit.getService(serviceClass : Class<T>) : T = create(serviceClass)
+    fun <T> Retrofit.getService(serviceClass: Class<T>): T = create(serviceClass)
 
     fun provideTrackService(retrofit: Retrofit): TrackService =
         retrofit.getService(TrackService::class.java)

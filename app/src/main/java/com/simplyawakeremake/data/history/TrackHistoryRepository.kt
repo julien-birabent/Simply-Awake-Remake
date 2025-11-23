@@ -28,7 +28,10 @@ class TrackHistoryRepository : TrackHistoryRepositoryInterface, KoinComponent {
 
     override suspend fun addToHistory(track: Track) = withContext(Dispatchers.IO) {
         val currentHistory = saver.loadAll()
-        val newHistory = (listOf(UiTrackHistory(track, System.currentTimeMillis())) + currentHistory).take(maxAmountStored - 1)
+        val newHistory =
+            (listOf(UiTrackHistory(track, System.currentTimeMillis())) + currentHistory).take(
+                maxAmountStored - 1
+            )
         saver.persist(newHistory)
     }
 }

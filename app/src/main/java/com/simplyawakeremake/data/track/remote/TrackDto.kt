@@ -33,14 +33,4 @@ data class TrackDto(
     @Expose
     @SerializedName("duration")
     val duration: String
-) {
-    val audioSourceUri: Uri by lazy { Uri.parse("media/audio/${id}.mp3") }
-}
-
-fun TrackDto.toUiTrack(): Track = Track(
-    id = id,
-    name = name,
-    lengthInSeconds = lengthInSeconds,
-    tagString = tagString,
-    duration = duration
 )

@@ -6,7 +6,7 @@ import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
 import com.simplyawakeremake.data.track.remote.TrackService
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import org.koin.core.component.KoinComponent

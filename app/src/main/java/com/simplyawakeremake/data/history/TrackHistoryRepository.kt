@@ -2,7 +2,7 @@ package com.simplyawakeremake.data.history
 
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch

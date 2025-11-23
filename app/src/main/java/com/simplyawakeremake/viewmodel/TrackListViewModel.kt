@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress

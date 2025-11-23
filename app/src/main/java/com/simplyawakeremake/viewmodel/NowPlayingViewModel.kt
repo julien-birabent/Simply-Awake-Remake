@@ -20,7 +20,7 @@ import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.service.PlaybackService
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.ui.screens.ControlButtons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

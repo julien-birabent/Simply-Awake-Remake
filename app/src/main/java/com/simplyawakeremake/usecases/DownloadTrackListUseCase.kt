@@ -1,7 +1,7 @@
 package com.simplyawakeremake.usecases
 
 import com.simplyawakeremake.data.download.track.TrackFileManager
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

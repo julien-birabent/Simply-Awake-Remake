@@ -3,7 +3,7 @@ package com.simplyawakeremake.data.track.remote
 import android.net.Uri
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 
 
 data class TrackDto(

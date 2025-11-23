@@ -1,7 +1,7 @@
 package com.simplyawakeremake.data.track.repository
 
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import kotlinx.coroutines.flow.Flow
 
 interface TrackRepositoryInterface {

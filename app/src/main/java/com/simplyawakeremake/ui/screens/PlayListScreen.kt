@@ -53,7 +53,7 @@ import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState

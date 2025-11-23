@@ -2,7 +2,7 @@ package com.simplyawakeremake.data.track.repository
 
 import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
-import com.simplyawakeremake.ui.model.Track
+import com.simplyawakeremake.data.track.Track
 
 
 fun TrackDto.toEntity(): TrackEntity = TrackEntity(

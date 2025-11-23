@@ -32,6 +32,8 @@ media3Exoplayer = "1.4.1"
 kotlinx-coroutines = "1.8.0"
 mockk = "1.14.6"
 androidx-core-testing = "2.2.0"
+room = "2.8.4"
+ksp = "2.0.21-1.0.27"
 
 [libraries]
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtendedVersion" }
@@ -70,12 +72,18 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 androidx-core-testing = { module = "androidx.arch.core:core-testing", version.ref = "androidx-core-testing" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbineVersion" }
+room-runtime  = { module = "androidx.room:room-runtime",  version.ref = "room" }
+room-ktx      = { module = "androidx.room:room-ktx",      version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinCompose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 secretsGradle = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradlePluginVersion" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 
+[bundles]
+room = ["room-runtime", "room-ktx"]
 
 

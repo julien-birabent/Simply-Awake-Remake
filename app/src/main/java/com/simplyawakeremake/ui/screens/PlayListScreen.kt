@@ -53,7 +53,7 @@ import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
-import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.ui.model.Track
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
@@ -235,7 +235,7 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
-    tracks: List<UiTrack>,
+    tracks: List<Track>,
     navController: NavController,
     viewModel: TrackListViewModel
 ) {
@@ -265,7 +265,7 @@ fun Playlist(
 }
 
 @Composable
-fun TrackItem(track: UiTrack) {
+fun TrackItem(track: Track) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

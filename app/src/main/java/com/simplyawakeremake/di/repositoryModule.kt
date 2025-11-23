@@ -2,8 +2,8 @@ package com.simplyawakeremake.di
 
 import com.simplyawakeremake.data.history.TrackHistoryRepository
 import com.simplyawakeremake.data.history.TrackHistoryRepositoryInterface
-import com.simplyawakeremake.data.track.TrackRepository
-import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import com.simplyawakeremake.data.track.repository.TrackRepository
+import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import org.koin.dsl.module
 
 val repositoryModule = module {

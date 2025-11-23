@@ -3,8 +3,8 @@ package com.simplyawakeremake.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.TrackRepositoryInterface
-import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
+import com.simplyawakeremake.ui.model.Track
 import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
@@ -88,8 +88,8 @@ class TrackListViewModel(
         return checkTrackDownloadStatusUseCase.execute(trackId)
     }
 
-    fun addToHistory(uiTrack: UiTrack) = viewModelScope.launch(Dispatchers.IO) {
-        addTrackToRecentHistoryUseCase.execute(uiTrack)
+    fun addToHistory(track: Track) = viewModelScope.launch(Dispatchers.IO) {
+        addTrackToRecentHistoryUseCase.execute(track)
     }
 }
 
@@ -102,7 +102,7 @@ sealed interface PlayerListUIState {
      *
      * @property items The list of track items to be displayed.
      */
-    data class Tracks(val items: List<UiTrack>) : PlayerListUIState
+    data class Tracks(val items: List<Track>) : PlayerListUIState
 
     /**
      * Represents the state when the player UI is in a loading state.

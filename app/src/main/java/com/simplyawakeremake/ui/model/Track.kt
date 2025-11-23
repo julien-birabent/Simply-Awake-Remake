@@ -1,6 +1,6 @@
 package com.simplyawakeremake.ui.model
 
-data class UiTrack(
+data class Track(
     val id: String,
     private val name: String,
     val lengthInSeconds: Int,

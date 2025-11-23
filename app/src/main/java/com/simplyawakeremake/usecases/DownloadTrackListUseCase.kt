@@ -1,7 +1,7 @@
 package com.simplyawakeremake.usecases
 
 import com.simplyawakeremake.data.download.track.TrackFileManager
-import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.ui.model.Track
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +19,7 @@ class DownloadTrackListUseCase(private val trackFileManager: TrackFileManager) {
     private var currentJob: Job? = null
     private var currentScope: CoroutineScope? = null
 
-    fun execute(tracks: List<UiTrack>): Flow<DownloadProgress> = callbackFlow {
+    fun execute(tracks: List<Track>): Flow<DownloadProgress> = callbackFlow {
         trySend(DownloadProgress.InProgress(0))
 
         currentScope = CoroutineScope(Dispatchers.IO)

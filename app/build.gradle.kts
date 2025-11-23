@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.secretsGradle)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -13,8 +14,8 @@ android {
         applicationId = "org.marklackey.android.awake"
         minSdk = 24
         targetSdk = 34
-        versionCode = 10
-        versionName = "10.0.0"
+        versionCode = 11
+        versionName = "10.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -108,7 +109,9 @@ dependencies {
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.turbine)
 
-    // --- Tests instrumentés ---
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation(libs.bundles.room)
+    ksp(libs.room.compiler)
 }

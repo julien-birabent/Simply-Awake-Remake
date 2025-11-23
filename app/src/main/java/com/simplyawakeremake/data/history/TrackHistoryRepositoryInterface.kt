@@ -1,7 +1,7 @@
 package com.simplyawakeremake.data.history
 
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.ui.model.Track
 import kotlinx.coroutines.flow.Flow
 
 interface TrackHistoryRepositoryInterface {
@@ -10,5 +10,5 @@ interface TrackHistoryRepositoryInterface {
 
     fun getRecentlyPlayedHistory(historyLimit : Int) : Flow<ResultState<List<UiTrackHistory>>>
 
-    suspend fun addToHistory(uiTrack: UiTrack)
+    suspend fun addToHistory(track: Track)
 }

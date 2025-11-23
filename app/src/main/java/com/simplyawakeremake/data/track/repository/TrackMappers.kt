@@ -3,7 +3,6 @@ package com.simplyawakeremake.data.track.repository
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
-import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
 fun TrackDto.toDomain(): Track =
     Track(

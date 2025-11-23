@@ -8,10 +8,6 @@ import com.simplyawakeremake.data.usertrack.toDomain
 import com.simplyawakeremake.data.usertrack.toDto
 import kotlinx.coroutines.tasks.await
 
-/**
- * Firestore-backed implementation of [UserTrackRemoteDataSource].
- * It works purely with [UserTrack] + [UserTrackDto] and does not know about Room entities.
- */
 class FirestoreUserTrackRemoteDataSource(
     private val firestore: FirebaseFirestore,
 ) : UserTrackRemoteDataSource {

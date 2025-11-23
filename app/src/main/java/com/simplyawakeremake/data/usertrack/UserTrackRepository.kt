@@ -1,6 +1,5 @@
 package com.simplyawakeremake.data.usertrack
 
-import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 import com.simplyawakeremake.data.usertrack.local.UserTrackLocalDataSource
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
 import kotlinx.coroutines.flow.Flow

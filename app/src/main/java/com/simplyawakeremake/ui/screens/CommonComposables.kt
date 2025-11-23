@@ -71,9 +71,10 @@ fun <T> ItemList(
             key = { keySelector(it) },
             itemContent = { index ->
                 val item = items[index]
-                Surface(Modifier
-                    .wrapContentSize()
-                    .clickable { onclick(item) }) {
+                Surface(
+                    Modifier
+                        .wrapContentSize()
+                        .clickable { onclick(item) }) {
                     itemContent(item)
                 }
                 if (index < items.lastIndex) divider()

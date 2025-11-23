@@ -40,9 +40,12 @@ abstract class DataRepository<Domain, DTO, DB> {
                 ResultState.Error(e, null)
             }
             if (fallback is ResultState.Success) {
-                Log.d(TAG, "Error while fetching, cached data available; emitting success with cache")
+                Log.d(
+                    TAG,
+                    "Error while fetching, cached data available; emitting success with cache"
+                )
                 emit(fallback)
-            }else {
+            } else {
                 Log.d(TAG, "Error while fetching, no cached data available; emitting error")
             }
         }

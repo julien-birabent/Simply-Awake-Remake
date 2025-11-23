@@ -1,7 +1,6 @@
 package com.simplyawakeremake.data.track
 
 import com.simplyawakeremake.data.usertrack.UserTrack
-import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
 data class Track(
     val id: String,
@@ -10,7 +9,7 @@ data class Track(
     val tagString: String,
     val duration: String,
     val season: Int,
-    val year : Int,
+    val year: Int,
 
     val isFavorite: Boolean = false,
     val playCount: Int = 0,

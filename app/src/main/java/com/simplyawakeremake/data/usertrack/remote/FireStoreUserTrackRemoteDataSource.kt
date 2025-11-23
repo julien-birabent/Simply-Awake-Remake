@@ -3,27 +3,31 @@ package com.simplyawakeremake.data.usertrack.remote
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.simplyawakeremake.data.FirestoreCollectionNames
-import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
+import com.simplyawakeremake.data.usertrack.UserTrack
+import com.simplyawakeremake.data.usertrack.toDomain
+import com.simplyawakeremake.data.usertrack.toDto
 import kotlinx.coroutines.tasks.await
 
-
+/**
+ * Firestore-backed implementation of [UserTrackRemoteDataSource].
+ * It works purely with [UserTrack] + [UserTrackDto] and does not know about Room entities.
+ */
 class FirestoreUserTrackRemoteDataSource(
     private val firestore: FirebaseFirestore,
 ) : UserTrackRemoteDataSource {
 
-    override suspend fun upsertUserTrack(entity: UserTrackEntity) {
-        val now = System.currentTimeMillis()
-        val remote = entity.toDto(now)
+    override suspend fun upsertUserTrack(userTrack: UserTrack) {
+        val dto = userTrack.toDto()
 
         firestore.collection(FirestoreCollectionNames.COLLECTON_USERS)
-            .document(entity.userId)
+            .document(userTrack.userId)
             .collection(FirestoreCollectionNames.COLLECTON_TRACKS)
-            .document(entity.trackId)
-            .set(remote, SetOptions.merge())
+            .document(userTrack.trackId)
+            .set(dto, SetOptions.merge())
             .await()
     }
 
-    override suspend fun fetchAllForUser(userId: String): List<UserTrackDto> {
+    override suspend fun fetchAllForUser(userId: String): List<UserTrack> {
         val snapshot = firestore.collection(FirestoreCollectionNames.COLLECTON_USERS)
             .document(userId)
             .collection(FirestoreCollectionNames.COLLECTON_TRACKS)
@@ -31,7 +35,7 @@ class FirestoreUserTrackRemoteDataSource(
             .await()
 
         return snapshot.documents.mapNotNull { doc ->
-            doc.toObject(UserTrackDto::class.java)
+            doc.toObject(UserTrackDto::class.java)?.toDomain(userId)
         }
     }
 }

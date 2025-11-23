@@ -1,61 +1,62 @@
 package com.simplyawakeremake.data.usertrack
 
-
 import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 import com.simplyawakeremake.data.usertrack.local.UserTrackLocalDataSource
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+
 
 class UserTrackRepository(
     private val userId: String,
     private val local: UserTrackLocalDataSource,
-    private val remote: UserTrackRemoteDataSource
+    private val remote: UserTrackRemoteDataSource,
 ) {
 
-    fun observeAll(): Flow<List<UserTrackEntity>> =
+    fun observeAll(): Flow<List<UserTrack>> =
         local.observeAll(userId)
+            .map { entities -> entities.map { it.toDomain() } }
 
-    fun observeTrack(trackId: String): Flow<UserTrackEntity?> =
+    fun observeTrack(trackId: String): Flow<UserTrack?> =
         local.observeOne(userId, trackId)
+            .map { entity -> entity?.toDomain() }
 
-    suspend fun toggleFavorite(trackId: String, isFavorite: Boolean) {
-        val current = local.getOne(userId, trackId)
-        val updated = (current ?: UserTrackEntity(
+    private fun defaultUserTrack(trackId: String): UserTrack =
+        UserTrack(
             userId = userId,
             trackId = trackId,
             isFavorite = false,
             playCount = 0,
-            lastPlayedAt = null
-        )).copy(
-            isFavorite = isFavorite
+            lastPlayedAt = null,
+            updatedAt = 0L // TODO now
         )
-        local.upsert(updated)
+
+    suspend fun toggleFavorite(trackId: String, isFavorite: Boolean) {
+        val current = local.getOne(userId, trackId)?.toDomain() ?: defaultUserTrack(trackId)
+
+        val updated = current.copy(isFavorite = isFavorite)
+        local.upsert(updated.toEntity())
         try {
             remote.upsertUserTrack(updated)
         } catch (e: Exception) {
-            // log, metrics, maybe mark for manual sync later if you want
+            // Optionally log/track error; don't affect local
         }
     }
 
     suspend fun registerPlay(trackId: String, playedAtMillis: Long) {
-        val current = local.getOne(userId, trackId)
-        val updated = (current ?: UserTrackEntity(
-            userId = userId,
-            trackId = trackId,
-            isFavorite = false,
-            playCount = 0,
-            lastPlayedAt = null
-        )).copy(
-            playCount = (current?.playCount ?: 0) + 1,
+        val current = local.getOne(userId, trackId)?.toDomain() ?: defaultUserTrack(trackId)
+
+        val updated = current.copy(
+            playCount = current.playCount + 1,
             lastPlayedAt = playedAtMillis
         )
 
-        local.upsert(updated)
+        local.upsert(updated.toEntity())
 
         try {
             remote.upsertUserTrack(updated)
         } catch (e: Exception) {
-            // same story: DB still correct, remote will be behind
+            // Optionally log/track error; don't affect local
         }
     }
 }

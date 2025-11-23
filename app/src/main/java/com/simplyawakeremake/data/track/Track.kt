@@ -1,5 +1,6 @@
 package com.simplyawakeremake.data.track
 
+import com.simplyawakeremake.data.usertrack.UserTrack
 import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
 data class Track(
@@ -19,7 +20,7 @@ data class Track(
     val displayName: String = name.replace(Regex("\\d"), "").trim()
 }
 
-fun Track.withUserMeta(userMeta: UserTrackEntity?): Track =
+fun Track.withUserMeta(userMeta: UserTrack?): Track =
     copy(
         isFavorite = userMeta?.isFavorite ?: false,
         playCount = userMeta?.playCount ?: 0,

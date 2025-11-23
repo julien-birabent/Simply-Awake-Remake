@@ -26,20 +26,16 @@ class TrackRepository : DataRepository<Track, TrackDto, TrackEntity>(),
 
     override val saver: DataSaver<TrackEntity> by inject(qualifier = named("tracks"))
 
-    override val dtoToDbMapper: (TrackDto) -> TrackEntity = { dto ->
-        dto.toDomain()
-    }
+    override val dtoToDomainMapper: (TrackDto) -> Track = { dto -> dto.toDomain() }
+    override val domainToDbMapper: (Track) -> TrackEntity = { domain -> domain.toEntity() }
+    override val dbToDomainMapper: (TrackEntity) -> Track = { entity -> entity.toDomain() }
 
-    override val dbToUiModelMapper: (TrackEntity) -> Track = { entity ->
-        entity.toDomain()
-    }
+    override fun getAllTracks(): Flow<ResultState<List<Track>>> = getAll()
 
     override fun getTrackBy(id: String): Flow<ResultState<Track>> = flow {
         emit(ResultState.Loading(null))
         emit(selectTrackResult(id))
     }
-
-    override fun getAllTracks(): Flow<ResultState<List<Track>>> = getAll()
 
     private fun selectTrackResult(id: String): ResultState<Track> {
         val trackSelected = saver.select(id)

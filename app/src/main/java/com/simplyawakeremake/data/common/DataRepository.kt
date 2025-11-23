@@ -6,67 +6,71 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
-abstract class DataRepository<UiModel, DTO, DB> {
+abstract class DataRepository<Domain, DTO, DB> {
 
     protected abstract val fetchAllCall: suspend () -> List<DTO>
     protected abstract val saver: DataSaver<DB>
-    protected abstract val dtoToDbMapper: (DTO) -> DB
-    protected abstract val dbToUiModelMapper: (DB) -> UiModel
+    protected abstract val dtoToDomainMapper: (DTO) -> Domain
+    protected abstract val domainToDbMapper: (Domain) -> DB
+    protected abstract val dbToDomainMapper: (DB) -> Domain
 
     private val TAG = this::class.qualifiedName
 
-    fun getAll(): Flow<ResultState<List<UiModel>>> = flow {
-        val savedResult: ResultState<List<UiModel>> = loadSavedData()
-        emit(savedResult)
+    private fun <T> cacheThenNetwork(
+        loadCached: suspend () -> ResultState<List<T>>,
+        fetchRemote: suspend () -> ResultState<List<T>>,
+        shouldEmitRemote: (cached: ResultState<List<T>>, remote: ResultState<List<T>>) -> Boolean
+    ): Flow<ResultState<List<T>>> = flow {
+        val cached = loadCached()
+        emit(cached)
 
         try {
-            val remoteResult: ResultState<List<UiModel>> = fetchAllRemotely()
+            val remote = fetchRemote()
 
-            val shouldEmitRemote = when {
-                savedResult is ResultState.Success &&
-                        remoteResult is ResultState.Success -> {
-                    val cachedList = savedResult.data
-                    val remoteList = remoteResult.data
-
-                    val sameContent = haveSameDistinctElements(cachedList, remoteList)
-                    if (sameContent) {
-                        Log.d(TAG, "Remote data identical to cached data, skipping emission")
-                    }
-                    !sameContent
-                }
-                else -> true
+            if (shouldEmitRemote(cached, remote)) {
+                Log.d(TAG, "Should emit remote true")
+                emit(remote)
+                Log.d(TAG, "Data refresh completed")
             }
-
-            if (shouldEmitRemote) {
-                emit(remoteResult)
-            }
-
-            Log.d(TAG, "Data refresh completed")
         } catch (e: Exception) {
             Log.e(TAG, "An exception occured while fetching ${e.message}", e)
-
-            val savedIsUsable =
-                savedResult is ResultState.Success && savedResult.data.isNotEmpty()
-
-            if (savedIsUsable) {
-                Log.d(TAG, "Error while fetching. Cached data already emitted, keeping it")
+            val fallback = if (cached is ResultState.Success && cached.data.isNotEmpty()) {
+                cached
             } else {
+                ResultState.Error(e, null)
+            }
+            if (fallback is ResultState.Success) {
+                Log.d(TAG, "Error while fetching, cached data available; emitting success with cache")
+                emit(fallback)
+            }else {
                 Log.d(TAG, "Error while fetching, no cached data available; emitting error")
-                emit(ResultState.Error(e, null))
             }
         }
-    }.flowOn(Dispatchers.IO)
-
-
-    private suspend fun fetchAllRemotely(): ResultState<List<UiModel>> {
-        Log.d(TAG, "Fetching all tracks remotely")
-        val fetchedTracks = fetchAllCall()
-        val trackSaved = fetchedTracks.map(dtoToDbMapper)
-        saver.persist(trackSaved)
-        return ResultState.Success(trackSaved.map(dbToUiModelMapper))
     }
 
-    private suspend fun loadSavedData(): ResultState<List<UiModel>> {
+    fun getAll(): Flow<ResultState<List<Domain>>> =
+        cacheThenNetwork(
+            loadCached = { loadSavedData() },
+            fetchRemote = { fetchAllRemotely() },
+            shouldEmitRemote = { cached, remote ->
+                if (cached is ResultState.Success && remote is ResultState.Success) {
+                    !haveSameDistinctElements(cached.data, remote.data)
+                } else {
+                    true
+                }
+            }
+        ).flowOn(Dispatchers.IO)
+
+    private suspend fun fetchAllRemotely(): ResultState<List<Domain>> {
+        Log.d(TAG, "Fetching all data remotely")
+        val fetchedDtos = fetchAllCall()
+        val domainModels = fetchedDtos.map(dtoToDomainMapper)
+        val dbModels = domainModels.map(domainToDbMapper)
+        saver.persist(dbModels)
+        return ResultState.Success(dbModels.map(dbToDomainMapper))
+    }
+
+    private suspend fun loadSavedData(): ResultState<List<Domain>> {
         val cachedData = saver.loadAll()
         return when {
             cachedData.isEmpty() -> {
@@ -76,7 +80,7 @@ abstract class DataRepository<UiModel, DTO, DB> {
 
             else -> {
                 Log.d(TAG, "Loading cache data")
-                ResultState.Success(cachedData.map(dbToUiModelMapper))
+                ResultState.Success(cachedData.map(dbToDomainMapper))
             }
         }
     }
@@ -87,5 +91,4 @@ abstract class DataRepository<UiModel, DTO, DB> {
     ): Boolean {
         return first.toSet() == second.toSet()
     }
-
 }

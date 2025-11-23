@@ -5,30 +5,7 @@ import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
 import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
-fun TrackDto.toDomain(): TrackEntity = TrackEntity(
-    id = id,
-    createDate = createDate,
-    updateDate = updateDate,
-    name = name,
-    lengthInSeconds = lengthInSeconds,
-    tagString = tagString,
-    season = season,
-    year = year,
-    duration = duration,
-)
-
-fun TrackEntity.toDomain(): Track = Track(
-    id = id,
-    name = name,
-    lengthInSeconds = lengthInSeconds,
-    tagString = tagString,
-    duration = duration,
-    season = season,
-    year = year
-)
-
-
-fun TrackEntity.toDomain(user: UserTrackEntity?): Track =
+fun TrackDto.toDomain(): Track =
     Track(
         id = id,
         name = name,
@@ -37,7 +14,47 @@ fun TrackEntity.toDomain(user: UserTrackEntity?): Track =
         duration = duration,
         season = season,
         year = year,
-        isFavorite = user?.isFavorite ?: false,
-        playCount = user?.playCount ?: 0,
-        lastPlayedAt = user?.lastPlayedAt,
+        isFavorite = false,
+        playCount = 0,
+        lastPlayedAt = null,
+    )
+
+fun Track.toDto(): TrackDto =
+    TrackDto(
+        id = id,
+        createDate = 0,
+        updateDate = 0,
+        name = name,
+        lengthInSeconds = lengthInSeconds,
+        tagString = tagString,
+        season = season,
+        year = year,
+        duration = duration,
+    )
+
+fun TrackEntity.toDomain(): Track =
+    Track(
+        id = id,
+        name = name,
+        lengthInSeconds = lengthInSeconds,
+        tagString = tagString,
+        duration = duration,
+        season = season,
+        year = year,
+        isFavorite = false,
+        playCount = 0,
+        lastPlayedAt = null,
+    )
+
+fun Track.toEntity(): TrackEntity =
+    TrackEntity(
+        id = id,
+        createDate = 0,
+        updateDate = 0,
+        name = name,
+        lengthInSeconds = lengthInSeconds,
+        tagString = tagString,
+        season = season,
+        year = year,
+        duration = duration,
     )

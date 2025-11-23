@@ -5,8 +5,7 @@ import com.simplyawakeremake.data.track.local.TrackEntity
 import com.simplyawakeremake.data.track.remote.TrackDto
 import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
-
-fun TrackDto.toEntity(): TrackEntity = TrackEntity(
+fun TrackDto.toDomain(): TrackEntity = TrackEntity(
     id = id,
     createDate = createDate,
     updateDate = updateDate,
@@ -18,7 +17,7 @@ fun TrackDto.toEntity(): TrackEntity = TrackEntity(
     duration = duration,
 )
 
-fun TrackEntity.toTrack(): Track = Track(
+fun TrackEntity.toDomain(): Track = Track(
     id = id,
     name = name,
     lengthInSeconds = lengthInSeconds,
@@ -29,7 +28,7 @@ fun TrackEntity.toTrack(): Track = Track(
 )
 
 
-fun TrackEntity.toTrack(user: UserTrackEntity?): Track =
+fun TrackEntity.toDomain(user: UserTrackEntity?): Track =
     Track(
         id = id,
         name = name,

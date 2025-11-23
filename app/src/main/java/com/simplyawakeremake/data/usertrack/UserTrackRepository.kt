@@ -3,11 +3,13 @@ package com.simplyawakeremake.data.usertrack
 
 import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 import com.simplyawakeremake.data.usertrack.local.UserTrackLocalDataSource
+import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
 import kotlinx.coroutines.flow.Flow
 
 class UserTrackRepository(
     private val userId: String,
     private val local: UserTrackLocalDataSource,
+    private val remote: UserTrackRemoteDataSource
 ) {
 
     fun observeAll(): Flow<List<UserTrackEntity>> =
@@ -28,8 +30,11 @@ class UserTrackRepository(
             isFavorite = isFavorite
         )
         local.upsert(updated)
-
-        // later: sync to Firebase/backend here
+        try {
+            remote.upsertUserTrack(updated)
+        } catch (e: Exception) {
+            // log, metrics, maybe mark for manual sync later if you want
+        }
     }
 
     suspend fun registerPlay(trackId: String, playedAtMillis: Long) {
@@ -44,8 +49,13 @@ class UserTrackRepository(
             playCount = (current?.playCount ?: 0) + 1,
             lastPlayedAt = playedAtMillis
         )
+
         local.upsert(updated)
 
-        // later: sync to Firebase/backend here
+        try {
+            remote.upsertUserTrack(updated)
+        } catch (e: Exception) {
+            // same story: DB still correct, remote will be behind
+        }
     }
 }

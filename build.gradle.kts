@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlinCompose) apply false
     alias(libs.plugins.secretsGradle) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.google.services) apply false
 }
 buildscript {
     repositories {

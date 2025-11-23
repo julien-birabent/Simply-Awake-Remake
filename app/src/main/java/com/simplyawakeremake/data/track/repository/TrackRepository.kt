@@ -27,11 +27,11 @@ class TrackRepository : DataRepository<Track, TrackDto, TrackEntity>(),
     override val saver: DataSaver<TrackEntity> by inject(qualifier = named("tracks"))
 
     override val dtoToDbMapper: (TrackDto) -> TrackEntity = { dto ->
-        dto.toEntity()
+        dto.toDomain()
     }
 
     override val dbToUiModelMapper: (TrackEntity) -> Track = { entity ->
-        entity.toTrack()
+        entity.toDomain()
     }
 
     override fun getTrackBy(id: String): Flow<ResultState<Track>> = flow {
@@ -46,7 +46,7 @@ class TrackRepository : DataRepository<Track, TrackDto, TrackEntity>(),
         return if (trackSelected == null) {
             ResultState.Error(TrackNotFoundException(id), null)
         } else {
-            ResultState.Success(trackSelected.toTrack())
+            ResultState.Success(trackSelected.toDomain())
         }
     }
 }

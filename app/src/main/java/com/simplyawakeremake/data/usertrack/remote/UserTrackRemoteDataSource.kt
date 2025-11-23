@@ -1,18 +1,18 @@
 package com.simplyawakeremake.data.usertrack.remote
 
+import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
+
 interface UserTrackRemoteDataSource {
 
-    suspend fun fetchAllForUser(userId: String): List<UserTrackDto>
+    /**
+     * Push the given user track state to the remote backend.
+     * DB is the source of truth; this is a mirror operation.
+     */
+    suspend fun upsertUserTrack(entity: UserTrackEntity)
 
-    suspend fun updateFavorite(
-        userId: String,
-        trackId: String,
-        isFavorite: Boolean
-    )
-
-    suspend fun registerPlay(
-        userId: String,
-        trackId: String,
-        playedAtMillis: Long
-    )
+    /**
+     * Optional, for initial sync / restore.
+     * Typically used when local DB is empty.
+     */
+    suspend fun fetchAllForUser(userId: String): List<UserTrackRemote>
 }

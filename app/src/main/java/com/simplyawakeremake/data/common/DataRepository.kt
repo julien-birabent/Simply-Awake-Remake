@@ -16,28 +16,47 @@ abstract class DataRepository<UiModel, DTO, DB> {
     private val TAG = this::class.qualifiedName
 
     fun getAll(): Flow<ResultState<List<UiModel>>> = flow {
-        val savedData = loadSavedData()
-        emit(savedData)
+        val savedResult: ResultState<List<UiModel>> = loadSavedData()
+        emit(savedResult)
 
         try {
-            emit(fetchAllRemotely())
-            Log.d(TAG, "Data")
-        } catch (e: Exception) {
-            Log.e(
-                TAG,
-                "An exception occured while fetching ${e.message}"
-            )
-            emit(
-                if (savedData is ResultState.Success && savedData.data.isNotEmpty()) {
-                    Log.d(TAG, "Error while fetching. Return cached data")
-                    savedData
-                } else {
-                    Log.d(TAG, "Error while fetching, no cache data available; returning error")
-                    ResultState.Error(e, null)
+            val remoteResult: ResultState<List<UiModel>> = fetchAllRemotely()
+
+            val shouldEmitRemote = when {
+                savedResult is ResultState.Success &&
+                        remoteResult is ResultState.Success -> {
+                    val cachedList = savedResult.data
+                    val remoteList = remoteResult.data
+
+                    val sameContent = haveSameDistinctElements(cachedList, remoteList)
+                    if (sameContent) {
+                        Log.d(TAG, "Remote data identical to cached data, skipping emission")
+                    }
+                    !sameContent
                 }
-            )
+                else -> true
+            }
+
+            if (shouldEmitRemote) {
+                emit(remoteResult)
+            }
+
+            Log.d(TAG, "Data refresh completed")
+        } catch (e: Exception) {
+            Log.e(TAG, "An exception occured while fetching ${e.message}", e)
+
+            val savedIsUsable =
+                savedResult is ResultState.Success && savedResult.data.isNotEmpty()
+
+            if (savedIsUsable) {
+                Log.d(TAG, "Error while fetching. Cached data already emitted, keeping it")
+            } else {
+                Log.d(TAG, "Error while fetching, no cached data available; emitting error")
+                emit(ResultState.Error(e, null))
+            }
         }
     }.flowOn(Dispatchers.IO)
+
 
     private suspend fun fetchAllRemotely(): ResultState<List<UiModel>> {
         Log.d(TAG, "Fetching all tracks remotely")
@@ -61,4 +80,12 @@ abstract class DataRepository<UiModel, DTO, DB> {
             }
         }
     }
+
+    private fun <T> haveSameDistinctElements(
+        first: List<T>,
+        second: List<T>
+    ): Boolean {
+        return first.toSet() == second.toSet()
+    }
+
 }

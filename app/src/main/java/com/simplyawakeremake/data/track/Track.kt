@@ -4,7 +4,7 @@ import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
 data class Track(
     val id: String,
-    private val name: String,
+    val name: String,
     val lengthInSeconds: Int,
     val tagString: String,
     val duration: String,

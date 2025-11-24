@@ -3,7 +3,7 @@ package com.simplyawakeremake.di
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.simplyawakeremake.BuildConfig
-import com.simplyawakeremake.data.track.TrackService
+import com.simplyawakeremake.data.track.remote.TrackService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.dsl.module
@@ -41,7 +41,7 @@ val dataModule = module {
     }
 
 
-    fun <T> Retrofit.getService(serviceClass : Class<T>) : T = create(serviceClass)
+    fun <T> Retrofit.getService(serviceClass: Class<T>): T = create(serviceClass)
 
     fun provideTrackService(retrofit: Retrofit): TrackService =
         retrofit.getService(TrackService::class.java)

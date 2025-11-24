@@ -1,12 +1,10 @@
-package com.simplyawakeremake.data.track
+package com.simplyawakeremake.data.track.remote
 
-import android.net.Uri
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
-import com.simplyawakeremake.ui.model.UiTrack
 
 
-data class ApiTrack(
+data class TrackDto(
     @SerializedName("id")
     val id: String,
     @Expose
@@ -33,14 +31,4 @@ data class ApiTrack(
     @Expose
     @SerializedName("duration")
     val duration: String
-){
-    val audioSourceUri : Uri by lazy { Uri.parse("media/audio/${id}.mp3") }
-}
-
-fun ApiTrack.toUiTrack(): UiTrack = UiTrack(
-    id = id,
-    name = name,
-    lengthInSeconds = lengthInSeconds,
-    tagString = tagString,
-    duration = duration
 )

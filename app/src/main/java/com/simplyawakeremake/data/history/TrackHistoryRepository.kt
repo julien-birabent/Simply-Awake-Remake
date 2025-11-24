@@ -2,7 +2,7 @@ package com.simplyawakeremake.data.history
 
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.data.track.Track
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -26,9 +26,12 @@ class TrackHistoryRepository : TrackHistoryRepositoryInterface, KoinComponent {
             emit(ResultState.Success(saver.loadAll()))
         }.catch { emit(ResultState.Error(it, null)) }
 
-    override suspend fun addToHistory(uiTrack: UiTrack) = withContext(Dispatchers.IO) {
+    override suspend fun addToHistory(track: Track) = withContext(Dispatchers.IO) {
         val currentHistory = saver.loadAll()
-        val newHistory = (listOf(UiTrackHistory(uiTrack, System.currentTimeMillis())) + currentHistory).take(maxAmountStored - 1)
+        val newHistory =
+            (listOf(UiTrackHistory(track, System.currentTimeMillis())) + currentHistory).take(
+                maxAmountStored - 1
+            )
         saver.persist(newHistory)
     }
 }

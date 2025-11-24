@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028914958582",
+    "project_id": "simply-awake",
+    "storage_bucket": "simply-awake.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028914958582:android:10162da21d0e3dced85cd7",
+        "android_client_info": {
+          "package_name": "org.marklackey.android.awake"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbilOrO8Yu-zy-7-zaysWmhiXendX_QJ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

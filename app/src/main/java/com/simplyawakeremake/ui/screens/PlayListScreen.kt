@@ -50,10 +50,10 @@ import androidx.navigation.NavController
 import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
 import com.simplyawakeremake.connectionState
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
-import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
@@ -122,7 +122,7 @@ private fun SetupToolbar(
     viewModel: TrackListViewModel,
     mainViewModel: MainViewModel,
     downloadState: DownloadProgress,
-    navController : NavController
+    navController: NavController
 ) {
     var showDownloadConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -136,7 +136,8 @@ private fun SetupToolbar(
     val toolbarConfig = ToolbarConfig(
         actions = listOf(
             tracksDownloadAction {
-                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog = true
+                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog =
+                    true
             },
             ToolbarAction(Icons.Outlined.History, "Recent History") {
                 navController.navigate(Screen.RECENT_HISTORY.name)
@@ -235,7 +236,7 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
-    tracks: List<UiTrack>,
+    tracks: List<Track>,
     navController: NavController,
     viewModel: TrackListViewModel
 ) {
@@ -265,7 +266,7 @@ fun Playlist(
 }
 
 @Composable
-fun TrackItem(track: UiTrack) {
+fun TrackItem(track: Track) {
     Column(
         modifier = Modifier
             .fillMaxWidth()

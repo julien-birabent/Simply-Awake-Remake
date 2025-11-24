@@ -6,7 +6,7 @@ import com.simplyawakeremake.ui.ToolbarConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class MainViewModel (application: Application): AndroidViewModel(application) {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val defaultToolbarConfig = ToolbarConfig(actions = emptyList(), showToolbar = true)
 

@@ -17,11 +17,10 @@ import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.download.track.TrackFileManager
-import com.simplyawakeremake.data.track.TrackRepositoryInterface
-import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
+import com.simplyawakeremake.data.track.Track
+import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.service.PlaybackService
-import com.simplyawakeremake.ui.model.UiTrack
 import com.simplyawakeremake.ui.screens.ControlButtons
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,7 +38,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -62,7 +60,7 @@ class NowPlayingViewModel(
     private val playerFlow = MutableStateFlow<Player?>(null)
     private var playerListener: PlayerSubjectWrapper? = null
 
-    private val trackFlow: Flow<ResultState<UiTrack>> = trackIdFlow
+    private val trackFlow: Flow<ResultState<Track>> = trackIdFlow
         .filterNotNull()
         .flatMapLatest { id -> trackRepository.getTrackBy(id) }
         .flowOn(Dispatchers.IO)
@@ -151,7 +149,7 @@ class NowPlayingViewModel(
         }
     }
 
-    private suspend fun createMediaItem(track: UiTrack): MediaItem = withContext(Dispatchers.IO) {
+    private suspend fun createMediaItem(track: Track): MediaItem = withContext(Dispatchers.IO) {
         val trackUri = trackFileManager.getTrackUri(track.id)
 
         val mediaMetaData = androidx.media3.common.MediaMetadata.Builder()

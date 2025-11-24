@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.secretsGradle)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -13,8 +15,8 @@ android {
         applicationId = "org.marklackey.android.awake"
         minSdk = 24
         targetSdk = 34
-        versionCode = 10
-        versionName = "10.0.0"
+        versionCode = 11
+        versionName = "10.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -57,7 +59,6 @@ android {
 }
 
 dependencies {
-    // --- Compose / Android ---
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     androidTestImplementation(composeBom)
@@ -82,25 +83,24 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
 
-    // --- Media3 ---
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.common)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
 
-    // --- DI / Koin ---
     implementation(platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // --- Réseau / Images ---
     implementation(libs.logging.interceptor)
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.glide)
 
-    // --- Tests unitaires ---
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+
     testImplementation(libs.junit)
     testImplementation(kotlin("test"))
     testImplementation(libs.kotlinx.coroutines.test)
@@ -108,7 +108,9 @@ dependencies {
     testImplementation(libs.androidx.core.testing)
     testImplementation(libs.turbine)
 
-    // --- Tests instrumentés ---
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    implementation(libs.bundles.room)
+    ksp(libs.room.compiler)
 }

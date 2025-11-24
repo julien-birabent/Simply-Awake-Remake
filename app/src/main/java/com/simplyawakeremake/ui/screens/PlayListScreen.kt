@@ -136,11 +136,15 @@ private fun SetupToolbar(
     val toolbarConfig = ToolbarConfig(
         actions = listOf(
             tracksDownloadAction {
-                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog =
-                    true
+                if (downloadState !is DownloadProgress.InProgress) {
+                    showDownloadConfirmationDialog = true
+                }
             },
             ToolbarAction(Icons.Outlined.History, "Recent History") {
                 navController.navigate(Screen.RECENT_HISTORY.name)
+            },
+            goToSettingsAction {
+                navController.navigate(Screen.SETTINGS.name)
             }
         ),
         showToolbar = true
@@ -151,12 +155,6 @@ private fun SetupToolbar(
     }
 }
 
-@Composable
-private fun tracksDownloadAction(onClick: () -> Unit): ToolbarAction {
-    return ToolbarAction(Icons.Outlined.FileDownload, contentDescription = "Download") {
-        onClick()
-    }
-}
 
 @Composable
 private fun DownloadConfirmationDialog(

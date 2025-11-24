@@ -19,7 +19,7 @@ class MainViewModelTest {
     @Before
     fun setup() {
         val application = mockk<Application>(relaxed = true)
-        viewModel = MainViewModel(application)
+        viewModel = MainViewModel(application, mockk(relaxed = true))
     }
 
     @Test

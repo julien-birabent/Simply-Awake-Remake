@@ -8,6 +8,10 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.simplyawakeremake.data.auth.GoogleAuthConfig
 
 
 const val REQUEST_STORAGE_PERMISSION = 1001

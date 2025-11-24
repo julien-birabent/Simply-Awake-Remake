@@ -13,12 +13,10 @@ class UserTrackRepository(
 ) {
 
     fun observeAll(): Flow<List<UserTrack>> =
-        local.observeAll(userId)
-            .map { entities -> entities.map { it.toDomain() } }
+        local.observeAll(userId).map { entities -> entities.map { it.toDomain() } }
 
     fun observeTrack(trackId: String): Flow<UserTrack?> =
-        local.observeOne(userId, trackId)
-            .map { entity -> entity?.toDomain() }
+        local.observeOne(userId, trackId).map { entity -> entity?.toDomain() }
 
     private fun defaultUserTrack(trackId: String): UserTrack =
         UserTrack(
@@ -27,7 +25,7 @@ class UserTrackRepository(
             isFavorite = false,
             playCount = 0,
             lastPlayedAt = null,
-            updatedAt = 0L // TODO now
+            updatedAt = 0L
         )
 
     suspend fun toggleFavorite(trackId: String, isFavorite: Boolean) {

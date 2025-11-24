@@ -40,7 +40,7 @@ fun AppNavHost(
             )
         }
         composable(Screen.RECENT_HISTORY.name) { RecentHistoryScreen(navController, mainViewModel) }
-        composable(Screen.SETTINGS.name) { SettingsScreen(navController) }
+        composable(Screen.SETTINGS.name) { SettingsScreen(navController, mainViewModel) }
 
     }
 }

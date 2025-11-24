@@ -3,15 +3,21 @@ package com.simplyawakeremake.ui.screens
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import com.simplyawakeremake.data.auth.AuthState
@@ -24,6 +30,9 @@ fun GoogleSignInSection(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
+    requireNotNull(activity) { "GoogleSignInSection must run in an Activity context" }
+
     val googleSignInClient = remember { context.createGoogleSignInClient() }
 
     val launcher = rememberLauncherForActivityResult(
@@ -50,15 +59,11 @@ fun GoogleSignInSection(
         }
     }
 
-    Column(modifier = modifier) {
-        Button(
-            onClick = {
-                val signInIntent = googleSignInClient.signInIntent
-                launcher.launch(signInIntent)
-            }
-        ) {
-            Text("Sign in with Google")
-        }
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
 
         val authState by viewModel.authState.collectAsState()
         when (authState) {
@@ -67,6 +72,15 @@ fun GoogleSignInSection(
                 val auth = authState as AuthState.Authenticated
                 Text("Signed in as ${auth.displayName ?: auth.email ?: "Unknown"}")
             }
+        }
+        Spacer(Modifier.height(16.dp))
+        Button(modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                val signInIntent = googleSignInClient.signInIntent
+                launcher.launch(signInIntent)
+            }
+        ) {
+            Text("Sign in with Google")
         }
     }
 }

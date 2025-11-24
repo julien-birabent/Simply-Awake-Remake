@@ -1,8 +1,8 @@
 package com.simplyawakeremake.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.auth.User
 import com.simplyawakeremake.data.auth.AuthRepository
 import com.simplyawakeremake.data.auth.AuthState
 import com.simplyawakeremake.data.user.UserRepository
@@ -37,6 +37,7 @@ class SettingsViewModel(
     fun onGoogleSignInSuccessful(idToken: String) {
         viewModelScope.launch {
             try {
+                Log.i("SettingsViewModel", "onGoogleSignInSuccessful: $idToken")
                 val newState = authRepository.signInWithGoogle(idToken)
 
                 // Optionally trigger sync after login:

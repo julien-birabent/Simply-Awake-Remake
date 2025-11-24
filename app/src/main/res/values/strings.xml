@@ -4,4 +4,5 @@
     <string name="notification_channel">Now Playing</string>
     <string name="notification_channel_description">Shows the current meditation playing</string>
     <string name="baseCDNUrl">https://evolv-audio.sfo3.cdn.digitaloceanspaces.com/simply-awake/</string>
+    <string name="toolbar_title_settings">Settings</string>
 </resources>

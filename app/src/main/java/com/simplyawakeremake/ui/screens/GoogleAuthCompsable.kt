@@ -1,6 +1,7 @@
 package com.simplyawakeremake.ui.screens
 
 import android.app.Activity
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -19,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.simplyawakeremake.R
 import com.simplyawakeremake.data.auth.AuthState
-import com.simplyawakeremake.data.auth.createGoogleSignInClient
+import com.simplyawakeremake.data.auth.GoogleAuthConfig
 import com.simplyawakeremake.viewmodel.SettingsViewModel
 
 @Composable
@@ -31,17 +34,21 @@ fun GoogleSignInSection(
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
-    requireNotNull(activity) { "GoogleSignInSection must run in an Activity context" }
+        ?: error("GoogleSignInSection must run in an Activity context")
 
-    val googleSignInClient = remember { context.createGoogleSignInClient() }
+    val googleSignInClient = remember {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        GoogleSignIn.getClient(activity, gso)
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode != Activity.RESULT_OK) {
-            // User canceled or something went wrong
-            return@rememberLauncherForActivityResult
-        }
+        Log.d("GoogleSignIn", "ActivityResult: code=${result.resultCode}")
 
         val data = result.data
         val task = GoogleSignIn.getSignedInAccountFromIntent(data)
@@ -49,13 +56,17 @@ fun GoogleSignInSection(
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account.idToken
+            Log.d("GoogleSignIn", "Got account=${account.email}, idToken null? ${idToken == null}")
+
             if (idToken != null) {
                 viewModel.onGoogleSignInSuccessful(idToken)
             } else {
-                // Handle null token (likely requestIdToken misconfigured)
+                Log.e("GoogleSignIn", "idToken is null – check requestIdToken(WEB_CLIENT_ID)")
             }
         } catch (e: ApiException) {
-            // Handle Google sign-in error (expose to UI, log, etc.)
+            Log.e("GoogleSignIn", "Google sign-in failed. statusCode=${e.statusCode}", e)
+            // Map statusCode to reason
+            // e.g. GoogleSignInStatusCodes.SIGN_IN_CANCELLED, DEVELOPER_ERROR, etc.
         }
     }
 

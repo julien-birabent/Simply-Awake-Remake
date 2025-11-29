@@ -23,6 +23,9 @@ class UserTrackRepository(
 
     private val TAG = "UserTrackRepository"
 
+    private fun UserTrack.withUpdatedTimestamp(): UserTrack =
+        copy(updatedAt = now())
+
     fun observeAll(): Flow<List<UserTrack>> =
         userRepository.currentUser
             .flatMapLatest { user -> local.observeAll(user.id) }
@@ -39,9 +42,8 @@ class UserTrackRepository(
             trackId = trackId,
             isFavorite = false,
             playCount = 0,
-            lastPlayedAt = null,
-            updatedAt = now()
-        )
+            lastPlayedAt = null
+        ).withUpdatedTimestamp()
 
     suspend fun toggleFavorite(trackId: String, isFavorite: Boolean) {
         val user = userRepository.currentUser.first()
@@ -49,7 +51,8 @@ class UserTrackRepository(
 
         val current = local.getOne(userId, trackId)?.toDomain() ?: defaultUserTrack(userId, trackId)
 
-        val updated = current.copy(isFavorite = isFavorite, updatedAt = now())
+        val updated = current.copy(isFavorite = isFavorite)
+            .withUpdatedTimestamp()
         Log.i(TAG, "toggleFavorite: $updated")
 
         local.upsert(updated.toEntity())
@@ -73,7 +76,7 @@ class UserTrackRepository(
             playCount = current.playCount + 1,
             lastPlayedAt = playedAtMillis,
             updatedAt = playedAtMillis
-        )
+        ).withUpdatedTimestamp()
 
         Log.i(TAG, "registerPlay: $updated")
 

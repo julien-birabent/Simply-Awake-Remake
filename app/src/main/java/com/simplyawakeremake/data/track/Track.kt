@@ -24,5 +24,5 @@ fun Track.withUserMeta(userMeta: UserTrack?): Track =
     copy(
         isFavorite = userMeta?.isFavorite ?: false,
         playCount = userMeta?.playCount ?: 0,
-        lastPlayedAt = userMeta?.lastPlayedAt
+        lastPlayedAt = userMeta?.lastPlayedAt,
     )

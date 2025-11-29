@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
@@ -44,6 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -55,6 +56,12 @@ import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.ui.common.CommonErrorView
+import com.simplyawakeremake.ui.common.ConfirmationDialog
+import com.simplyawakeremake.ui.common.FavoriteButton
+import com.simplyawakeremake.ui.common.ItemList
+import com.simplyawakeremake.ui.common.goToSettingsAction
+import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
@@ -64,7 +71,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.net.UnknownHostException
 import java.util.Locale
-import com.simplyawakeremake.ui.screens.LoadingIndicator as LoadingIndicator1
+import com.simplyawakeremake.ui.common.LoadingIndicator as LoadingIndicator1
 
 @Composable
 fun PlayListScreen(
@@ -261,54 +268,72 @@ fun Playlist(
         modifier = modifier,
         items = tracks,
         keySelector = { index -> tracks[index].id },
-        onclick = { track ->
-            if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
-                viewModel.addToHistory(track)
-                navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
-            } else showToast()
-        },
         divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
-    ) { track -> TrackItem(track = track) }
+    ) { track ->
+        TrackListItem(
+            track = track,
+            onClick = {
+                if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
+                    viewModel.addToHistory(track)
+                    navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
+                } else showToast()
+            },
+            onFavoriteClick = { viewModel.onFavoriteClicked(it) })
+    }
 }
 
 @Composable
-fun TrackItem(track: Track) {
-    Column(
-        modifier = Modifier
+fun TrackListItem(
+    track: Track,
+    onClick: (Track) -> Unit,
+    onFavoriteClick: (Track) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
             .fillMaxWidth()
-            .wrapContentSize(Alignment.Center)
-            .padding(12.dp)
+            .clickable { onClick(track) }
+            .padding(horizontal = 8.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Text(
+            text = track.ordinal.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.widthIn(min = 12.dp),
+        )
+
+        Column(
+            modifier = Modifier.weight(1f)
         ) {
             Text(
-                "${track.ordinal} " + track.displayName,
+                text = track.displayName,
                 style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Start
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+
+            if (track.tagString.isNotBlank()) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = track.tagString,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
             Text(
                 text = track.duration,
-                textAlign = TextAlign.Right,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = track.tagString,
-                textAlign = TextAlign.Left,
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            FavoriteButton(onClick = { onFavoriteClick(track) }, track.isFavorite)
         }
     }
 }

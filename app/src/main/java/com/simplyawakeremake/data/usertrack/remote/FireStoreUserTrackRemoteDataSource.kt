@@ -10,20 +10,20 @@ class FirestoreUserTrackRemoteDataSource(
     private val firestore: FirebaseFirestore,
 ) : UserTrackRemoteDataSource {
 
-    override suspend fun upsertUserTrack(userTrack: UserTrack) {
+    override suspend fun upsertUserTrack(remoteUserId: String, userTrack: UserTrack) {
         val dto = userTrack.toDto()
 
         firestore.collection(FirestoreCollectionNames.COLLECTION_USERS)
-            .document(userTrack.userId)
+            .document(remoteUserId)
             .collection(FirestoreCollectionNames.COLLECTION_TRACKS)
             .document(userTrack.trackId)
             .set(dto, SetOptions.merge())
             .await()
     }
 
-    override suspend fun fetchAllForUser(userId: String): List<UserTrack> {
+    override suspend fun fetchAllForUser(remoteUserId: String): List<UserTrack> {
         val snapshot = firestore.collection(FirestoreCollectionNames.COLLECTION_USERS)
-            .document(userId)
+            .document(remoteUserId)
             .collection(FirestoreCollectionNames.COLLECTION_TRACKS)
             .get()
             .await()

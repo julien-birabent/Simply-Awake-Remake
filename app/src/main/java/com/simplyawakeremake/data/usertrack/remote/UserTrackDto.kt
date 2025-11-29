@@ -17,6 +17,7 @@ fun UserTrackDto.toDomain(): UserTrack =
         isFavorite = isFavorite,
         playCount = playCount,
         lastPlayedAt = lastPlayedAt,
+        updatedAt = updatedAt
     )
 
 fun UserTrack.toDto(): UserTrackDto =
@@ -26,4 +27,5 @@ fun UserTrack.toDto(): UserTrackDto =
         isFavorite = isFavorite,
         playCount = playCount,
         lastPlayedAt = lastPlayedAt,
+        updatedAt = updatedAt
     )

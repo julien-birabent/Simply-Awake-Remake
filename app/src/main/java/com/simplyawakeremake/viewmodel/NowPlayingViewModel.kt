@@ -22,6 +22,8 @@ import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.service.PlaybackService
 import com.simplyawakeremake.ui.screens.ControlButtons
+import com.simplyawakeremake.usecases.RegisterTrackPlayUseCase
+import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -49,7 +51,9 @@ import org.koin.core.component.inject
 @UnstableApi
 class NowPlayingViewModel(
     private val app: Application,
-    trackRepository: TrackRepositoryInterface
+    userTrackRepository: TrackRepositoryInterface,
+    private val toggleTrackFavoriteUseCase: ToggleTrackFavoriteUseCase,
+    private val registerTrackPlayUseCase: RegisterTrackPlayUseCase
 ) : AndroidViewModel(app), KoinComponent {
 
     private val trackFileManager: TrackFileManager by inject()
@@ -61,7 +65,7 @@ class NowPlayingViewModel(
 
     private val trackFlow: Flow<ResultState<Track>> = trackIdFlow
         .filterNotNull()
-        .flatMapLatest { id -> trackRepository.getTrackBy(id) }
+        .flatMapLatest { id -> userTrackRepository.getTrackBy(id) }
         .flowOn(Dispatchers.IO)
 
     private val tickerFlow = flow {
@@ -165,6 +169,18 @@ class NowPlayingViewModel(
             .setMediaId(track.id)
             .setMediaMetadata(mediaMetaData)
             .build()
+    }
+
+    fun onFavoriteClicked(track: Track) {
+        viewModelScope.launch(Dispatchers.IO) {
+            toggleTrackFavoriteUseCase(track)
+        }
+    }
+
+    fun onTrackStarted(trackId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            registerTrackPlayUseCase(trackId)
+        }
     }
 
     override fun onCleared() {

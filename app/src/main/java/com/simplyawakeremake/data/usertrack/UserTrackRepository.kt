@@ -7,8 +7,10 @@ import com.simplyawakeremake.data.usertrack.local.UserTrackLocalDataSource
 import com.simplyawakeremake.data.usertrack.local.toDomain
 import com.simplyawakeremake.data.usertrack.local.toEntity
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
+import com.simplyawakeremake.now
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
@@ -20,6 +22,9 @@ class UserTrackRepository(
 ) {
 
     private val TAG = "UserTrackRepository"
+
+    private fun UserTrack.withUpdatedTimestamp(): UserTrack =
+        copy(updatedAt = now())
 
     fun observeAll(): Flow<List<UserTrack>> =
         userRepository.currentUser
@@ -37,17 +42,17 @@ class UserTrackRepository(
             trackId = trackId,
             isFavorite = false,
             playCount = 0,
-            lastPlayedAt = null,
-        )
+            lastPlayedAt = null
+        ).withUpdatedTimestamp()
 
     suspend fun toggleFavorite(trackId: String, isFavorite: Boolean) {
-        val user = userRepository.ensureLocalUserExists()
+        val user = userRepository.currentUser.first()
         val userId = user.id
 
-        val current = local.getOne(userId, trackId)?.toDomain()
-            ?: defaultUserTrack(userId, trackId)
+        val current = local.getOne(userId, trackId)?.toDomain() ?: defaultUserTrack(userId, trackId)
 
         val updated = current.copy(isFavorite = isFavorite)
+            .withUpdatedTimestamp()
         Log.i(TAG, "toggleFavorite: $updated")
 
         local.upsert(updated.toEntity())
@@ -56,12 +61,12 @@ class UserTrackRepository(
             user = user,
             operationName = "favorite"
         ) {
-            remote.upsertUserTrack(updated)
+            user.firebaseUid?.let { remote.upsertUserTrack(it, updated) }
         }
     }
 
     suspend fun registerPlay(trackId: String, playedAtMillis: Long) {
-        val user = userRepository.ensureLocalUserExists()
+        val user = userRepository.currentUser.first()
         val userId = user.id
 
         val current = local.getOne(userId, trackId)?.toDomain()
@@ -69,8 +74,9 @@ class UserTrackRepository(
 
         val updated = current.copy(
             playCount = current.playCount + 1,
-            lastPlayedAt = playedAtMillis
-        )
+            lastPlayedAt = playedAtMillis,
+            updatedAt = playedAtMillis
+        ).withUpdatedTimestamp()
 
         Log.i(TAG, "registerPlay: $updated")
 
@@ -80,7 +86,7 @@ class UserTrackRepository(
             user = user,
             operationName = "play"
         ) {
-            remote.upsertUserTrack(updated)
+            user.firebaseUid?.let { remote.upsertUserTrack(remoteUserId = it, updated) }
         }
     }
 

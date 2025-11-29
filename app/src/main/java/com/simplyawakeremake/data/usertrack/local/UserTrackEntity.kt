@@ -13,6 +13,7 @@ data class UserTrackEntity(
     val isFavorite: Boolean,
     val playCount: Int,
     val lastPlayedAt: Long?,
+    val updatedAt: Long = 0L
 )
 
 fun UserTrackEntity.toDomain(): UserTrack =
@@ -22,6 +23,7 @@ fun UserTrackEntity.toDomain(): UserTrack =
         isFavorite = isFavorite,
         playCount = playCount,
         lastPlayedAt = lastPlayedAt,
+        updatedAt = updatedAt
     )
 
 fun UserTrack.toEntity(): UserTrackEntity =
@@ -31,4 +33,5 @@ fun UserTrack.toEntity(): UserTrackEntity =
         isFavorite = isFavorite,
         playCount = playCount,
         lastPlayedAt = lastPlayedAt,
+        updatedAt = updatedAt
     )

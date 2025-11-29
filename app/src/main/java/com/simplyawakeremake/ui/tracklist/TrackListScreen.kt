@@ -62,7 +62,7 @@ import com.simplyawakeremake.ui.common.ToolbarConfig
 import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.usecases.DownloadProgress
-import com.simplyawakeremake.viewmodel.MainViewModel
+import com.simplyawakeremake.ui.main.MainViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel

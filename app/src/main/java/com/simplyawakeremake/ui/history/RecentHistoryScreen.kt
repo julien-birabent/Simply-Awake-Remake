@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.history
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +35,6 @@ import com.simplyawakeremake.ui.common.CommonErrorView
 import com.simplyawakeremake.ui.common.ItemList
 import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.ui.common.ToolbarConfig
-import com.simplyawakeremake.viewmodel.RecentHistoryViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.compose.koinViewModel
 import java.text.SimpleDateFormat

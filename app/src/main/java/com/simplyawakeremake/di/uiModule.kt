@@ -6,9 +6,9 @@ import com.simplyawakeremake.ui.login.LoginViewModel
 import com.simplyawakeremake.ui.settings.SettingsViewModel
 import com.simplyawakeremake.ui.synchronization.SynchronizationViewModel
 import com.simplyawakeremake.ui.tracklist.TrackListViewModel
-import com.simplyawakeremake.viewmodel.MainViewModel
-import com.simplyawakeremake.viewmodel.NowPlayingViewModel
-import com.simplyawakeremake.viewmodel.RecentHistoryViewModel
+import com.simplyawakeremake.ui.main.MainViewModel
+import com.simplyawakeremake.ui.playback.NowPlayingViewModel
+import com.simplyawakeremake.ui.history.RecentHistoryViewModel
 import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module

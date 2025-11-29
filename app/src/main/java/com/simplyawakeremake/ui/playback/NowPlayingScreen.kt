@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.playback
 
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
@@ -52,8 +52,6 @@ import com.simplyawakeremake.ui.common.FavoriteButton
 import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.ui.common.ToolbarConfig
 import com.simplyawakeremake.ui.tracklist.PlayerListUIState
-import com.simplyawakeremake.viewmodel.NowPlayingViewModel
-import com.simplyawakeremake.viewmodel.PlayerUIState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 

@@ -1,4 +1,4 @@
-package com.simplyawakeremake.viewmodel
+package com.simplyawakeremake.ui.playback
 
 import android.app.Application
 import android.content.ComponentName
@@ -21,7 +21,6 @@ import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
 import com.simplyawakeremake.service.PlaybackService
-import com.simplyawakeremake.ui.screens.ControlButtons
 import com.simplyawakeremake.usecases.RegisterTrackPlayUseCase
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
 import kotlinx.coroutines.Dispatchers

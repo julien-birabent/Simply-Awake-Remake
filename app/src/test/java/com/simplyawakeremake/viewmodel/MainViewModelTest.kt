@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.simplyawakeremake.ui.common.ToolbarAction
 import com.simplyawakeremake.ui.common.ToolbarConfig
+import com.simplyawakeremake.ui.main.MainViewModel
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

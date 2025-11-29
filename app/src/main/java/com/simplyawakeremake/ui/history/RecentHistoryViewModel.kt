@@ -1,4 +1,4 @@
-package com.simplyawakeremake.viewmodel
+package com.simplyawakeremake.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

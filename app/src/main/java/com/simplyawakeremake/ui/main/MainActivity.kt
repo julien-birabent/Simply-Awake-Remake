@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,7 +21,6 @@ import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
-import com.simplyawakeremake.viewmodel.MainViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.component.KoinComponent
 

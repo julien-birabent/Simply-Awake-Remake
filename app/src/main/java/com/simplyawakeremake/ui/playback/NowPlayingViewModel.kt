@@ -16,6 +16,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.common.ResultState
+import com.simplyawakeremake.data.common.mapData
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
@@ -35,6 +36,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -50,7 +53,7 @@ import org.koin.core.component.inject
 @UnstableApi
 class NowPlayingViewModel(
     private val app: Application,
-    userTrackRepository: TrackRepositoryInterface,
+    private val userTrackRepository: TrackRepositoryInterface,
     private val toggleTrackFavoriteUseCase: ToggleTrackFavoriteUseCase,
     private val registerTrackPlayUseCase: RegisterTrackPlayUseCase
 ) : AndroidViewModel(app), KoinComponent {
@@ -61,6 +64,11 @@ class NowPlayingViewModel(
     private val trackIdFlow = MutableStateFlow<String?>(null)
     private val playerFlow = MutableStateFlow<Player?>(null)
     private var playerListener: PlayerSubjectWrapper? = null
+
+    private var playlistTrackIds: List<String> = emptyList()
+
+    private val _isShuffleEnabled = MutableStateFlow(false)
+    val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled
 
     private val trackFlow: Flow<ResultState<Track>> = trackIdFlow
         .filterNotNull()
@@ -123,6 +131,7 @@ class NowPlayingViewModel(
     init {
         val sessionToken = SessionToken(app, ComponentName(app, PlaybackService::class.java))
         val controllerFuture = MediaController.Builder(app, sessionToken).buildAsync()
+        viewModelScope.launch(Dispatchers.IO) { ensurePlaylistLoaded() }
 
         controllerFuture.addListener(
             {
@@ -139,14 +148,68 @@ class NowPlayingViewModel(
         )
     }
 
+    private suspend fun ensurePlaylistLoaded() {
+        if (playlistTrackIds.isNotEmpty()) return
+
+        userTrackRepository.getAllTracks()
+            .firstOrNull { it is ResultState.Success }
+            ?.mapData { tracks -> tracks.map { it.id } }
+            ?: emptyList<String>()
+    }
+
     fun setupTrackId(id: String) {
         trackIdFlow.value = id
+    }
+
+    private fun getNextTrackId(currentId: String): String? {
+        if (playlistTrackIds.isEmpty()) return null
+
+        return if (_isShuffleEnabled.value) {
+            val candidates = playlistTrackIds.filterNot { it == currentId }
+            (candidates.ifEmpty { playlistTrackIds }).randomOrNull()
+        } else {
+            val index = playlistTrackIds.indexOf(currentId)
+            if (index == -1) return null
+            val nextIndex = (index + 1) % playlistTrackIds.size
+            playlistTrackIds[nextIndex]
+        }
+    }
+
+    private fun getPreviousTrackId(currentId: String): String? {
+        if (playlistTrackIds.isEmpty()) return null
+
+        val index = playlistTrackIds.indexOf(currentId)
+        if (index == -1) return null
+        val prevIndex = if (index == 0) playlistTrackIds.lastIndex else index - 1
+        return playlistTrackIds[prevIndex]
     }
 
     fun onControlPressed(controlPressed: ControlButtons) {
         when (controlPressed) {
             ControlButtons.Play -> {
                 if (player.isPlaying) player.pause() else player.play()
+            }
+
+            ControlButtons.Next -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val currentId = trackIdFlow.value ?: return@launch
+                    val nextId = getNextTrackId(currentId) ?: return@launch
+                    trackIdFlow.emit(nextId)
+                    onTrackStarted(nextId)
+                }
+            }
+
+            ControlButtons.Previous -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    val currentId = trackIdFlow.value ?: return@launch
+                    val prevId = getPreviousTrackId(currentId) ?: return@launch
+                    trackIdFlow.emit(prevId)
+                    onTrackStarted(prevId)
+                }
+            }
+
+            ControlButtons.ToggleShuffle -> {
+                _isShuffleEnabled.value = !_isShuffleEnabled.value
             }
         }
     }

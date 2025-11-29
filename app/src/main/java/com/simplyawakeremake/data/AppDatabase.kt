@@ -1,6 +1,5 @@
 package com.simplyawakeremake.data
 
-import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.simplyawakeremake.data.track.local.TrackDao

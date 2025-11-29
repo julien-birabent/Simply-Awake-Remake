@@ -12,8 +12,6 @@ import com.simplyawakeremake.ui.screens.PlayListScreen
 import com.simplyawakeremake.ui.screens.RecentHistoryScreen
 import com.simplyawakeremake.ui.screens.SettingsScreen
 import com.simplyawakeremake.ui.screens.login.LoginRoute
-import com.simplyawakeremake.viewmodel.MainViewModel
-import com.simplyawakeremake.viewmodel.SettingsViewModel
 
 @Composable
 fun AppNavHost(

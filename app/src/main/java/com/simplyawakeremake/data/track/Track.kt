@@ -1,7 +1,6 @@
 package com.simplyawakeremake.data.track
 
 import com.simplyawakeremake.data.usertrack.UserTrack
-import com.simplyawakeremake.data.usertrack.local.UserTrackEntity
 
 
 data class Track(

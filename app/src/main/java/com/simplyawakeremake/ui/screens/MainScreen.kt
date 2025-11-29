@@ -20,7 +20,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.simplyawakeremake.navigation.AppNavHost
 import com.simplyawakeremake.ui.LocalMainViewModel
-import com.simplyawakeremake.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

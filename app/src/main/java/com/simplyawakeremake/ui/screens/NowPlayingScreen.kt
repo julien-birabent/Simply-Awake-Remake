@@ -48,7 +48,6 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarConfig
-import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.PlayerUIState

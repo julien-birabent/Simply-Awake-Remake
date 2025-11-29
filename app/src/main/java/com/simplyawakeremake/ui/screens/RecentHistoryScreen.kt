@@ -32,7 +32,6 @@ import com.simplyawakeremake.data.history.UiTrackHistory
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarConfig
-import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.RecentHistoryViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.compose.koinViewModel

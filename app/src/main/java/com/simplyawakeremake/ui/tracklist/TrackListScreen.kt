@@ -61,8 +61,8 @@ import com.simplyawakeremake.ui.common.ToolbarAction
 import com.simplyawakeremake.ui.common.ToolbarConfig
 import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
-import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.ui.main.MainViewModel
+import com.simplyawakeremake.usecases.DownloadProgress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -341,7 +341,11 @@ fun TrackListItem(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            FavoriteButton(onClick = { onFavoriteClick(track) }, track.isFavorite)
+            FavoriteButton(
+                modifier = Modifier,
+                onClick = { onFavoriteClick(track) },
+                isFavorite = track.isFavorite
+            )
         }
     }
 }

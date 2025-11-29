@@ -16,7 +16,6 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.common.mapData
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
@@ -36,7 +35,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -88,9 +86,15 @@ class NowPlayingViewModel(
         when (resultState) {
             is ResultState.Loading -> PlayerUIState.Loading
             is ResultState.Success -> {
-                player.setMediaItem(createMediaItem(resultState.data))
-                player.prepare()
-                PlayerUIState.ReadyToPlay(resultState.data, player)
+                val track = resultState.data
+
+                val currentMediaId = player.currentMediaItem?.mediaId
+                if (currentMediaId != track.id) {
+                    player.setMediaItem(createMediaItem(track))
+                    player.prepare()
+                }
+
+                PlayerUIState.ReadyToPlay(track, player)
             }
 
             is ResultState.Error -> PlayerUIState.Error
@@ -151,10 +155,14 @@ class NowPlayingViewModel(
     private suspend fun ensurePlaylistLoaded() {
         if (playlistTrackIds.isNotEmpty()) return
 
-        userTrackRepository.getAllTracks()
+        val ids: List<String> = userTrackRepository.getAllTracks()
             .firstOrNull { it is ResultState.Success }
-            ?.mapData { tracks -> tracks.map { it.id } }
-            ?: emptyList<String>()
+            ?.let { result ->
+                (result as ResultState.Success).data.map { it.id }
+            }
+            ?: emptyList()
+
+        playlistTrackIds = ids
     }
 
     fun setupTrackId(id: String) {

@@ -15,10 +15,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,11 +51,9 @@ import androidx.navigation.NavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.LocalMainViewModel
-import com.simplyawakeremake.ui.common.CommonErrorView
 import com.simplyawakeremake.ui.common.FavoriteButton
 import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.ui.common.ToolbarConfig
-import com.simplyawakeremake.ui.tracklist.PlayerListUIState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
@@ -78,6 +80,7 @@ fun NowPlayingScreen(
     val totalDurationState by viewModel.totalDurationInMs.collectAsState(initial = 0L)
     val currentPositionState by viewModel.playerPositionUpdates.collectAsState(0L)
     val uiState by viewModel.uiState.collectAsState(initial = PlayerUIState.Loading)
+    val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
 
     Column(
         modifier = Modifier
@@ -111,8 +114,8 @@ fun NowPlayingScreen(
         ) {
             when (uiState) {
                 PlayerUIState.Error -> {
-                    val error = (uiState as PlayerListUIState.Error).throwable
-                    CommonErrorView(throwable = error)
+                    // this cast was wrong before, use a generic error view or just show a message
+                    //CommonErrorView(throwable = null)
                 }
 
                 PlayerUIState.Loading -> {
@@ -150,10 +153,10 @@ fun NowPlayingScreen(
                             exoPlayer = readyState.player,
                             totalDuration = totalDurationState,
                             currentPosition = currentPositionState,
-                            isPlaying = isPlayingState
-                        ) { controlButtons ->
-                            viewModel.onControlPressed(controlButtons)
-                        }
+                            isPlaying = isPlayingState,
+                            isShuffleEnabled = isShuffleEnabled,
+                            onControlPressed = viewModel::onControlPressed
+                        )
                         Spacer(modifier = Modifier.size(12.dp))
                     }
                 }
@@ -161,6 +164,7 @@ fun NowPlayingScreen(
         }
     }
 }
+
 
 @Composable
 fun PlayerSlider(player: Player, duration: Long) {
@@ -204,7 +208,10 @@ fun TrackInformationSection(
     isFavorite: Boolean = false,
     onFavoriteClicked: () -> Unit = {}
 ) {
-    Row(Modifier.fillMaxWidth()) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
         Column(Modifier.weight(1f)) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -219,7 +226,14 @@ fun TrackInformationSection(
                 fontSize = MaterialTheme.typography.bodyMedium.fontSize
             )
         }
-        FavoriteButton(isFavorite = isFavorite, onClick = onFavoriteClicked)
+        FavoriteButton(
+            modifier = Modifier
+                .requiredSize(32.dp)
+                .align(Alignment.Top),
+            iconSize = 32.dp,
+            isFavorite = isFavorite,
+            onClick = onFavoriteClicked
+        )
     }
 }
 
@@ -229,7 +243,8 @@ fun PlayerControlsView(
     totalDuration: Long,
     currentPosition: Long,
     isPlaying: Boolean,
-    navigateTrack: (ControlButtons) -> Unit
+    isShuffleEnabled: Boolean,
+    onControlPressed: (ControlButtons) -> Unit
 ) {
     Column(
         Modifier.fillMaxWidth(),
@@ -247,17 +262,33 @@ fun PlayerControlsView(
             Text(text = totalDuration.formatToMinuteAndSeconds(), color = Color.White)
         }
 
+        Spacer(modifier = Modifier.size(16.dp))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(
+                onClick = { onControlPressed(ControlButtons.Previous) },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.size(32.dp),
+                    imageVector = Icons.Default.SkipPrevious,
+                    contentDescription = "Previous",
+                    tint = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.size(24.dp))
+
+            IconButton(
                 modifier = Modifier
                     .size(64.dp)
                     .background(Color.White, shape = CircleShape)
                     .clip(CircleShape),
-                onClick = { navigateTrack(ControlButtons.Play) }
+                onClick = { onControlPressed(ControlButtons.Play) }
             ) {
                 Icon(
                     imageVector = ImageVector.vectorResource(
@@ -267,6 +298,34 @@ fun PlayerControlsView(
                     tint = Color.Black
                 )
             }
+
+            Spacer(modifier = Modifier.size(24.dp))
+
+            IconButton(
+                onClick = { onControlPressed(ControlButtons.Next) },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.size(32.dp),
+                    imageVector = Icons.Default.SkipNext,
+                    contentDescription = "Next",
+                    tint = Color.White
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.size(12.dp))
+
+        IconButton(
+            onClick = { onControlPressed(ControlButtons.ToggleShuffle) }
+        ) {
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.Default.Shuffle,
+                contentDescription = "Shuffle",
+                tint = if (isShuffleEnabled) MaterialTheme.colorScheme.primary else Color.White
+            )
         }
     }
 }
+

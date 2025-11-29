@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -113,7 +114,7 @@ fun LoginScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.enzo),
-                        contentDescription = "Track artwork",
+                        contentDescription = stringResource(R.string.login_track_artwork_cd),
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(100.dp, 200.dp),
@@ -122,13 +123,13 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Welcome to Simply Awake",
+                        text = stringResource(R.string.login_title),
                         style = MaterialTheme.typography.headlineLarge,
                         textAlign = TextAlign.Center,
                     )
 
                     Text(
-                        text = "Choose how you want to continue:",
+                        text = stringResource(R.string.login_subtitle),
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                     )
@@ -136,7 +137,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     LoadingButton(
-                        text = "Continue as guest",
+                        text = stringResource(R.string.login_continue_as_guest),
                         onClick = onContinueAsGuest,
                         isLoading = false,
                         enabled = !state.isLoggingIn,
@@ -144,7 +145,7 @@ fun LoginScreen(
                     )
 
                     LoadingButton(
-                        text = "Sign in with Google",
+                        text = stringResource(R.string.login_sign_in_with_google),
                         onClick = onLoginWithGoogle,
                         isLoading = state.isLoggingIn,
                         enabled = !state.isLoggingIn,
@@ -154,7 +155,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Why log in with a Google account?",
+                        text = stringResource(R.string.login_why_login_question),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.clickable(enabled = !state.isLoggingIn) {
@@ -180,18 +181,14 @@ private fun WhyLoginDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("OK")
+                Text(stringResource(R.string.login_dialog_ok))
             }
         },
         title = {
-            Text("Why log in?")
+            Text(stringResource(R.string.login_dialog_title))
         },
         text = {
-            Text(
-                "If you sign in with Google, your favorites and listening history " +
-                        "can be synced across devices and remain available even if you reinstall the app. " +
-                        "As a guest, your data stays on this device only."
-            )
+            Text(stringResource(R.string.login_dialog_text))
         }
     )
 }

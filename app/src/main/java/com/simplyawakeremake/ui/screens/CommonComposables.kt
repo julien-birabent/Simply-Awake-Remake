@@ -56,7 +56,7 @@ fun CommonErrorView(throwable: Throwable) {
 
 @Composable
 fun <T> ItemList(
-    modifier: Modifier = Modifier.fillMaxWidth(),
+    modifier: Modifier,
     items: List<T>,
     keySelector: ((index: Int) -> Any) = {},
     onclick: (T) -> Unit,
@@ -64,7 +64,7 @@ fun <T> ItemList(
     itemContent: @Composable (T) -> Unit
 ) {
     LazyColumn(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
     ) {
         items(
             count = items.size,

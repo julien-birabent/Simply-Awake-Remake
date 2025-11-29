@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -104,7 +105,7 @@ fun GoogleSignInSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "Account",
+            text = stringResource(id = R.string.settings_section_account_title),
             style = MaterialTheme.typography.titleMedium,
         )
 
@@ -113,31 +114,32 @@ fun GoogleSignInSection(
         when {
             state.isLoadingUser -> {
                 Text(
-                    text = "Loading account…",
+                    text = stringResource(id = R.string.settings_loading_account),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
 
             state.isLoggedIn -> {
                 Text(
-                    text = "Logged in as:",
+                    text = stringResource(id = R.string.settings_logged_in_as),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = state.userDisplayName ?: "Unknown user",
+                    text = state.userDisplayName
+                        ?: stringResource(id = R.string.settings_unknown_user),
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
 
             else -> {
                 Text(
-                    text = "You are currently using the app as a guest.",
+                    text = stringResource(id = R.string.settings_guest_message),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 LoadingButton(
-                    text = "Sign in with Google",
+                    text = stringResource(id = R.string.settings_sign_in_with_google),
                     onClick = onLoginWithGoogle,
                     isLoading = state.isLoggingIn,
                     modifier = Modifier.fillMaxWidth()
@@ -154,6 +156,7 @@ fun GoogleSignInSection(
         }
     }
 }
+
 
 @Preview(
     showBackground = true,

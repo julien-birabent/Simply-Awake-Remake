@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -52,6 +51,7 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.navigation.Screen
+import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
 import com.simplyawakeremake.usecases.DownloadProgress
@@ -67,12 +67,11 @@ import com.simplyawakeremake.ui.screens.LoadingIndicator as LoadingIndicator1
 
 @Composable
 fun PlayListScreen(
-    navController: NavController,
-    mainViewModel: MainViewModel,
-    viewModel: TrackListViewModel = koinViewModel()
+    navController: NavController, viewModel: TrackListViewModel = koinViewModel()
 ) {
     val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
+    val mainViewModel = LocalMainViewModel.current
 
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
@@ -134,21 +133,15 @@ private fun SetupToolbar(
     }
 
     val toolbarConfig = ToolbarConfig(
-        actions = listOf(
-            tracksDownloadAction {
-                if (downloadState !is DownloadProgress.InProgress) {
-                    showDownloadConfirmationDialog = true
-                }
-            },
-            ToolbarAction(Icons.Outlined.History, "Recent History") {
-                navController.navigate(Screen.RECENT_HISTORY.name)
-            },
-            goToSettingsAction {
-                navController.navigate(Screen.SETTINGS.name)
-            }
-        ),
-        showToolbar = true
-    )
+        actions = listOf(tracksDownloadAction {
+        if (downloadState !is DownloadProgress.InProgress) {
+            showDownloadConfirmationDialog = true
+        }
+    }, ToolbarAction(Icons.Outlined.History, "Recent History") {
+        navController.navigate(Screen.RECENT_HISTORY.name)
+    }, goToSettingsAction {
+        navController.navigate(Screen.SETTINGS.name)
+    }), showToolbar = true)
 
     LaunchedEffect(Unit) {
         mainViewModel.updateToolbar(toolbarConfig)
@@ -158,8 +151,7 @@ private fun SetupToolbar(
 
 @Composable
 private fun DownloadConfirmationDialog(
-    onConfirmSelected: () -> Unit,
-    onDismiss: () -> Unit
+    onConfirmSelected: () -> Unit, onDismiss: () -> Unit
 ) {
     ConfirmationDialog(
         title = "Confirm Download",
@@ -221,9 +213,7 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
             shape = RoundedCornerShape(30.dp)
         ) {
             Text(
-                text = "Try again",
-                fontSize = 20.sp,
-                color = Color.White
+                text = "Try again", fontSize = 20.sp, color = Color.White
             )
         }
 
@@ -323,11 +313,9 @@ fun DownloadProgressIndicator(
             onClick = {
                 onDismiss()
                 isVisible = false
-            },
-            modifier = Modifier
+            }, modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RectangleShape
+                .height(56.dp), shape = RectangleShape
         ) {
             Text("Dismiss".uppercase(Locale.ROOT), fontSize = 14.sp, fontWeight = FontWeight.Medium)
         }
@@ -338,8 +326,7 @@ fun DownloadProgressIndicator(
             modifier = modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(top = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(top = 16.dp), horizontalAlignment = Alignment.CenterHorizontally
         ) {
             when (downloadState) {
                 is DownloadProgress.InProgress -> {
@@ -355,8 +342,7 @@ fun DownloadProgressIndicator(
                             modifier = Modifier.weight(1f)
                         )
                         TextButton(
-                            onClick = onCancelClick,
-                            modifier = Modifier.padding(end = 8.dp)
+                            onClick = onCancelClick, modifier = Modifier.padding(end = 8.dp)
                         ) {
                             Text("Cancel", color = MaterialTheme.colorScheme.primary)
                         }
@@ -374,8 +360,7 @@ fun DownloadProgressIndicator(
 
                 is DownloadProgress.Success -> {
                     Text(
-                        text = "Download Complete!",
-                        style = MaterialTheme.typography.bodyLarge
+                        text = "Download Complete!", style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     dismissButton()

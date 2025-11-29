@@ -6,12 +6,15 @@ import kotlinx.coroutines.flow.first
 interface UserRepository {
     val currentUser: Flow<User>
 
-    suspend fun ensureGuestUser(): User
-    suspend fun linkCurrentUserToFirebase(
-        firebaseUid: String,
+    suspend fun ensureLocalUserExists(): User
+
+    suspend fun linkCurrentUserToRemote(
+        userRemoteId: String,
         email: String?,
         displayName: String?
     )
 
     suspend fun requireCurrentUserId(): String = currentUser.first().id
+
+    suspend fun hasExistingUser(): Boolean
 }

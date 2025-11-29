@@ -55,8 +55,8 @@ class AuthRepositoryImpl(
         val email = firebaseUser.email
         val displayName = firebaseUser.displayName
 
-        userRepository.linkCurrentUserToFirebase(
-            firebaseUid = firebaseUid,
+        userRepository.linkCurrentUserToRemote(
+            userRemoteId = firebaseUid,
             email = email,
             displayName = displayName
         )

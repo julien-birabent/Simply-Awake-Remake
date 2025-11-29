@@ -1,15 +1,16 @@
 package com.simplyawakeremake.data.usertrack
 
 import android.util.Log
+import com.simplyawakeremake.data.user.User
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.local.UserTrackLocalDataSource
+import com.simplyawakeremake.data.usertrack.local.toDomain
+import com.simplyawakeremake.data.usertrack.local.toEntity
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserTrackRepository(
@@ -17,6 +18,8 @@ class UserTrackRepository(
     private val remote: UserTrackRemoteDataSource,
     private val userRepository: UserRepository
 ) {
+
+    private val TAG = "UserTrackRepository"
 
     fun observeAll(): Flow<List<UserTrack>> =
         userRepository.currentUser
@@ -28,7 +31,6 @@ class UserTrackRepository(
             .flatMapLatest { user -> local.observeOne(user.id, trackId) }
             .map { entity -> entity?.toDomain() }
 
-
     private fun defaultUserTrack(userId: String, trackId: String): UserTrack =
         UserTrack(
             userId = userId,
@@ -36,25 +38,32 @@ class UserTrackRepository(
             isFavorite = false,
             playCount = 0,
             lastPlayedAt = null,
-            updatedAt = 0L
         )
 
     suspend fun toggleFavorite(trackId: String, isFavorite: Boolean) {
-        val userId = userRepository.requireCurrentUserId()
-        val current = local.getOne(userId, trackId)?.toDomain() ?: defaultUserTrack(userId, trackId)
+        val user = userRepository.ensureLocalUserExists()
+        val userId = user.id
+
+        val current = local.getOne(userId, trackId)?.toDomain()
+            ?: defaultUserTrack(userId, trackId)
 
         val updated = current.copy(isFavorite = isFavorite)
-        Log.i("UserTrackRepository", "toggleFavorite: $updated")
+        Log.i(TAG, "toggleFavorite: $updated")
+
         local.upsert(updated.toEntity())
-        try {
+
+        syncRemoteIfLoggedIn(
+            user = user,
+            operationName = "favorite"
+        ) {
             remote.upsertUserTrack(updated)
-        } catch (e: Exception) {
-            // Optionally log/track error; don't affect local
         }
     }
 
     suspend fun registerPlay(trackId: String, playedAtMillis: Long) {
-        val userId = userRepository.requireCurrentUserId()
+        val user = userRepository.ensureLocalUserExists()
+        val userId = user.id
+
         val current = local.getOne(userId, trackId)?.toDomain()
             ?: defaultUserTrack(userId, trackId)
 
@@ -62,14 +71,38 @@ class UserTrackRepository(
             playCount = current.playCount + 1,
             lastPlayedAt = playedAtMillis
         )
-        Log.i("UserTrackRepository", "registerPlay: $updated")
+
+        Log.i(TAG, "registerPlay: $updated")
 
         local.upsert(updated.toEntity())
 
-        try {
+        syncRemoteIfLoggedIn(
+            user = user,
+            operationName = "play"
+        ) {
             remote.upsertUserTrack(updated)
+        }
+    }
+
+    private suspend fun syncRemoteIfLoggedIn(
+        user: User,
+        operationName: String,
+        block: suspend () -> Unit,
+    ) {
+        if (user.firebaseUid == null) {
+            Log.d(TAG, "Guest user (no firebaseUid); skipping remote $operationName sync")
+            return
+        }
+
+        try {
+            block()
         } catch (e: Exception) {
-            // Optionally log/track error; don't affect local
+            Log.w(
+                TAG,
+                "Failed to sync $operationName to Firestore for user=${user.id}, " +
+                        "keeping local only",
+                e
+            )
         }
     }
 }

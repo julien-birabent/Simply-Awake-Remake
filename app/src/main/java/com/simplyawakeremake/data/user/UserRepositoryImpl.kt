@@ -10,9 +10,15 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import java.util.UUID
 
+class LinkCurrentUserToFirebaseException(
+    cause: Throwable
+) : Exception("Failed to link user to Firebase / Firestore", cause)
+
+
 class UserRepositoryImpl(
     private val userDao: UserDao,
     private val dataStore: DataStore<Preferences>,
+    private val remote: UserRemoteDataSource
 ) : UserRepository {
 
     companion object {
@@ -23,26 +29,22 @@ class UserRepositoryImpl(
     override val currentUser: Flow<User> =
         dataStore.data
             .map { prefs -> prefs[KEY_CURRENT_USER_ID] }
-            .filterNotNull()
             .flatMapLatest { id ->
                 flow {
-                    val user = userDao.getById(id) ?: error("No user for id=$id")
-                    emit(user.toDomain())
+                    val user = if (id != null) {
+                        userDao.getById(id)
+                    } else {
+                        null
+                    }
+
+                    val ensuredUser = user ?: createGuestUserInternal()
+                    emit(ensuredUser.toDomain())
                 }
             }
 
-    override suspend fun ensureGuestUser(): User {
-        val prefs = dataStore.data.first()
-        val existingId = prefs[KEY_CURRENT_USER_ID]
+    override suspend fun ensureLocalUserExists(): User = currentUser.first()
 
-        if (existingId != null) {
-            val existingUser = userDao.getById(existingId)
-            if (existingUser != null) {
-                Log.i("UserRepositoryImpl", "guest user already registered, returning it: $existingUser")
-                return existingUser.toDomain()
-            }
-        }
-
+    private suspend fun createGuestUserInternal(): UserEntity {
         val newId = "user_" + UUID.randomUUID().toString()
         val now = now()
 
@@ -54,29 +56,49 @@ class UserRepositoryImpl(
             createdAt = now,
             lastActiveAt = now,
         )
-        Log.i("UserRepositoryImpl", "No Guest User currently registered; creating new user: $user")
+
+        Log.i("UserRepositoryImpl", "Creating guest user: $user")
 
         userDao.insert(user)
-
         dataStore.edit { prefsEditable ->
             prefsEditable[KEY_CURRENT_USER_ID] = newId
         }
 
-        return user.toDomain()
+        return user
     }
 
-    override suspend fun linkCurrentUserToFirebase(
-        firebaseUid: String,
+    override suspend fun linkCurrentUserToRemote(
+        userRemoteId: String,
         email: String?,
         displayName: String?,
     ) {
-        Log.i("UserRepositoryImpl", "linkCurrentUserToFirebase: $firebaseUid")
-        val current = currentUser.first()
-        val updated = current.copy(
-            firebaseUid = firebaseUid,
-            email = email ?: current.email,
-            displayName = displayName ?: current.displayName
+        Log.i("UserRepositoryImpl", "linkCurrentUserToFirebase: $userRemoteId")
+
+        val baseUser = currentUser.first()
+
+        val updated = baseUser.copy(
+            firebaseUid = userRemoteId,
+            email = email ?: baseUser.email,
+            displayName = displayName ?: baseUser.displayName
         )
+
+        try {
+            remote.upsertUser(updated)
+        } catch (e: Exception) {
+            Log.w("UserRepositoryImpl", "Failed to sync user to Firestore", e)
+            throw LinkCurrentUserToFirebaseException(e)
+        }
+
         userDao.insert(updated.toEntity())
     }
+
+
+
+    override suspend fun hasExistingUser(): Boolean {
+        val prefs = dataStore.data.first()
+        val existingId = prefs[KEY_CURRENT_USER_ID] ?: return false
+
+        return userDao.getById(existingId) != null
+    }
+
 }

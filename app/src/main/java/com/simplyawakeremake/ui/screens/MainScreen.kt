@@ -19,16 +19,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.simplyawakeremake.navigation.AppNavHost
+import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    canNavigateBack: Boolean = false,
-    viewModel: MainViewModel
+    canNavigateBack: Boolean = false
 ) {
-    val toolbarConfig by viewModel.toolbarConfig.collectAsStateWithLifecycle()
+    val mainViewModel = LocalMainViewModel.current
+    val toolbarConfig by mainViewModel.toolbarConfig.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
@@ -55,8 +56,7 @@ fun MainScreen(
     ) { paddingValues ->
         AppNavHost(
             modifier = Modifier.padding(paddingValues),
-            navController = navController,
-            mainViewModel = viewModel
+            navController = navController
         )
     }
 }

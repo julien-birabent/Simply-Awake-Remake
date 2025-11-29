@@ -8,10 +8,6 @@ import android.net.NetworkCapabilities
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.simplyawakeremake.data.auth.GoogleAuthConfig
 
 
 const val REQUEST_STORAGE_PERMISSION = 1001
@@ -22,7 +18,6 @@ fun Context.askForStoragePermission(
     onDenied: () -> Unit
 ) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        // API 29+ does not require external storage permission for app-specific directories
         onGranted()
     } else {
         val permission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE

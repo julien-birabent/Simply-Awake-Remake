@@ -24,7 +24,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.auth.AuthState
-import com.simplyawakeremake.data.auth.GoogleAuthConfig
 import com.simplyawakeremake.viewmodel.SettingsViewModel
 
 @Composable

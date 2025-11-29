@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
+import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarConfig
 import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.SettingsViewModel
@@ -20,10 +21,9 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun SettingsScreen(
     navController: NavController,
-    mainViewModel: MainViewModel,
     viewModel: SettingsViewModel = koinViewModel()
 ) {
-
+    val mainViewModel = LocalMainViewModel.current
     val toolbarConfig = ToolbarConfig(
         title = R.string.toolbar_title_settings,
         showToolbar = true,

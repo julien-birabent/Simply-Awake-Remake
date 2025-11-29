@@ -1,5 +1,5 @@
 package com.simplyawakeremake.navigation
 
 enum class Screen {
-    PLAYLIST, NOW_PLAYING, RECENT_HISTORY, SETTINGS;
+    PLAYLIST, NOW_PLAYING, RECENT_HISTORY, SETTINGS, LOGIN;
 }

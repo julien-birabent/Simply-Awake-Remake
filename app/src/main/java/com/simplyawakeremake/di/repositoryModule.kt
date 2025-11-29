@@ -2,9 +2,7 @@ package com.simplyawakeremake.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.simplyawakeremake.data.auth.AuthRepository
-import com.simplyawakeremake.data.auth.AuthRepositoryImpl
-import com.simplyawakeremake.data.auth.createGoogleSignInClient
+import com.simplyawakeremake.data.createGoogleSignInClient
 import com.simplyawakeremake.data.history.TrackHistoryRepository
 import com.simplyawakeremake.data.history.TrackHistoryRepositoryInterface
 import com.simplyawakeremake.data.track.repository.TrackRepository
@@ -33,13 +31,6 @@ val repositoryModule = module {
     single<UserTrackRemoteDataSource> {
         FirestoreUserTrackRemoteDataSource(
             firestore = get(),
-        )
-    }
-
-    single<AuthRepository> {
-        AuthRepositoryImpl(
-            firebaseAuth = get(),
-            userRepository = get()
         )
     }
 

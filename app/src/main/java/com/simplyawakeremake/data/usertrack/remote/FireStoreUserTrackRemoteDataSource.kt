@@ -29,7 +29,8 @@ class FirestoreUserTrackRemoteDataSource(
             .await()
 
         return snapshot.documents.mapNotNull { doc ->
-            doc.toObject(UserTrackDto::class.java)?.toDomain()
+            val dto = doc.toObject(UserTrackDto::class.java)
+            dto?.toDomain()
         }
     }
 }

@@ -1,10 +1,11 @@
-package com.simplyawakeremake.ui.screens.login
+package com.simplyawakeremake.ui.login
 
 
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.user.UserRepository
+import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,9 @@ data class LoginUiState(
 
 sealed interface LoginEvent {
     data object NavigateToMain : LoginEvent
+    data object StartSyncAfterLogin : LoginEvent
     data class LaunchGoogleSignIn(val intent: Intent) : LoginEvent
+    data class ShowMessage(val message: String) : LoginEvent
 }
 
 class LoginViewModel(
@@ -82,7 +85,7 @@ class LoginViewModel(
         viewModelScope.launch {
             try {
                 googleSignInUseCase.handleSignInResult(data)
-                _events.emit(LoginEvent.NavigateToMain)
+                _events.emit(LoginEvent.StartSyncAfterLogin)
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -93,6 +96,23 @@ class LoginViewModel(
             }
         }
     }
+
+    fun onSyncAfterLoginCompleted(result: UserTrackSyncResult) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoggingIn = false) }
+
+            if (result is UserTrackSyncResult.Failure) {
+                _events.emit(
+                    LoginEvent.ShowMessage(
+                        "We couldn't synchronise your data. " +
+                                "You can still use the app; sync will be retried later."
+                    )
+                )
+            }
+            _events.emit(LoginEvent.NavigateToMain)
+        }
+    }
+
 
     fun onWhyLoginClicked() {
         _uiState.update { it.copy(showWhyLoginDialog = true) }

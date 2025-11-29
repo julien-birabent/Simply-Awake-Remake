@@ -5,6 +5,8 @@ import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
+import com.simplyawakeremake.ui.tracklist.PlayerListUIState
+import com.simplyawakeremake.ui.tracklist.TrackListViewModel
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.usecases.DownloadTrackListUseCase

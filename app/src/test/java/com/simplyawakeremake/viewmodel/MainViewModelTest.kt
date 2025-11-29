@@ -2,8 +2,8 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.simplyawakeremake.ui.ToolbarAction
-import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.ui.common.ToolbarAction
+import com.simplyawakeremake.ui.common.ToolbarConfig
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest

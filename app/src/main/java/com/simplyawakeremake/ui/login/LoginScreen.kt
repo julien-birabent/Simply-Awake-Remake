@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens.login
+package com.simplyawakeremake.ui.login
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +40,7 @@ import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.LoadingButton
 import com.simplyawakeremake.ui.common.LoadingIndicator
+import com.simplyawakeremake.ui.synchronization.SynchronizationFlowDialog
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
 import org.koin.androidx.compose.koinViewModel
 
@@ -48,6 +52,7 @@ fun LoginRoute(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val uiState by viewModel.uiState.collectAsState()
+    var showSyncDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         mainViewModel.updateToolbar { current ->
@@ -68,11 +73,18 @@ fun LoginRoute(
                     googleSignInLauncher.launch(event.intent)
                 }
 
+                LoginEvent.StartSyncAfterLogin -> {
+                    showSyncDialog = true
+                }
+
                 LoginEvent.NavigateToMain -> {
                     navController.navigate(navigateToMainRoute) {
                         popUpTo(Screen.LOGIN.name) { inclusive = true }
                         launchSingleTop = true
                     }
+                }
+
+                is LoginEvent.ShowMessage -> {
                 }
             }
         }
@@ -85,6 +97,15 @@ fun LoginRoute(
         onWhyLogin = viewModel::onWhyLoginClicked,
         onDismissWhyLogin = viewModel::onWhyLoginDialogDismissed,
     )
+
+    if(showSyncDialog){
+        SynchronizationFlowDialog(
+            onFinished = { result ->
+                showSyncDialog = false
+                viewModel.onSyncAfterLoginCompleted(result)
+            }
+        )
+    }
 }
 
 @Composable

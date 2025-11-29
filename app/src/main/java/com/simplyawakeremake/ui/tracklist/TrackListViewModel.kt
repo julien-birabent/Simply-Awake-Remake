@@ -1,10 +1,12 @@
-package com.simplyawakeremake.viewmodel
+package com.simplyawakeremake.ui.tracklist
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
+import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
 import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
@@ -31,6 +33,7 @@ class TrackListViewModel(
     private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase,
     private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase,
     private val toggleTrackFavoriteUseCase: ToggleTrackFavoriteUseCase,
+    private val initialUserTrackSyncManager: InitialUserTrackSyncManager
 ) : ViewModel(), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
@@ -97,6 +100,16 @@ class TrackListViewModel(
     fun onFavoriteClicked(track: Track) {
         viewModelScope.launch(Dispatchers.IO) {
             toggleTrackFavoriteUseCase(track)
+        }
+    }
+
+    fun onConnectionAvailableForInitialSync() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                initialUserTrackSyncManager.runIfLoggedInAndNeeded()
+            } catch (e: Exception) {
+                Log.e("TrackListViewModel", "Initial sync crashed", e)
+            }
         }
     }
 

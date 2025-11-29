@@ -27,6 +27,9 @@
         No internet &amp; track not downloaded!
     </string>
 
+    <string name="sync_dialog_title">Synchronizing your data…</string>
+    <string name="sync_dialog_done">Finalizing…</string>
+
     <!-- Download progress indicator -->
     <string name="playlist_download_dismiss">Dismiss</string>
     <string name="playlist_download_in_progress">Downloading... %1$d%%</string>

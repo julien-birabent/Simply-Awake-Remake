@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.tracklist
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
@@ -54,18 +53,16 @@ import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
-import com.simplyawakeremake.ui.ToolbarAction
-import com.simplyawakeremake.ui.ToolbarConfig
 import com.simplyawakeremake.ui.common.CommonErrorView
 import com.simplyawakeremake.ui.common.ConfirmationDialog
 import com.simplyawakeremake.ui.common.FavoriteButton
 import com.simplyawakeremake.ui.common.ItemList
+import com.simplyawakeremake.ui.common.ToolbarAction
+import com.simplyawakeremake.ui.common.ToolbarConfig
 import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.viewmodel.MainViewModel
-import com.simplyawakeremake.viewmodel.PlayerListUIState
-import com.simplyawakeremake.viewmodel.TrackListViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -73,6 +70,7 @@ import java.net.UnknownHostException
 import java.util.Locale
 import com.simplyawakeremake.ui.common.LoadingIndicator as LoadingIndicator1
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun PlayListScreen(
     navController: NavController,
@@ -81,6 +79,15 @@ fun PlayListScreen(
     val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
     val mainViewModel = LocalMainViewModel.current
+
+    val connectionState by connectionState()
+
+    LaunchedEffect(connectionState) {
+        if (connectionState == ConnectionState.Available) {
+            viewModel.onConnectionAvailableForInitialSync()
+        }
+    }
+
 
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
@@ -264,6 +271,7 @@ fun Playlist(
     }
     val connectionState by connectionState()
 
+    HorizontalDivider(color = Color.White, thickness = 1.dp)
     ItemList(
         modifier = modifier,
         items = tracks,
@@ -293,14 +301,14 @@ fun TrackListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick(track) }
-            .padding(horizontal = 8.dp, vertical = 12.dp),
+            .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
             text = track.ordinal.toString(),
+            modifier = Modifier.padding(8.dp),
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.widthIn(min = 12.dp),
         )
 
         Column(

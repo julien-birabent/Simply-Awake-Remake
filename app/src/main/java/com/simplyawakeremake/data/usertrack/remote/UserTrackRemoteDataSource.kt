@@ -20,5 +20,5 @@ interface UserTrackRemoteDataSource {
      * Optional, for initial sync / restore.
      * Typically used when local DB is empty.
      */
-    suspend fun fetchAllForUser(userId: String): List<UserTrack>
+    suspend fun fetchAllForUser(remoteUserId: String): List<UserTrack>
 }

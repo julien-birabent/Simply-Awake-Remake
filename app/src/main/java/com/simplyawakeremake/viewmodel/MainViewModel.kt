@@ -2,7 +2,7 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.ui.common.ToolbarConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

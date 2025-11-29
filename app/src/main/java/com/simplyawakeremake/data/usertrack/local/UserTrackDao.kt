@@ -12,6 +12,9 @@ interface UserTrackDao {
     @Query("SELECT * FROM user_tracks WHERE userId = :userId")
     fun observeAllForUser(userId: String): Flow<List<UserTrackEntity>>
 
+    @Query("SELECT * FROM user_tracks WHERE userId = :userId")
+    fun getAllForUser(userId: String): List<UserTrackEntity>
+
     @Query("SELECT * FROM user_tracks WHERE userId = :userId AND trackId = :trackId LIMIT 1")
     fun observeForUserAndTrack(userId: String, trackId: String): Flow<UserTrackEntity?>
 

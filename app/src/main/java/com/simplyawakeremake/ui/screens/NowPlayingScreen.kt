@@ -46,8 +46,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
+import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarConfig
-import com.simplyawakeremake.viewmodel.MainViewModel
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.PlayerUIState
@@ -58,10 +58,10 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun NowPlayingScreen(
     navController: NavController,
-    mainViewModel: MainViewModel,
     trackId: String,
     viewModel: NowPlayingViewModel = koinViewModel()
 ) {
+    val mainViewModel = LocalMainViewModel.current
     val toolbarConfig = ToolbarConfig(showToolbar = false)
 
     LaunchedEffect(Unit) {

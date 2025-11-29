@@ -1,6 +1,7 @@
 package com.simplyawakeremake.data.usertrack.local
 
 import androidx.room.Entity
+import com.simplyawakeremake.data.usertrack.UserTrack
 
 @Entity(
     tableName = "user_tracks",
@@ -13,3 +14,21 @@ data class UserTrackEntity(
     val playCount: Int,
     val lastPlayedAt: Long?,
 )
+
+fun UserTrackEntity.toDomain(): UserTrack =
+    UserTrack(
+        userId = userId,
+        trackId = trackId,
+        isFavorite = isFavorite,
+        playCount = playCount,
+        lastPlayedAt = lastPlayedAt,
+    )
+
+fun UserTrack.toEntity(): UserTrackEntity =
+    UserTrackEntity(
+        userId = userId,
+        trackId = trackId,
+        isFavorite = isFavorite,
+        playCount = playCount,
+        lastPlayedAt = lastPlayedAt,
+    )

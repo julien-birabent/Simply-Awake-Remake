@@ -19,6 +19,5 @@ class SimpleAwakeApplication : Application() {
             androidContext(this@SimpleAwakeApplication)
             modules(appModule, dataModule, databaseModule, repositoryModule, domainModule, uiModule)
         }
-
     }
 }

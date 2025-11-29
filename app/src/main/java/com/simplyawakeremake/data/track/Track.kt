@@ -2,6 +2,7 @@ package com.simplyawakeremake.data.track
 
 import com.simplyawakeremake.data.usertrack.UserTrack
 
+
 data class Track(
     val id: String,
     val name: String,

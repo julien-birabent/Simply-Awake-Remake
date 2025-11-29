@@ -2,6 +2,9 @@ package com.simplyawakeremake.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.simplyawakeremake.BuildConfig
 import com.simplyawakeremake.data.common.DataSaver
 import com.simplyawakeremake.data.download.AndroidDownloadService
@@ -19,6 +22,10 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 
+val Context.userPrefsDataStore by preferencesDataStore(
+    name = "user_prefs"
+)
+
 val appModule = module {
 
     single<SharedPreferences> {
@@ -27,6 +34,11 @@ val appModule = module {
             Context.MODE_PRIVATE
         )
     }
+
+    single<DataStore<Preferences>> {
+        androidContext().userPrefsDataStore
+    }
+
     single<DataSaver<TrackDto>>(named("tracks")) { TrackSharedPrefsSaver(get()) }
     single<DataSaver<UiTrackHistory>>(named("track_history")) { TrackHistorySaver(get()) }
     single { TrackUriProvider(BuildConfig.baseServerUrl) }

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -42,6 +41,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,6 +52,7 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.navigation.Screen
+import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarAction
 import com.simplyawakeremake.ui.ToolbarConfig
 import com.simplyawakeremake.usecases.DownloadProgress
@@ -68,11 +69,11 @@ import com.simplyawakeremake.ui.screens.LoadingIndicator as LoadingIndicator1
 @Composable
 fun PlayListScreen(
     navController: NavController,
-    mainViewModel: MainViewModel,
     viewModel: TrackListViewModel = koinViewModel()
 ) {
     val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
+    val mainViewModel = LocalMainViewModel.current
 
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
@@ -98,8 +99,8 @@ fun PlayListScreen(
                 Playlist(
                     modifier = Modifier.fillMaxSize(),
                     tracks = (uiState as PlayerListUIState.Tracks).items,
-                    navController,
-                    viewModel
+                    navController = navController,
+                    viewModel = viewModel
                 )
                 Box(
                     modifier = Modifier
@@ -127,20 +128,30 @@ private fun SetupToolbar(
     var showDownloadConfirmationDialog by rememberSaveable { mutableStateOf(false) }
 
     if (showDownloadConfirmationDialog) {
-        DownloadConfirmationDialog(onConfirmSelected = {
-            viewModel.downloadAllTracks()
-            showDownloadConfirmationDialog = false
-        }, onDismiss = { showDownloadConfirmationDialog = false })
+        DownloadConfirmationDialog(
+            onConfirmSelected = {
+                viewModel.downloadAllTracks()
+                showDownloadConfirmationDialog = false
+            },
+            onDismiss = { showDownloadConfirmationDialog = false }
+        )
     }
 
     val toolbarConfig = ToolbarConfig(
         actions = listOf(
             tracksDownloadAction {
-                if (downloadState !is DownloadProgress.InProgress) showDownloadConfirmationDialog =
-                    true
+                if (downloadState !is DownloadProgress.InProgress) {
+                    showDownloadConfirmationDialog = true
+                }
             },
-            ToolbarAction(Icons.Outlined.History, "Recent History") {
+            ToolbarAction(
+                Icons.Outlined.History,
+                stringResource(R.string.playlist_toolbar_recent_history)
+            ) {
                 navController.navigate(Screen.RECENT_HISTORY.name)
+            },
+            goToSettingsAction {
+                navController.navigate(Screen.SETTINGS.name)
             }
         ),
         showToolbar = true
@@ -152,24 +163,18 @@ private fun SetupToolbar(
 }
 
 @Composable
-private fun tracksDownloadAction(onClick: () -> Unit): ToolbarAction {
-    return ToolbarAction(Icons.Outlined.FileDownload, contentDescription = "Download") {
-        onClick()
-    }
-}
-
-@Composable
 private fun DownloadConfirmationDialog(
     onConfirmSelected: () -> Unit,
     onDismiss: () -> Unit
 ) {
     ConfirmationDialog(
-        title = "Confirm Download",
-        message = "This action will download all the tracks to your device. Do you want to proceed?",
-        confirmButtonText = "Start Download",
-        dismissButtonText = "Cancel",
+        title = stringResource(R.string.playlist_download_confirm_title),
+        message = stringResource(R.string.playlist_download_confirm_message),
+        confirmButtonText = stringResource(R.string.playlist_download_confirm_start),
+        dismissButtonText = stringResource(R.string.playlist_download_confirm_cancel),
         onDismiss = onDismiss,
-        onConfirm = { onConfirmSelected() })
+        onConfirm = { onConfirmSelected() }
+    )
 }
 
 @Composable
@@ -188,11 +193,10 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
             modifier = Modifier
                 .height(200.dp)
                 .fillMaxWidth(),
-
-            )
+        )
         Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = "Whoops!!",
+            text = stringResource(R.string.playlist_no_internet_title),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(top = 20.dp)
@@ -204,7 +208,7 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "No Internet connection was found. Check your connection or try again.",
+            text = stringResource(R.string.playlist_no_internet_message),
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .padding(top = 10.dp, start = 25.dp, end = 25.dp)
@@ -223,12 +227,11 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
             shape = RoundedCornerShape(30.dp)
         ) {
             Text(
-                text = "Try again",
+                text = stringResource(R.string.playlist_no_internet_try_again),
                 fontSize = 20.sp,
                 color = Color.White
             )
         }
-
     }
 }
 
@@ -245,17 +248,20 @@ fun Playlist(
 
     val showToast = {
         currentToast?.cancel()
-        currentToast =
-            Toast.makeText(context, "No internet & track not downloaded!", Toast.LENGTH_LONG)
+        currentToast = Toast.makeText(
+            context,
+            context.getString(R.string.playlist_no_internet_track_not_available),
+            Toast.LENGTH_LONG
+        )
         currentToast?.show()
     }
     val connectionState by connectionState()
 
     ItemList(
         modifier = modifier,
-        tracks,
-        { index -> tracks[index].id },
-        { track ->
+        items = tracks,
+        keySelector = { index -> tracks[index].id },
+        onclick = { track ->
             if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
                 viewModel.addToHistory(track)
                 navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
@@ -331,7 +337,12 @@ fun DownloadProgressIndicator(
                 .height(56.dp),
             shape = RectangleShape
         ) {
-            Text("Dismiss".uppercase(Locale.ROOT), fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            Text(
+                stringResource(R.string.playlist_download_dismiss)
+                    .uppercase(Locale.ROOT),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 
@@ -352,7 +363,10 @@ fun DownloadProgressIndicator(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Downloading... ${downloadState.percentage}%",
+                            text = stringResource(
+                                R.string.playlist_download_in_progress,
+                                downloadState.percentage
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.weight(1f)
                         )
@@ -360,9 +374,11 @@ fun DownloadProgressIndicator(
                             onClick = onCancelClick,
                             modifier = Modifier.padding(end = 8.dp)
                         ) {
-                            Text("Cancel", color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                stringResource(R.string.playlist_download_cancel),
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
-
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
@@ -376,7 +392,7 @@ fun DownloadProgressIndicator(
 
                 is DownloadProgress.Success -> {
                     Text(
-                        text = "Download Complete!",
+                        text = stringResource(R.string.playlist_download_complete),
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -385,7 +401,10 @@ fun DownloadProgressIndicator(
 
                 is DownloadProgress.Failure -> {
                     Text(
-                        text = "Download Failed: ${downloadState.error.message}",
+                        text = stringResource(
+                            R.string.playlist_download_failed,
+                            downloadState.error.message ?: ""
+                        ),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )

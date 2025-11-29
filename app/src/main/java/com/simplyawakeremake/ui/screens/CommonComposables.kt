@@ -56,7 +56,7 @@ fun CommonErrorView(throwable: Throwable) {
 
 @Composable
 fun <T> ItemList(
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
     items: List<T>,
     keySelector: ((index: Int) -> Any) = {},
     onclick: (T) -> Unit,
@@ -64,7 +64,7 @@ fun <T> ItemList(
     itemContent: @Composable (T) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
     ) {
         items(
             count = items.size,
@@ -122,26 +122,6 @@ fun LaunchPermissionFlow(
     } else {
         onGranted()
     }
-}
-
-@Composable
-fun QuickDismissAlertDialog(
-    onDismissRequest: () -> Unit,
-    dialogTitle: String,
-    dialogText: String
-) {
-    AlertDialog(
-        title = { Text(text = dialogTitle) },
-        text = { Text(text = dialogText) },
-        onDismissRequest = { onDismissRequest() },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = { onDismissRequest() }
-            ) {
-                Text("Dismiss")
-            }
-        }
-    )
 }
 
 @Composable

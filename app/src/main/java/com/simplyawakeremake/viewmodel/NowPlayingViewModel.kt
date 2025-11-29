@@ -50,8 +50,7 @@ import org.koin.core.component.inject
 class NowPlayingViewModel(
     private val app: Application,
     trackRepository: TrackRepositoryInterface
-) :
-    AndroidViewModel(app), KoinComponent {
+) : AndroidViewModel(app), KoinComponent {
 
     private val trackFileManager: TrackFileManager by inject()
 

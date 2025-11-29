@@ -10,14 +10,14 @@ import androidx.navigation.navArgument
 import com.simplyawakeremake.ui.screens.NowPlayingScreen
 import com.simplyawakeremake.ui.screens.PlayListScreen
 import com.simplyawakeremake.ui.screens.RecentHistoryScreen
-import com.simplyawakeremake.viewmodel.MainViewModel
+import com.simplyawakeremake.ui.screens.SettingsRoute
+import com.simplyawakeremake.ui.screens.login.LoginRoute
 
 @Composable
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    startDestination: String = Screen.PLAYLIST.name,
-    mainViewModel: MainViewModel,
+    startDestination: String = Screen.LOGIN.name
 ) {
     NavHost(
         modifier = modifier,
@@ -25,7 +25,7 @@ fun AppNavHost(
         startDestination = startDestination
     ) {
         composable(Screen.PLAYLIST.name) {
-            PlayListScreen(navController, mainViewModel)
+            PlayListScreen(navController)
         }
         composable(
             Screen.NOW_PLAYING.name + "/{trackId}",
@@ -33,10 +33,17 @@ fun AppNavHost(
         ) { backStackEntry ->
             NowPlayingScreen(
                 navController,
-                mainViewModel,
                 backStackEntry.arguments?.getString("trackId") ?: ""
             )
         }
-        composable(Screen.RECENT_HISTORY.name) { RecentHistoryScreen(navController, mainViewModel) }
+        composable(Screen.RECENT_HISTORY.name) { RecentHistoryScreen(navController) }
+        composable(Screen.SETTINGS.name) { SettingsRoute(navController) }
+        composable(Screen.LOGIN.name) {
+            LoginRoute(
+                navController,
+                navigateToMainRoute = Screen.PLAYLIST.name
+            )
+        }
+
     }
 }

@@ -12,7 +12,20 @@
           "package_name": "org.marklackey.android.awake"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1028914958582-p2913dis5e3js2p2ga21h67ta082out1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.marklackey.android.awake",
+            "certificate_hash": "922385eb88658e4f2550b1b205b6b0aa7e596926"
+          }
+        },
+        {
+          "client_id": "1028914958582-acguoha7dpvp0dfnjcuup5sacc3s87tg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDbilOrO8Yu-zy-7-zaysWmhiXendX_QJ4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1028914958582-acguoha7dpvp0dfnjcuup5sacc3s87tg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

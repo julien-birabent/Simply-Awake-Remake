@@ -1,60 +1,89 @@
 package com.simplyawakeremake.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.simplyawakeremake.data.auth.AuthRepository
-import com.simplyawakeremake.data.auth.AuthState
 import com.simplyawakeremake.data.user.UserRepository
-import com.simplyawakeremake.data.usertrack.UserTrackRepository
-import kotlinx.coroutines.flow.SharingStarted
+import com.simplyawakeremake.usecases.GoogleSignInUseCase
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
+data class SettingsUiState(
+    val isLoadingUser: Boolean = true,
+    val isLoggedIn: Boolean = false,
+    val isLoggingIn: Boolean = false,
+    val userDisplayName: String? = null,
+    val errorMessage: String? = null,
+)
+
+sealed interface SettingsEvent {
+    data class LaunchGoogleSignIn(val intent: android.content.Intent) : SettingsEvent
+    data class ShowMessage(val message: String) : SettingsEvent
+}
+
 class SettingsViewModel(
-    private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
-    private val userTrackRepository: UserTrackRepository
+    private val googleSignInUseCase: GoogleSignInUseCase,
 ) : ViewModel() {
 
-    val authState: StateFlow<AuthState> =
-        authRepository.authState
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = AuthState.Guest
-            )
+    private val _uiState = MutableStateFlow(SettingsUiState())
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-    /*val currentUser: StateFlow<User?> =
-        userRepository.currentUser
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = null
-            )*/
+    private val _events = MutableSharedFlow<SettingsEvent>()
+    val events = _events.asSharedFlow()
 
-    fun onGoogleSignInSuccessful(idToken: String) {
+    init {
+        observeCurrentUser()
+    }
+
+    private fun observeCurrentUser() {
         viewModelScope.launch {
-            try {
-                Log.i("SettingsViewModel", "onGoogleSignInSuccessful: $idToken")
-                val newState = authRepository.signInWithGoogle(idToken)
-
-                // Optionally trigger sync after login:
-                // userTrackRepository.syncLocalToRemoteIfLoggedIn()
-
-                // And/or expose some UI event for "Login success"
-
-            } catch (e: Exception) {
-                // Expose error to UI, log, etc.
+            userRepository.currentUser.collect { user ->
+                _uiState.update {
+                    it.copy(
+                        isLoadingUser = false,
+                        isLoggedIn = user.firebaseUid != null,
+                        userDisplayName = user.displayName ?: user.email ?: "Logged in"
+                    )
+                }
             }
         }
     }
 
-    fun onSignOutClicked() {
+    fun onLoginWithGoogleClicked() {
+        if (_uiState.value.isLoggingIn) return
+
         viewModelScope.launch {
-            authRepository.signOut()
-            // UI will observe authState and react
+            _uiState.update { it.copy(isLoggingIn = true, errorMessage = null) }
+            val intent = googleSignInUseCase.getSignInIntent()
+            _events.emit(SettingsEvent.LaunchGoogleSignIn(intent))
+        }
+    }
+
+    fun onGoogleSignInResult(data: android.content.Intent?) {
+        viewModelScope.launch {
+            try {
+                googleSignInUseCase.handleSignInResult(data)
+                _uiState.update { it.copy(isLoggingIn = false) }
+                _events.emit(
+                    SettingsEvent.ShowMessage("Successfully linked your account ✨")
+                )
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoggingIn = false,
+                        errorMessage = e.message ?: "Failed to log in"
+                    )
+                }
+                _events.emit(
+                    SettingsEvent.ShowMessage("Login failed: ${e.message ?: "unknown error"}")
+                )
+            }
         }
     }
 }

@@ -21,11 +21,5 @@ val uiModule = module {
     viewModel { TrackListViewModel(get(), get(), get(), get()) }
     viewModel { NowPlayingViewModel(androidApplication(), get()) }
     viewModel { RecentHistoryViewModel(get(), get()) }
-    viewModel {
-        SettingsViewModel(
-            authRepository = get(),
-            userTrackRepository = get(),
-            userRepository = get()
-        )
-    }
+    viewModel { SettingsViewModel(get(), get()) }
 }

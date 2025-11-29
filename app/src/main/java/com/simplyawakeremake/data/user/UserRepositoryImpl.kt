@@ -8,6 +8,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.simplyawakeremake.now
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -35,16 +37,17 @@ class UserRepositoryImpl(
             .map { prefs -> prefs[KEY_CURRENT_USER_ID] }
             .flatMapLatest { id ->
                 flow {
-                    val user = if (id != null) {
-                        userDao.getById(id)
-                    } else {
-                        null
-                    }
+                    val effectiveId = id ?: createGuestUserInternal().id
 
-                    val ensuredUser = user ?: createGuestUserInternal()
-                    emit(ensuredUser.toDomain())
+                    emitAll(
+                        userDao.observeById(effectiveId)
+                            .filterNotNull()
+                            .map { entity -> entity.toDomain() }
+                    )
                 }
             }
+
+
 
     override suspend fun ensureLocalUserExists(): User = currentUser.first()
 

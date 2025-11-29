@@ -10,7 +10,7 @@ import androidx.navigation.navArgument
 import com.simplyawakeremake.ui.screens.NowPlayingScreen
 import com.simplyawakeremake.ui.screens.PlayListScreen
 import com.simplyawakeremake.ui.screens.RecentHistoryScreen
-import com.simplyawakeremake.ui.screens.SettingsScreen
+import com.simplyawakeremake.ui.screens.SettingsRoute
 import com.simplyawakeremake.ui.screens.login.LoginRoute
 
 @Composable
@@ -37,7 +37,7 @@ fun AppNavHost(
             )
         }
         composable(Screen.RECENT_HISTORY.name) { RecentHistoryScreen(navController) }
-        composable(Screen.SETTINGS.name) { SettingsScreen(navController) }
+        composable(Screen.SETTINGS.name) { SettingsRoute(navController) }
         composable(Screen.LOGIN.name) {
             LoginRoute(
                 navController,

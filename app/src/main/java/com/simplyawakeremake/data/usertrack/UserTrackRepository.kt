@@ -4,15 +4,12 @@ import android.util.Log
 import com.simplyawakeremake.data.user.User
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.local.UserTrackLocalDataSource
-import com.simplyawakeremake.data.usertrack.local.toDomain
-import com.simplyawakeremake.data.usertrack.local.toEntity
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
 import com.simplyawakeremake.now
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserTrackRepository(
@@ -27,14 +24,10 @@ class UserTrackRepository(
         copy(updatedAt = now())
 
     fun observeAll(): Flow<List<UserTrack>> =
-        userRepository.currentUser
-            .flatMapLatest { user -> local.observeAll(user.id) }
-            .map { entities -> entities.map { it.toDomain() } }
+        userRepository.currentUser.flatMapLatest { user -> local.observeAll(user.id) }
 
     fun observeTrack(trackId: String): Flow<UserTrack?> =
-        userRepository.currentUser
-            .flatMapLatest { user -> local.observeOne(user.id, trackId) }
-            .map { entity -> entity?.toDomain() }
+        userRepository.currentUser.flatMapLatest { user -> local.observeOne(user.id, trackId) }
 
     private fun defaultUserTrack(userId: String, trackId: String): UserTrack =
         UserTrack(
@@ -49,13 +42,14 @@ class UserTrackRepository(
         val user = userRepository.currentUser.first()
         val userId = user.id
 
-        val current = local.getOne(userId, trackId)?.toDomain() ?: defaultUserTrack(userId, trackId)
+        val current = local.getOne(userId, trackId) ?: defaultUserTrack(userId, trackId)
 
-        val updated = current.copy(isFavorite = isFavorite)
+        val updated = current
+            .copy(isFavorite = isFavorite)
             .withUpdatedTimestamp()
         Log.i(TAG, "toggleFavorite: $updated")
 
-        local.upsert(updated.toEntity())
+        local.upsert(updated)
 
         syncRemoteIfLoggedIn(
             user = user,
@@ -69,24 +63,29 @@ class UserTrackRepository(
         val user = userRepository.currentUser.first()
         val userId = user.id
 
-        val current = local.getOne(userId, trackId)?.toDomain()
-            ?: defaultUserTrack(userId, trackId)
+        val current = local.getOne(userId, trackId) ?: defaultUserTrack(userId, trackId)
 
         val updated = current.copy(
             playCount = current.playCount + 1,
             lastPlayedAt = playedAtMillis,
-            updatedAt = playedAtMillis
         ).withUpdatedTimestamp()
 
         Log.i(TAG, "registerPlay: $updated")
 
-        local.upsert(updated.toEntity())
+        local.upsert(updated)
 
         syncRemoteIfLoggedIn(
             user = user,
             operationName = "play"
         ) {
-            user.firebaseUid?.let { remote.upsertUserTrack(remoteUserId = it, updated) }
+
+            user.firebaseUid?.let {
+                Log.i(
+                    TAG,
+                    "toggleFavorite remote upsert: remoteUserId=$it, trackId=$trackId, isFavorite=${updated.isFavorite}"
+                )
+                remote.upsertUserTrack(remoteUserId = it, updated)
+            }
         }
     }
 

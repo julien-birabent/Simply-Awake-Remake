@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui
+package com.simplyawakeremake.ui.common
 
 import androidx.compose.ui.graphics.vector.ImageVector
 

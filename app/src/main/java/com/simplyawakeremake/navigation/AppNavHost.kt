@@ -7,11 +7,11 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.simplyawakeremake.ui.login.LoginRoute
 import com.simplyawakeremake.ui.screens.NowPlayingScreen
-import com.simplyawakeremake.ui.screens.PlayListScreen
 import com.simplyawakeremake.ui.screens.RecentHistoryScreen
-import com.simplyawakeremake.ui.screens.SettingsRoute
-import com.simplyawakeremake.ui.screens.login.LoginRoute
+import com.simplyawakeremake.ui.settings.SettingsRoute
+import com.simplyawakeremake.ui.tracklist.PlayListScreen
 
 @Composable
 fun AppNavHost(

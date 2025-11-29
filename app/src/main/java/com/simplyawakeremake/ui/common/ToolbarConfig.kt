@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui
+package com.simplyawakeremake.ui.common
 
 import androidx.annotation.StringRes
 import com.simplyawakeremake.R

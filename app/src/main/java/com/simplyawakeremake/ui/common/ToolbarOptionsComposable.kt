@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
-import com.simplyawakeremake.ui.ToolbarAction
 
 @Composable
 fun goToSettingsAction(onClick: () -> Unit): ToolbarAction {

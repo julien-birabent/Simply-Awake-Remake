@@ -20,9 +20,9 @@ data class Track(
     val displayName: String = name.replace(Regex("\\d"), "").trim()
 }
 
-fun Track.withUserMeta(userMeta: UserTrack?): Track =
-    copy(
-        isFavorite = userMeta?.isFavorite ?: false,
-        playCount = userMeta?.playCount ?: 0,
-        lastPlayedAt = userMeta?.lastPlayedAt,
+fun Track.withUserMeta(meta: UserTrack?): Track =
+    if (meta == null) this else copy(
+        isFavorite = meta.isFavorite,
+        playCount = meta.playCount,
+        lastPlayedAt = meta.lastPlayedAt,
     )

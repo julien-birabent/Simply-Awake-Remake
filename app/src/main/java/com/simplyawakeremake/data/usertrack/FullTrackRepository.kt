@@ -12,23 +12,25 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 
-class TrackWithUserRepository(
+class FullTrackRepository(
     private val catalogRepo: TrackRepository,
     private val userTrackRepository: UserTrackRepository,
 ) : TrackRepositoryInterface {
     private val TAG = "TrackWithUserRepository"
+
     override fun getAllTracks(): Flow<ResultState<List<Track>>> {
-        val safeUserFlow = userTrackRepository.observeAll()
-            .catch { e ->
-                Log.e(TAG, "User meta observation failed, using empty list, error: $e")
-                emit(emptyList())
-            }
+        val safeUserFlow: Flow<List<UserTrack>> =
+            userTrackRepository.observeAll()
+                .catch { e ->
+                    Log.e(TAG, "User meta observation failed, using empty list", e)
+                    emit(emptyList())
+                }
 
         return combine(
             catalogRepo.getAllTracks(),
             safeUserFlow
-        ) { trackResult, userEntities ->
-            val userMap = userEntities.associateBy { it.trackId }
+        ) { trackResult, userTracks ->
+            val userMap: Map<String, UserTrack> = userTracks.associateBy { it.trackId }
 
             trackResult.mapData { tracks ->
                 tracks.map { track ->
@@ -38,6 +40,7 @@ class TrackWithUserRepository(
             }
         }
     }
+
 
     override fun getTrackBy(id: String): Flow<ResultState<Track>> {
         return combine(

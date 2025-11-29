@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.settings
 
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -26,12 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.ui.LocalMainViewModel
-import com.simplyawakeremake.ui.ToolbarConfig
 import com.simplyawakeremake.ui.common.LoadingButton
+import com.simplyawakeremake.ui.common.ToolbarConfig
+import com.simplyawakeremake.ui.synchronization.SynchronizationFlowDialog
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
-import com.simplyawakeremake.viewmodel.SettingsEvent
-import com.simplyawakeremake.viewmodel.SettingsUiState
-import com.simplyawakeremake.viewmodel.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -75,7 +73,18 @@ fun SettingsRoute(
         }
     }
 
-    SettingsScreen(uiState, viewModel::onLoginWithGoogleClicked)
+    SettingsScreen(
+        uiState = uiState,
+        onLoginWithGoogle = viewModel::onLoginWithGoogleClicked
+    )
+
+    if (uiState.showSyncDialog) {
+        SynchronizationFlowDialog(
+            onFinished = { result ->
+                viewModel.onSyncCompleted(result)
+            }
+        )
+    }
 }
 
 @Composable

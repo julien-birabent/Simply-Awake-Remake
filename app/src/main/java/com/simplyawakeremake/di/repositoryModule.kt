@@ -11,10 +11,12 @@ import com.simplyawakeremake.data.user.FirestoreUserRemoteDataSource
 import com.simplyawakeremake.data.user.UserRemoteDataSource
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.user.UserRepositoryImpl
-import com.simplyawakeremake.data.usertrack.TrackWithUserRepository
+import com.simplyawakeremake.data.usertrack.FullTrackRepository
 import com.simplyawakeremake.data.usertrack.UserTrackRepository
 import com.simplyawakeremake.data.usertrack.remote.FirestoreUserTrackRemoteDataSource
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
+import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncService
+import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncServiceImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -45,7 +47,7 @@ val repositoryModule = module {
     single<TrackHistoryRepositoryInterface> { TrackHistoryRepository() }
 
     single<TrackRepositoryInterface> {
-        TrackWithUserRepository(
+        FullTrackRepository(
             catalogRepo = get<TrackRepository>(),
             userTrackRepository = get(),
         )
@@ -55,4 +57,5 @@ val repositoryModule = module {
     single<UserRepository> {
         UserRepositoryImpl(get(), get(), get())
     }
+    single<UserTrackSyncService> { UserTrackSyncServiceImpl(userRepository = get(), local = get(), remote = get()) }
 }

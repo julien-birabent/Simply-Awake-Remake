@@ -1,9 +1,11 @@
-package com.simplyawakeremake.viewmodel
+package com.simplyawakeremake.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.user.UserRepository
+import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,18 +15,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
+sealed interface SettingsEvent {
+    data class LaunchGoogleSignIn(val intent: android.content.Intent) : SettingsEvent
+    data class ShowMessage(val message: String) : SettingsEvent
+}
+
 data class SettingsUiState(
     val isLoadingUser: Boolean = true,
     val isLoggedIn: Boolean = false,
     val isLoggingIn: Boolean = false,
     val userDisplayName: String? = null,
     val errorMessage: String? = null,
+    val showSyncDialog: Boolean = false,
 )
-
-sealed interface SettingsEvent {
-    data class LaunchGoogleSignIn(val intent: android.content.Intent) : SettingsEvent
-    data class ShowMessage(val message: String) : SettingsEvent
-}
 
 class SettingsViewModel(
     private val userRepository: UserRepository,
@@ -56,7 +59,7 @@ class SettingsViewModel(
     }
 
     fun onLoginWithGoogleClicked() {
-        if (_uiState.value.isLoggingIn) return
+        if (_uiState.value.isLoggingIn || _uiState.value.showSyncDialog) return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoggingIn = true, errorMessage = null) }
@@ -66,13 +69,14 @@ class SettingsViewModel(
     }
 
     fun onGoogleSignInResult(data: android.content.Intent?) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
+                _uiState.update { it.copy(isLoggingIn = true, errorMessage = null) }
+
                 googleSignInUseCase.handleSignInResult(data)
-                _uiState.update { it.copy(isLoggingIn = false) }
-                _events.emit(
-                    SettingsEvent.ShowMessage("Successfully linked your account ✨")
-                )
+                _uiState.update {
+                    it.copy(isLoggingIn = false, showSyncDialog = true)
+                }
             } catch (e: Exception) {
                 _uiState.update {
                     it.copy(
@@ -83,6 +87,30 @@ class SettingsViewModel(
                 _events.emit(
                     SettingsEvent.ShowMessage("Login failed: ${e.message ?: "unknown error"}")
                 )
+            }
+        }
+    }
+
+    fun onSyncCompleted(result: UserTrackSyncResult) {
+        _uiState.update { it.copy(showSyncDialog = false) }
+
+        viewModelScope.launch {
+            when (result) {
+                is UserTrackSyncResult.Success -> {
+                    _events.emit(
+                        SettingsEvent.ShowMessage("Account linked and data synchronized ✨")
+                    )
+                }
+
+                is UserTrackSyncResult.Failure -> {
+                    _events.emit(
+                        SettingsEvent.ShowMessage(
+                            "Account linked, but sync failed: ${
+                                result.cause.message ?: "unknown error"
+                            }"
+                        )
+                    )
+                }
             }
         }
     }

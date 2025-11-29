@@ -47,12 +47,12 @@ import androidx.navigation.NavController
 import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.LocalMainViewModel
-import com.simplyawakeremake.ui.ToolbarConfig
 import com.simplyawakeremake.ui.common.CommonErrorView
 import com.simplyawakeremake.ui.common.FavoriteButton
 import com.simplyawakeremake.ui.common.LoadingIndicator
+import com.simplyawakeremake.ui.common.ToolbarConfig
+import com.simplyawakeremake.ui.tracklist.PlayerListUIState
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
-import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.PlayerUIState
 import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel

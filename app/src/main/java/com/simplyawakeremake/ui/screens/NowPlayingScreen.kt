@@ -48,6 +48,9 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.ui.common.CommonErrorView
+import com.simplyawakeremake.ui.common.FavoriteButton
+import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.viewmodel.NowPlayingViewModel
 import com.simplyawakeremake.viewmodel.PlayerListUIState
 import com.simplyawakeremake.viewmodel.PlayerUIState
@@ -70,6 +73,7 @@ fun NowPlayingScreen(
 
     LaunchedEffect(viewModel) {
         viewModel.setupTrackId(trackId)
+        viewModel.onTrackStarted(trackId)
     }
 
     val isPlayingState by viewModel.isPlaying.collectAsState(false)
@@ -135,7 +139,14 @@ fun NowPlayingScreen(
                                 .weight(0.5f, fill = false),
                             contentScale = ContentScale.Fit
                         )
-                        TrackInformationSection(track.displayName, track.tagString)
+                        TrackInformationSection(
+                            track.displayName,
+                            track.tagString,
+                            track.isFavorite,
+                            onFavoriteClicked = {
+                                viewModel.onFavoriteClicked(track)
+                            }
+                        )
                         Spacer(modifier = Modifier.size(12.dp))
                         PlayerControlsView(
                             exoPlayer = readyState.player,
@@ -189,20 +200,28 @@ fun PlayerSlider(player: Player, duration: Long) {
 }
 
 @Composable
-fun TrackInformationSection(trackName: String, tags: String) {
-    Column(Modifier.fillMaxWidth()) {
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = trackName,
-            color = Color.White,
-            fontSize = MaterialTheme.typography.bodyLarge.fontSize
-        )
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = tags,
-            color = Color.White,
-            fontSize = MaterialTheme.typography.bodyMedium.fontSize
-        )
+fun TrackInformationSection(
+    trackName: String,
+    tags: String,
+    isFavorite: Boolean = false,
+    onFavoriteClicked: () -> Unit = {}
+) {
+    Row(Modifier.fillMaxWidth()) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = trackName,
+                color = Color.White,
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize
+            )
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = tags,
+                color = Color.White,
+                fontSize = MaterialTheme.typography.bodyMedium.fontSize
+            )
+        }
+        FavoriteButton(isFavorite = isFavorite, onClick = onFavoriteClicked)
     }
 }
 

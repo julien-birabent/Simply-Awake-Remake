@@ -9,6 +9,7 @@ import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.DownloadProgress
 import com.simplyawakeremake.usecases.DownloadTrackListUseCase
+import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,8 @@ class TrackListViewModel(
     private val trackRepository: TrackRepositoryInterface,
     private val downloadTrackListUseCase: DownloadTrackListUseCase,
     private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase,
-    private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase
+    private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase,
+    private val toggleTrackFavoriteUseCase: ToggleTrackFavoriteUseCase,
 ) : ViewModel(), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
@@ -91,23 +93,19 @@ class TrackListViewModel(
     fun addToHistory(track: Track) = viewModelScope.launch(Dispatchers.IO) {
         addTrackToRecentHistoryUseCase.execute(track)
     }
+
+    fun onFavoriteClicked(track: Track) {
+        viewModelScope.launch(Dispatchers.IO) {
+            toggleTrackFavoriteUseCase(track)
+        }
+    }
+
 }
 
-/**
- * Sealed interface representing the different states of the player UI.
- */
+
 sealed interface PlayerListUIState {
-    /**
-     * Represents the state when the player UI displays a list of tracks.
-     *
-     * @property items The list of track items to be displayed.
-     */
+
     data class Tracks(val items: List<Track>) : PlayerListUIState
-
-    /**
-     * Represents the state when the player UI is in a loading state.
-     */
     data object Loading : PlayerListUIState
-
     data class Error(val throwable: Throwable) : PlayerListUIState
 }

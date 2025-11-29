@@ -36,7 +36,7 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.LoadingButton
-import com.simplyawakeremake.ui.screens.LoadingIndicator
+import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
 import org.koin.androidx.compose.koinViewModel
 

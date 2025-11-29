@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.common
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FileDownload

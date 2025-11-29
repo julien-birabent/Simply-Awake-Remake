@@ -14,7 +14,7 @@ interface UserTrackRemoteDataSource {
      * Push the given user track state to the remote backend.
      * Local DB is the source of truth; this is a mirror operation.
      */
-    suspend fun upsertUserTrack(userTrack: UserTrack)
+    suspend fun upsertUserTrack(remoteUserId: String, userTrack: UserTrack)
 
     /**
      * Optional, for initial sync / restore.

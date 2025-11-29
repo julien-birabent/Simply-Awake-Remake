@@ -18,8 +18,8 @@ val uiModule = module {
     single { ExoPlayer.Builder(androidApplication()).build() }
     viewModel { MainViewModel(androidApplication()) }
     viewModel { LoginViewModel(userRepository = get(), googleSignInUseCase = get()) }
-    viewModel { TrackListViewModel(get(), get(), get(), get()) }
-    viewModel { NowPlayingViewModel(androidApplication(), get()) }
+    viewModel { TrackListViewModel(get(), get(), get(), get(), get()) }
+    viewModel { NowPlayingViewModel(androidApplication(), get(), get(), get()) }
     viewModel { RecentHistoryViewModel(get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
 }

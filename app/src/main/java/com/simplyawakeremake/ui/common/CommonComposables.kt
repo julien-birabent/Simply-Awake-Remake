@@ -1,4 +1,4 @@
-package com.simplyawakeremake.ui.screens
+package com.simplyawakeremake.ui.common
 
 import android.Manifest
 import android.os.Build
@@ -59,7 +59,7 @@ fun <T> ItemList(
     modifier: Modifier,
     items: List<T>,
     keySelector: ((index: Int) -> Any) = {},
-    onclick: (T) -> Unit,
+    onclick: (T) -> Unit = {},
     divider: @Composable () -> Unit,
     itemContent: @Composable (T) -> Unit
 ) {

@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -43,7 +44,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -58,6 +58,7 @@ class NowPlayingViewModel(
     private val registerTrackPlayUseCase: RegisterTrackPlayUseCase
 ) : AndroidViewModel(app), KoinComponent {
 
+    private val TAG = "NowPlayingViewModel"
     private val trackFileManager: TrackFileManager by inject()
 
     private lateinit var player: Player
@@ -66,6 +67,8 @@ class NowPlayingViewModel(
 
     private val trackIdFlow = MutableStateFlow<String?>(null)
     private var playlistTrackIds: List<String> = emptyList()
+
+    private val playbackHistory = mutableListOf<String>()
 
     private val _isShuffleEnabled = MutableStateFlow(false)
     val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled
@@ -97,7 +100,6 @@ class NowPlayingViewModel(
             emit(PlayerUIState.Error)
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, PlayerUIState.Loading)
-
 
     private val tickerFlow = flow {
         while (true) {
@@ -158,6 +160,7 @@ class NowPlayingViewModel(
             ) { _, request ->
                 request
             }.collectLatest { request ->
+                Log.d(TAG, "Receiving new playback request: $request")
                 loadTrackForPlayback(request.trackId, request.autoPlay)
             }
         }
@@ -173,18 +176,38 @@ class NowPlayingViewModel(
             }
             ?: emptyList()
 
+        Log.d(TAG, "Loading playlist track ids = ${ids.size}")
         playlistTrackIds = ids
     }
 
-    fun setupTrackId(id: String) {
-        trackIdFlow.value = id
+    private fun pushToHistory(trackId: String) {
+        if (playbackHistory.lastOrNull() != trackId) {
+            playbackHistory.add(trackId)
+        }
+    }
 
-        playbackRequestFlow.tryEmit(
+    private suspend fun switchToTrack(
+        trackId: String,
+        autoPlay: Boolean
+    ) {
+        trackIdFlow.emit(trackId)
+        pushToHistory(trackId)
+        playbackRequestFlow.emit(
             PlaybackRequest(
+                trackId = trackId,
+                autoPlay = autoPlay
+            )
+        )
+        onTrackStarted(trackId)
+    }
+
+    fun setupTrackId(id: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            switchToTrack(
                 trackId = id,
                 autoPlay = true
             )
-        )
+        }
     }
 
     private fun getNextTrackId(currentId: String): String? {
@@ -204,10 +227,21 @@ class NowPlayingViewModel(
     private fun getPreviousTrackId(currentId: String): String? {
         if (playlistTrackIds.isEmpty()) return null
 
-        val index = playlistTrackIds.indexOf(currentId)
-        if (index == -1) return null
-        val prevIndex = if (index == 0) playlistTrackIds.lastIndex else index - 1
-        return playlistTrackIds[prevIndex]
+        return if (_isShuffleEnabled.value) {
+            if (playbackHistory.size < 2) {
+                null
+            } else {
+                if (playbackHistory.last() == currentId) {
+                    playbackHistory.removeAt(playbackHistory.lastIndex)
+                }
+                playbackHistory.lastOrNull()
+            }
+        } else {
+            val index = playlistTrackIds.indexOf(currentId)
+            if (index == -1) return null
+            val prevIndex = if (index == 0) playlistTrackIds.lastIndex else index - 1
+            playlistTrackIds[prevIndex]
+        }
     }
 
     fun onControlPressed(controlPressed: ControlButtons) {
@@ -222,15 +256,10 @@ class NowPlayingViewModel(
                     val currentId = trackIdFlow.value ?: return@launch
                     val nextId = getNextTrackId(currentId) ?: return@launch
 
-                    trackIdFlow.emit(nextId)
-                    playbackRequestFlow.emit(
-                        PlaybackRequest(
-                            trackId = nextId,
-                            autoPlay = true
-                        )
+                    switchToTrack(
+                        trackId = nextId,
+                        autoPlay = true,
                     )
-
-                    onTrackStarted(nextId)
                 }
             }
 
@@ -239,16 +268,10 @@ class NowPlayingViewModel(
                     val currentId = trackIdFlow.value ?: return@launch
                     val prevId = getPreviousTrackId(currentId) ?: return@launch
 
-                    trackIdFlow.emit(prevId)
-
-                    playbackRequestFlow.emit(
-                        PlaybackRequest(
-                            trackId = prevId,
-                            autoPlay = true
-                        )
+                    switchToTrack(
+                        trackId = prevId,
+                        autoPlay = true,
                     )
-
-                    onTrackStarted(prevId)
                 }
             }
 
@@ -264,6 +287,7 @@ class NowPlayingViewModel(
         val trackResult = userTrackRepository.getTrackBy(trackId).firstOrNull()
         val track = (trackResult as? ResultState.Success)?.data ?: return@withContext
 
+        Log.d(TAG, "Loading track for playback = $track")
         val mediaItem = createMediaItem(track)
 
         withContext(Dispatchers.Main) {

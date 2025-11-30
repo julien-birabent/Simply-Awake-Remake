@@ -34,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,7 +46,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
@@ -73,7 +73,6 @@ fun NowPlayingScreen(
 
     LaunchedEffect(viewModel, trackId) {
         viewModel.setupTrackId(trackId)
-        viewModel.onTrackStarted(trackId)
     }
 
     val isPlayingState by viewModel.isPlaying.collectAsState(false)
@@ -114,7 +113,7 @@ fun NowPlayingScreen(
         ) {
             when (uiState) {
                 PlayerUIState.Error -> {
-                    // TODO: show error message
+                    // TODO: show a proper error view
                 }
 
                 PlayerUIState.Loading -> {
@@ -139,15 +138,18 @@ fun NowPlayingScreen(
                                 .weight(0.5f, fill = false),
                             contentScale = ContentScale.Fit
                         )
+
                         TrackInformationSection(
-                            track.displayName,
-                            track.tagString,
-                            track.isFavorite,
+                            trackName = track.displayName,
+                            tags = track.tagString,
+                            isFavorite = track.isFavorite,
                             onFavoriteClicked = {
                                 viewModel.onFavoriteClicked(track)
                             }
                         )
+
                         Spacer(modifier = Modifier.size(12.dp))
+
                         PlayerControlsView(
                             totalDuration = totalDurationState,
                             currentPosition = currentPositionState,
@@ -156,6 +158,7 @@ fun NowPlayingScreen(
                             onControlPressed = viewModel::onControlPressed,
                             onSeekTo = viewModel::onSeekTo
                         )
+
                         Spacer(modifier = Modifier.size(12.dp))
                     }
                 }
@@ -163,66 +166,6 @@ fun NowPlayingScreen(
         }
     }
 }
-
-
-
-@Composable
-fun PlayerSlider(
-    duration: Long,
-    currentPosition: Long,
-    onSeekTo: (Long) -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val isDragged by interactionSource.collectIsDraggedAsState()
-    val isInteracting by remember { derivedStateOf { isPressed || isDragged } }
-
-    var sliderPosition by remember { mutableFloatStateOf(0f) }
-
-    /*val targetSliderPosition by remember(duration, currentPosition) {
-        mutableFloatStateOf(
-            if (duration > 0L) {
-                currentPosition.toFloat()
-                    .div(duration.toFloat())
-                    .times(100f)
-                    .coerceIn(0f, 100f)
-            } else {
-                0f
-            }
-        )
-    }
-
-    if (!isInteracting) {
-        sliderPosition = targetSliderPosition
-    }*/
-
-    LaunchedEffect(duration, currentPosition, isInteracting) {
-        if (!isInteracting && duration > 0L) {
-            val clampedPosition = currentPosition.coerceIn(0L, duration)
-            sliderPosition = clampedPosition.toFloat()
-                .div(duration.toFloat())
-                .times(100f)
-                .coerceIn(0f, 100f)
-        }
-    }
-
-    Column {
-        Slider(
-            value = sliderPosition,
-            onValueChange = { newSliderPosition ->
-                sliderPosition = newSliderPosition
-            },
-            onValueChangeFinished = {
-                val newPosition = (sliderPosition / 100f) * duration
-                onSeekTo(newPosition.toLong())
-            },
-            valueRange = 0f..100f,
-            interactionSource = interactionSource,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
 
 @Composable
 fun TrackInformationSection(
@@ -260,6 +203,88 @@ fun TrackInformationSection(
     }
 }
 
+
+@Composable
+fun PlayerSlider(
+    duration: Long,
+    currentPosition: Long,
+    onSeekTo: (Long) -> Unit,
+    onSeekPreview: (Long?) -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isDragged by interactionSource.collectIsDraggedAsState()
+    val isInteracting by remember { derivedStateOf { isPressed || isDragged } }
+
+    var sliderPosition by remember { mutableFloatStateOf(0f) }
+    var pendingSeekTargetMs by remember { mutableStateOf<Long?>(null) }
+
+    LaunchedEffect(duration, currentPosition, isInteracting, pendingSeekTargetMs) {
+        if (duration <= 0L) return@LaunchedEffect
+
+        when {
+            // User has their finger on it → we don't touch sliderPosition
+            isInteracting -> {
+                // no-op
+            }
+
+            // We've just requested a seek; keep the thumb at the target
+            // until the player position gets close to that target.
+            pendingSeekTargetMs != null -> {
+                val target = pendingSeekTargetMs!!
+                sliderPosition = (target.toFloat() / duration.toFloat() * 100f)
+                    .coerceIn(0f, 100f)
+
+                val diff = kotlin.math.abs(currentPosition - target)
+                if (diff <= 250L) { // ~250ms tolerance
+                    pendingSeekTargetMs = null
+                }
+            }
+
+            // Normal mode: follow the real playback position
+            else -> {
+                val clampedPosition = currentPosition.coerceIn(0L, duration)
+                sliderPosition = (clampedPosition.toFloat() / duration.toFloat() * 100f)
+                    .coerceIn(0f, 100f)
+            }
+        }
+    }
+
+    Column {
+        Slider(
+            value = sliderPosition,
+            onValueChange = { newSliderPosition ->
+                sliderPosition = newSliderPosition
+
+                if (duration > 0L) {
+                    val previewPosition = (newSliderPosition / 100f) * duration
+                    onSeekPreview(previewPosition.toLong())
+                } else {
+                    onSeekPreview(null)
+                }
+            },
+            onValueChangeFinished = {
+                if (duration > 0L) {
+                    val finalPosition = (sliderPosition / 100f) * duration
+                    val finalPositionMs = finalPosition.toLong()
+
+                    // keep slider visually at the target until the player catches up
+                    pendingSeekTargetMs = finalPositionMs
+
+                    // do NOT clear preview here – PlayerControlsView handles it
+                    onSeekTo(finalPositionMs)
+                } else {
+                    onSeekPreview(null)
+                    pendingSeekTargetMs = null
+                }
+            },
+            valueRange = 0f..100f,
+            interactionSource = interactionSource,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
 @Composable
 fun PlayerControlsView(
     totalDuration: Long,
@@ -269,6 +294,21 @@ fun PlayerControlsView(
     onControlPressed: (ControlButtons) -> Unit,
     onSeekTo: (Long) -> Unit
 ) {
+    var previewPositionMs by remember { mutableStateOf<Long?>(null) }
+
+    // If user is scrubbing or we have a pending seek target → show preview time.
+    // Otherwise show real playback time.
+    val displayedPositionMs = previewPositionMs ?: currentPosition
+
+    // Clear preview once the player has caught up to the seek target
+    LaunchedEffect(currentPosition, previewPositionMs) {
+        val target = previewPositionMs ?: return@LaunchedEffect
+        val diff = kotlin.math.abs(currentPosition - target)
+        if (diff <= 250L) {
+            previewPositionMs = null
+        }
+    }
+
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -277,7 +317,10 @@ fun PlayerControlsView(
         PlayerSlider(
             duration = totalDuration,
             currentPosition = currentPosition,
-            onSeekTo = onSeekTo
+            onSeekTo = onSeekTo,
+            onSeekPreview = { newPreviewPosition ->
+                previewPositionMs = newPreviewPosition
+            }
         )
 
         Row(
@@ -285,8 +328,14 @@ fun PlayerControlsView(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = currentPosition.formatToMinuteAndSeconds(), color = Color.White)
-            Text(text = totalDuration.formatToMinuteAndSeconds(), color = Color.White)
+            Text(
+                text = displayedPositionMs.formatToMinuteAndSeconds(),
+                color = Color.White
+            )
+            Text(
+                text = totalDuration.formatToMinuteAndSeconds(),
+                color = Color.White
+            )
         }
 
         Spacer(modifier = Modifier.size(16.dp))

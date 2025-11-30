@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -162,7 +163,7 @@ fun LoginScreen(
                         onClick = onContinueAsGuest,
                         isLoading = false,
                         enabled = !state.isLoggingIn,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().requiredHeight(56.dp)
                     )
 
                     LoadingButton(
@@ -170,7 +171,7 @@ fun LoginScreen(
                         onClick = onLoginWithGoogle,
                         isLoading = state.isLoggingIn,
                         enabled = !state.isLoggingIn,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().requiredHeight(56.dp)
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

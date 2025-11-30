@@ -271,22 +271,24 @@ fun Playlist(
     }
     val connectionState by connectionState()
 
-    HorizontalDivider(color = Color.White, thickness = 1.dp)
-    ItemList(
-        modifier = modifier,
-        items = tracks,
-        keySelector = { index -> tracks[index].id },
-        divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
-    ) { track ->
-        TrackListItem(
-            track = track,
-            onClick = {
-                if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
-                    viewModel.addToHistory(track)
-                    navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
-                } else showToast()
-            },
-            onFavoriteClick = { viewModel.onFavoriteClicked(it) })
+    Column {
+        HorizontalDivider(color = Color.White, thickness = 1.dp)
+        ItemList(
+            modifier = modifier,
+            items = tracks,
+            keySelector = { index -> tracks[index].id },
+            divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
+        ) { track ->
+            TrackListItem(
+                track = track,
+                onClick = {
+                    if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
+                        viewModel.addToHistory(track)
+                        navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
+                    } else showToast()
+                },
+                onFavoriteClick = { viewModel.onFavoriteClicked(it) })
+        }
     }
 }
 
@@ -301,7 +303,7 @@ fun TrackListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick(track) }
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {

@@ -172,7 +172,7 @@ class NowPlayingViewModel(
             }
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             onPlayerUpdate
                 .map { it.playbackState }
                 .distinctUntilChanged()

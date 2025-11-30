@@ -10,8 +10,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -21,6 +23,12 @@ data class TrackFilesUsage(
     val count: Int,
     val totalSizeBytes: Long
 )
+
+enum class TrackDownloadStatus {
+    NOT_DOWNLOADED,
+    DOWNLOADING,
+    DOWNLOADED,
+}
 
 class TrackFileManager(
     private val downloadService: DownloadService,
@@ -36,6 +44,23 @@ class TrackFileManager(
     private val batchSize = 4
 
     private val filesChanged = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    private val _downloadingTrackIds = MutableStateFlow<Set<String>>(emptySet())
+    val downloadingTrackIds: StateFlow<Set<String>> = _downloadingTrackIds.asStateFlow()
+
+    private fun updateDownloading(
+        add: Set<String> = emptySet(),
+        remove: Set<String> = emptySet()
+    ) {
+        _downloadingTrackIds.value =
+            _downloadingTrackIds.value
+                .plus(add)
+                .minus(remove)
+    }
+
+    private fun markFilesChanged() {
+        filesChanged.tryEmit(Unit)
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val trackFilesUsage: StateFlow<TrackFilesUsage> = filesChanged
@@ -57,17 +82,13 @@ class TrackFileManager(
             )
         )
 
-    private fun markFilesChanged() {
-        filesChanged.tryEmit(Unit)
-    }
-
     fun trackCount(): Int = trackFilesUsage.value.count
-    fun trackTotalSizeBytes(): Long = trackFilesUsage.value.totalSizeBytes
 
     fun cancelAllDownloads() {
         session?.cancel()
         session = null
         downloadService.cancelDownloads()
+        _downloadingTrackIds.value = emptySet()
     }
 
     fun deleteAllTrackFiles(): Boolean {
@@ -76,6 +97,26 @@ class TrackFileManager(
         fileStorage.ensureDirectoriesExist()
         markFilesChanged()
         return success
+    }
+
+    fun deleteTrackFile(trackId: String): Boolean {
+        val file = fileStorage.getTrackFile(trackId)
+        val deleted = if (file.exists()) file.delete() else true
+        if (deleted) {
+            markFilesChanged()
+        }
+        return deleted
+    }
+
+    fun getDownloadStatus(trackId: String): TrackDownloadStatus {
+        val isDownloading = _downloadingTrackIds.value.contains(trackId)
+        val isDownloaded = fileStorage.getTrackFile(trackId).exists()
+
+        return when {
+            isDownloading -> TrackDownloadStatus.DOWNLOADING
+            isDownloaded -> TrackDownloadStatus.DOWNLOADED
+            else -> TrackDownloadStatus.NOT_DOWNLOADED
+        }
     }
 
     fun getTrackFile(trackId: String): File = fileStorage.getTrackFile(trackId)
@@ -92,7 +133,9 @@ class TrackFileManager(
         onEachTrackDownloaded: (Int) -> Unit,
         onComplete: (List<File>) -> Unit
     ) {
-        if (session != null) throw IllegalStateException("A download session is already in progress. Call cancelAllDownloads() first.")
+        if (session != null) {
+            throw IllegalStateException("A download session is already in progress. Call cancelAllDownloads() first.")
+        }
 
         if (areAllTracksDownloaded(tracks)) {
             onComplete(tracks.map { (id, _) -> fileStorage.getTrackFile(id) })
@@ -100,19 +143,54 @@ class TrackFileManager(
             return
         }
 
+        val trackIds = tracks.map { it.first }.toSet()
+        updateDownloading(add = trackIds)
+
         session = DownloadSession(
             pendingDownloads = tracks.toMutableList(),
-            onDownloadCanceled = onDownloadCanceled,
+            onDownloadCanceled = {
+                updateDownloading(remove = trackIds)
+                onDownloadCanceled()
+            },
             onEachDownloaded = { downloadedCount ->
                 onEachTrackDownloaded(downloadedCount)
                 markFilesChanged()
             },
             onComplete = { files ->
-                onComplete(files)
+                updateDownloading(remove = trackIds)
                 markFilesChanged()
+                onComplete(files)
             }
         )
         session?.startNextBatch(batchSize, ::enqueueSingleDownload)
+    }
+
+    fun downloadSingleTrack(
+        trackId: String,
+        trackTitle: String,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        if (_downloadingTrackIds.value.contains(trackId)) return
+
+        updateDownloading(add = setOf(trackId))
+
+        val destination = fileStorage.getTrackFile(trackId)
+
+        downloadService.enqueueDownload(
+            url = trackUriProvider(trackId),
+            destination = destination,
+            title = trackTitle,
+            onCancel = {
+                updateDownloading(remove = setOf(trackId))
+                markFilesChanged()
+                onResult(false)
+            }
+        ) { resultFile ->
+            val success = resultFile != null && resultFile.exists()
+            updateDownloading(remove = setOf(trackId))
+            markFilesChanged()
+            onResult(success)
+        }
     }
 
     private fun enqueueSingleDownload(

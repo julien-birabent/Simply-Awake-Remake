@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -14,10 +17,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.simplyawakeremake.R
+import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 
 @Composable
 fun LoadingButton(
@@ -76,5 +82,43 @@ fun FavoriteButton(
             },
             tint = tint
         )
+    }
+}
+
+@Composable
+fun TrackDownloadButton(
+    status: TrackDownloadStatus,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val enabled = status != TrackDownloadStatus.DOWNLOADING
+
+    IconButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled
+    ) {
+        when (status) {
+            TrackDownloadStatus.NOT_DOWNLOADED -> {
+                Icon(
+                    imageVector = Icons.Outlined.FileDownload,
+                    contentDescription = "Download"
+                )
+            }
+
+            TrackDownloadStatus.DOWNLOADING -> {
+                CircularProgressIndicator(
+                    strokeWidth = 2.dp,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            TrackDownloadStatus.DOWNLOADED -> {
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_save_24),
+                    contentDescription = "Downloaded"
+                )
+            }
+        }
     }
 }

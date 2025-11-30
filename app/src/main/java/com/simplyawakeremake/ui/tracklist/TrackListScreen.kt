@@ -50,7 +50,6 @@ import androidx.navigation.NavController
 import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
 import com.simplyawakeremake.connectionState
-import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.CommonErrorView
@@ -59,6 +58,7 @@ import com.simplyawakeremake.ui.common.FavoriteButton
 import com.simplyawakeremake.ui.common.ItemList
 import com.simplyawakeremake.ui.common.ToolbarAction
 import com.simplyawakeremake.ui.common.ToolbarConfig
+import com.simplyawakeremake.ui.common.TrackDownloadButton
 import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.ui.main.MainViewModel
@@ -76,7 +76,7 @@ fun PlayListScreen(
     navController: NavController,
     viewModel: TrackListViewModel = koinViewModel()
 ) {
-    val uiState by viewModel.screenState.collectAsState(initial = PlayerListUIState.Loading)
+    val uiState by viewModel.uiState.collectAsState(initial = TrackListUiState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
     val mainViewModel = LocalMainViewModel.current
 
@@ -93,8 +93,8 @@ fun PlayListScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
-            is PlayerListUIState.Error -> {
-                when (val error = (uiState as PlayerListUIState.Error).throwable) {
+            is TrackListUiState.Error -> {
+                when (val error = (uiState as TrackListUiState.Error).throwable) {
                     is UnknownHostException -> {
                         NoInternetScreen { viewModel.retryLoadingPlaylist() }
                     }
@@ -105,14 +105,14 @@ fun PlayListScreen(
                 }
             }
 
-            PlayerListUIState.Loading -> {
+            TrackListUiState.Loading -> {
                 LoadingIndicator1()
             }
 
-            is PlayerListUIState.Tracks -> {
+            is TrackListUiState.Content -> {
                 Playlist(
                     modifier = Modifier.fillMaxSize(),
-                    tracks = (uiState as PlayerListUIState.Tracks).items,
+                    tracks = (uiState as TrackListUiState.Content).items,
                     navController = navController,
                     viewModel = viewModel
                 )
@@ -253,7 +253,7 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
-    tracks: List<Track>,
+    tracks: List<TrackUi>,
     navController: NavController,
     viewModel: TrackListViewModel
 ) {
@@ -287,17 +287,19 @@ fun Playlist(
                         navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
                     } else showToast()
                 },
-                onFavoriteClick = { viewModel.onFavoriteClicked(it) })
+                onFavoriteClick = { viewModel.onFavoriteClicked(it) },
+                onDownloadClick = { viewModel.onDownloadClicked(it) })
         }
     }
 }
 
 @Composable
 fun TrackListItem(
-    track: Track,
-    onClick: (Track) -> Unit,
-    onFavoriteClick: (Track) -> Unit,
     modifier: Modifier = Modifier,
+    track: TrackUi,
+    onClick: (TrackUi) -> Unit,
+    onFavoriteClick: (TrackUi) -> Unit,
+    onDownloadClick: (TrackUi) -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -347,6 +349,11 @@ fun TrackListItem(
                 modifier = Modifier,
                 onClick = { onFavoriteClick(track) },
                 isFavorite = track.isFavorite
+            )
+
+            TrackDownloadButton(
+                status = track.downloadStatus,
+                onClick = { onDownloadClick(track) }
             )
         }
     }

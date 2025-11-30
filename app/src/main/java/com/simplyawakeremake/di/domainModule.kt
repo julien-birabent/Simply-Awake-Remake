@@ -8,10 +8,10 @@ import com.simplyawakeremake.usecases.DownloadTrackListUseCase
 import com.simplyawakeremake.usecases.GetRecentHistoryUseCase
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
 import com.simplyawakeremake.usecases.RegisterTrackPlayUseCase
+import com.simplyawakeremake.usecases.SingleTrackDownloadUseCase
 import com.simplyawakeremake.usecases.SyncUserTracksAfterLoginUseCase
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
 import com.simplyawakeremake.usecases.UserTrackLoginSyncUseCase
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 val domainModule = module {
@@ -32,4 +32,5 @@ val domainModule = module {
     single { UserTrackLoginSyncUseCase(get(), get(), get()) }
     single { InitialUserTrackSyncManager(userRepository = get(), loginSyncUseCase = get()) }
     single { DeleteAllDownloadsUseCase(trackFileManager = get()) }
+    single { SingleTrackDownloadUseCase(trackFileManager = get()) }
 }

@@ -18,4 +18,37 @@ class LocalTrackFileStorage(context: Context) : FileStorage {
             tracksDir.mkdirs()
         }
     }
+
+    override fun deleteAll(): Boolean {
+        if (!tracksDir.exists()) return true
+
+        val files = tracksDir.listFiles() ?: return true
+
+        var allDeleted = true
+
+        files.forEach { file ->
+            if (file.isFile) {
+                val deleted = file.delete()
+                if (!deleted) {
+                    allDeleted = false
+                }
+            }
+        }
+        return allDeleted
+    }
+
+    override fun count(): Int {
+        if (!tracksDir.exists()) return 0
+        val files = tracksDir.listFiles() ?: return 0
+        return files.count { it.isFile }
+    }
+
+    override fun totalSizeBytes(): Long {
+        if (!tracksDir.exists()) return 0L
+        val files = tracksDir.listFiles() ?: return 0L
+        return files
+            .asSequence()
+            .filter { it.isFile }
+            .sumOf { it.length() }
+    }
 }

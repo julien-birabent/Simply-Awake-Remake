@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,9 +66,11 @@ fun SettingsRoute(
                 }
 
                 is SettingsEvent.ShowMessage -> {
-                    Toast
-                        .makeText(context, event.message, Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        context,
+                        event.message.asString(context),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -75,7 +78,8 @@ fun SettingsRoute(
 
     SettingsScreen(
         uiState = uiState,
-        onLoginWithGoogle = viewModel::onLoginWithGoogleClicked
+        onLoginWithGoogle = viewModel::onLoginWithGoogleClicked,
+        onDeleteAllDownloadsClicked = viewModel::onDeleteAllDownloadsClicked
     )
 
     if (uiState.showSyncDialog) {
@@ -88,7 +92,11 @@ fun SettingsRoute(
 }
 
 @Composable
-private fun SettingsScreen(uiState: SettingsUiState, onLoginWithGoogle: () -> Unit) {
+private fun SettingsScreen(
+    uiState: SettingsUiState,
+    onLoginWithGoogle: () -> Unit = {},
+    onDeleteAllDownloadsClicked: () -> Unit = {}
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.Start,
@@ -103,8 +111,78 @@ private fun SettingsScreen(uiState: SettingsUiState, onLoginWithGoogle: () -> Un
             onLoginWithGoogle = onLoginWithGoogle
         )
         HorizontalDivider(modifier = Modifier.height(1.dp))
+
+        DeleteDownloadsSection(
+            isDeleting = uiState.isDeletingDownloads,
+            trackFilesCount = uiState.trackFilesCount,
+            trackFilesSizeBytes = uiState.trackFilesSizeBytes,
+            onDeleteClicked = onDeleteAllDownloadsClicked
+        )
+        HorizontalDivider(modifier = Modifier.height(1.dp))
     }
 }
+
+@Composable
+fun DeleteDownloadsSection(
+    isDeleting: Boolean,
+    trackFilesCount: Int,
+    trackFilesSizeBytes: Long,
+    onDeleteClicked: () -> Unit
+) {
+    val tracksLabel = pluralStringResource(
+        id = R.plurals.settings_downloads_tracks,
+        count = trackFilesCount,
+        trackFilesCount
+    )
+
+    val sizeInMb = trackFilesSizeBytes.toDouble() / (1024.0 * 1024.0)
+    val sizeLabel = stringResource(
+        id = R.string.settings_downloads_size_mb,
+        sizeInMb
+    )
+
+    val statusText = stringResource(
+        id = R.string.settings_downloads_status,
+        tracksLabel,
+        sizeLabel
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = stringResource(id = R.string.settings_section_downloads_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = statusText,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(id = R.string.settings_downloads_delete_all_description),
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LoadingButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(id = R.string.settings_downloads_delete_all_button),
+            isLoading = isDeleting,
+            enabled = !isDeleting && trackFilesCount > 0,
+            onClick = onDeleteClicked
+        )
+    }
+}
+
 
 @Composable
 fun GoogleSignInSection(

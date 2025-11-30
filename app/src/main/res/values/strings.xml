@@ -54,7 +54,6 @@
         <item quantity="other">%d tracks</item>
     </plurals>
 
-    <string name="settings_downloads_size_mb">%.1f MB</string>
     <string name="settings_downloads_status">%1$s \u2013 %2$s on device</string>
     <string name="settings_downloads_delete_all_description">Delete all downloaded tracks from your device.</string>
     <string name="settings_downloads_delete_all_button">Delete all downloads</string>

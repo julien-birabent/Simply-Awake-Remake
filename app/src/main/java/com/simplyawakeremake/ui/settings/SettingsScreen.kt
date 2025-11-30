@@ -136,15 +136,12 @@ fun DeleteDownloadsSection(
         trackFilesCount
     )
 
-    val sizeLabel = stringResource(
-        id = R.string.settings_downloads_size_mb,
-        trackFilesSizeBytes.formatSize()
-    )
+    val formattedSize = trackFilesSizeBytes.formatSize()
 
     val statusText = stringResource(
         id = R.string.settings_downloads_status,
         tracksLabel,
-        sizeLabel
+        formattedSize
     )
 
     Column(

@@ -73,6 +73,13 @@ class NowPlayingViewModel(
     private val _isShuffleEnabled = MutableStateFlow(false)
     val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled
 
+
+    private val _isRepeatEnabled = MutableStateFlow(false)
+    val isRepeatEnabled: StateFlow<Boolean> = _isRepeatEnabled
+
+    private val _isAutoPlayNextEnabled = MutableStateFlow(false)
+    val isAutoPlayNextEnabled: StateFlow<Boolean> = _isAutoPlayNextEnabled
+
     private data class PlaybackRequest(
         val trackId: String,
         val autoPlay: Boolean
@@ -156,13 +163,23 @@ class NowPlayingViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             combine(
                 playerFlow.filterNotNull(),
-                playbackRequestFlow
+                playbackRequestFlow.distinctUntilChanged()
             ) { _, request ->
                 request
             }.collectLatest { request ->
                 Log.d(TAG, "Receiving new playback request: $request")
                 loadTrackForPlayback(request.trackId, request.autoPlay)
             }
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            onPlayerUpdate
+                .map { it.playbackState }
+                .distinctUntilChanged()
+                .filter { it == Player.STATE_ENDED }
+                .collect {
+                    handleTrackEnded()
+                }
         }
     }
 
@@ -278,6 +295,15 @@ class NowPlayingViewModel(
             ControlButtons.ToggleShuffle -> {
                 _isShuffleEnabled.value = !_isShuffleEnabled.value
             }
+
+            ControlButtons.ToggleRepeat -> {
+                _isRepeatEnabled.value = !_isRepeatEnabled.value
+            }
+
+            ControlButtons.ToggleAutoPlayNext -> {
+                _isAutoPlayNextEnabled.value = !_isAutoPlayNextEnabled.value
+            }
+
         }
     }
 
@@ -340,6 +366,43 @@ class NowPlayingViewModel(
         if (!::player.isInitialized) return
         player.seekTo(positionMs)
     }
+
+    private fun handleTrackEnded() {
+        val currentId = trackIdFlow.value ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            when {
+                _isRepeatEnabled.value -> {
+                    Log.d(TAG, "Track ended → repeating current track: $currentId")
+                    withContext(Dispatchers.Main) {
+                        if (::player.isInitialized) {
+                            player.seekTo(0L)
+                            player.playWhenReady = true
+                        }
+                    }
+                }
+
+                _isAutoPlayNextEnabled.value -> {
+                    val nextId = getNextTrackId(currentId)
+                    if (nextId != null) {
+                        Log.d(TAG, "Track ended → auto-playing next track: $nextId")
+                        switchToTrack(
+                            trackId = nextId,
+                            autoPlay = true
+                        )
+                    } else {
+                        Log.d(TAG, "Track ended → no next track found, staying ended")
+                    }
+                }
+
+                // 3) Nothing else: just stop at the end
+                else -> {
+                    Log.d(TAG, "Track ended → repeat OFF & auto-play-next OFF, staying ended")
+                }
+            }
+        }
+    }
+
 
     override fun onCleared() {
         super.onCleared()

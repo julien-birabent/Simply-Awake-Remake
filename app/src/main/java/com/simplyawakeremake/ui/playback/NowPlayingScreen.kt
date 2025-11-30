@@ -11,16 +11,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOn
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.ShuffleOn
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
@@ -52,9 +58,9 @@ import com.simplyawakeremake.R
 import com.simplyawakeremake.extensions.formatToMinuteAndSeconds
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.FavoriteButton
+import com.simplyawakeremake.ui.common.ImmersiveMode
 import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.ui.common.ToolbarConfig
-import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(UnstableApi::class)
@@ -64,6 +70,7 @@ fun NowPlayingScreen(
     trackId: String,
     viewModel: NowPlayingViewModel = koinViewModel()
 ) {
+    ImmersiveMode(true)
     val mainViewModel = LocalMainViewModel.current
     val toolbarConfig = ToolbarConfig(showToolbar = false)
 
@@ -79,13 +86,16 @@ fun NowPlayingScreen(
     val totalDurationState by viewModel.totalDurationInMs.collectAsState(initial = 0L)
     val currentPositionState by viewModel.playerPositionUpdates.collectAsState(0L)
     val uiState by viewModel.uiState.collectAsState(initial = PlayerUIState.Loading)
+
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
+    val isRepeatEnabled by viewModel.isRepeatEnabled.collectAsState()
+    val isAutoPlayNextEnabled by viewModel.isAutoPlayNextEnabled.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 52.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -155,6 +165,8 @@ fun NowPlayingScreen(
                             currentPosition = currentPositionState,
                             isPlaying = isPlayingState,
                             isShuffleEnabled = isShuffleEnabled,
+                            isRepeatEnabled = isRepeatEnabled,
+                            isAutoPlayNextEnabled = isAutoPlayNextEnabled,
                             onControlPressed = viewModel::onControlPressed,
                             onSeekTo = viewModel::onSeekTo
                         )
@@ -202,7 +214,6 @@ fun TrackInformationSection(
         )
     }
 }
-
 
 @Composable
 fun PlayerSlider(
@@ -291,6 +302,8 @@ fun PlayerControlsView(
     currentPosition: Long,
     isPlaying: Boolean,
     isShuffleEnabled: Boolean,
+    isRepeatEnabled: Boolean,
+    isAutoPlayNextEnabled: Boolean,
     onControlPressed: (ControlButtons) -> Unit,
     onSeekTo: (Long) -> Unit
 ) {
@@ -323,85 +336,168 @@ fun PlayerControlsView(
             }
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        PlaybackTimeRow(
+            currentPositionMs = displayedPositionMs,
+            totalDurationMs = totalDuration
+        )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        PlaybackButtonsRow(
+            isPlaying = isPlaying,
+            isShuffleEnabled = isShuffleEnabled,
+            isRepeatEnabled = isRepeatEnabled,
+            onControlPressed = onControlPressed
+        )
+
+        Spacer(modifier = Modifier.size(12.dp))
+
+        AutoPlayToggle(
+            isEnabled = isAutoPlayNextEnabled,
+            onToggle = { onControlPressed(ControlButtons.ToggleAutoPlayNext) }
+        )
+    }
+}
+
+@Composable
+private fun PlaybackTimeRow(
+    currentPositionMs: Long,
+    totalDurationMs: Long
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = currentPositionMs.formatToMinuteAndSeconds(),
+            color = Color.White
+        )
+        Text(
+            text = totalDurationMs.formatToMinuteAndSeconds(),
+            color = Color.White
+        )
+    }
+}
+
+@Composable
+private fun PlaybackToggleIcon(
+    icon: ImageVector,
+    contentDescription: String,
+    isEnabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.size(40.dp)
+    ) {
+        Icon(
+            modifier = Modifier.size(28.dp),
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (isEnabled) MaterialTheme.colorScheme.primary else Color.White
+        )
+    }
+}
+
+@Composable
+private fun PlaybackButtonsRow(
+    isPlaying: Boolean,
+    isShuffleEnabled: Boolean,
+    isRepeatEnabled: Boolean,
+    onControlPressed: (ControlButtons) -> Unit
+) {
+    // Choose icon based on toggle state
+    val repeatIcon = if (isRepeatEnabled) Icons.Filled.RepeatOn else Icons.Filled.Repeat
+    val shuffleIcon = if (isShuffleEnabled) Icons.Filled.ShuffleOn else Icons.Filled.Shuffle
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlaybackToggleIcon(
+            icon = repeatIcon,
+            contentDescription = "Repeat current track",
+            isEnabled = isRepeatEnabled,
+            onClick = { onControlPressed(ControlButtons.ToggleRepeat) }
+        )
+
+        Spacer(modifier = Modifier.size(12.dp))
+
+        IconButton(
+            onClick = { onControlPressed(ControlButtons.Previous) },
+            modifier = Modifier.size(48.dp)
         ) {
-            Text(
-                text = displayedPositionMs.formatToMinuteAndSeconds(),
-                color = Color.White
-            )
-            Text(
-                text = totalDuration.formatToMinuteAndSeconds(),
-                color = Color.White
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.Default.SkipPrevious,
+                contentDescription = "Previous",
+                tint = Color.White
             )
         }
 
         Spacer(modifier = Modifier.size(16.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+        IconButton(
+            modifier = Modifier
+                .size(64.dp)
+                .background(Color.White, shape = CircleShape)
+                .clip(CircleShape),
+            onClick = { onControlPressed(ControlButtons.Play) }
         ) {
-            IconButton(
-                onClick = { onControlPressed(ControlButtons.Previous) },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    modifier = Modifier.size(32.dp),
-                    imageVector = Icons.Default.SkipPrevious,
-                    contentDescription = "Previous",
-                    tint = Color.White
-                )
-            }
+            Icon(
+                imageVector = ImageVector.vectorResource(
+                    id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+                ),
+                contentDescription = if (isPlaying) "Pause" else "Play",
+                tint = Color.Black
+            )
+        }
 
-            Spacer(modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.size(16.dp))
 
-            IconButton(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(Color.White, shape = CircleShape)
-                    .clip(CircleShape),
-                onClick = { onControlPressed(ControlButtons.Play) }
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(
-                        id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-                    ),
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                    tint = Color.Black
-                )
-            }
-
-            Spacer(modifier = Modifier.size(24.dp))
-
-            IconButton(
-                onClick = { onControlPressed(ControlButtons.Next) },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    modifier = Modifier.size(32.dp),
-                    imageVector = Icons.Default.SkipNext,
-                    contentDescription = "Next",
-                    tint = Color.White
-                )
-            }
+        IconButton(
+            onClick = { onControlPressed(ControlButtons.Next) },
+            modifier = Modifier.size(48.dp)
+        ) {
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.Default.SkipNext,
+                contentDescription = "Next",
+                tint = Color.White
+            )
         }
 
         Spacer(modifier = Modifier.size(12.dp))
 
-        IconButton(
+        PlaybackToggleIcon(
+            icon = shuffleIcon,
+            contentDescription = "Shuffle",
+            isEnabled = isShuffleEnabled,
             onClick = { onControlPressed(ControlButtons.ToggleShuffle) }
-        ) {
-            Icon(
-                modifier = Modifier.size(32.dp),
-                imageVector = Icons.Default.Shuffle,
-                contentDescription = "Shuffle",
-                tint = if (isShuffleEnabled) MaterialTheme.colorScheme.primary else Color.White
-            )
-        }
+        )
     }
 }
 
+@Composable
+private fun AutoPlayToggle(
+    isEnabled: Boolean,
+    onToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        PlaybackToggleIcon(
+            icon = ImageVector.vectorResource(id = R.drawable.ic_autoplay_24dp),
+            contentDescription = "Auto play next",
+            isEnabled = isEnabled,
+            onClick = onToggle
+        )
+    }
+}

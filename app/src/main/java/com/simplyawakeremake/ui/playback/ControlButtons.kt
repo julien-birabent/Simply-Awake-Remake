@@ -1,8 +1,10 @@
 package com.simplyawakeremake.ui.playback
 
 enum class ControlButtons {
-    Previous,
     Play,
+    Previous,
     Next,
     ToggleShuffle,
+    ToggleRepeat,
+    ToggleAutoPlayNext,
 }

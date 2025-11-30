@@ -1,4 +1,4 @@
-package com.simplyawakeremake.viewmodel
+package com.simplyawakeremake.ui.main
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

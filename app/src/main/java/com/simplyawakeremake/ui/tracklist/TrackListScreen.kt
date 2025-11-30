@@ -61,8 +61,8 @@ import com.simplyawakeremake.ui.common.ToolbarAction
 import com.simplyawakeremake.ui.common.ToolbarConfig
 import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
+import com.simplyawakeremake.ui.main.MainViewModel
 import com.simplyawakeremake.usecases.DownloadProgress
-import com.simplyawakeremake.viewmodel.MainViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -271,22 +271,24 @@ fun Playlist(
     }
     val connectionState by connectionState()
 
-    HorizontalDivider(color = Color.White, thickness = 1.dp)
-    ItemList(
-        modifier = modifier,
-        items = tracks,
-        keySelector = { index -> tracks[index].id },
-        divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
-    ) { track ->
-        TrackListItem(
-            track = track,
-            onClick = {
-                if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
-                    viewModel.addToHistory(track)
-                    navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
-                } else showToast()
-            },
-            onFavoriteClick = { viewModel.onFavoriteClicked(it) })
+    Column {
+        HorizontalDivider(color = Color.White, thickness = 1.dp)
+        ItemList(
+            modifier = modifier,
+            items = tracks,
+            keySelector = { index -> tracks[index].id },
+            divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
+        ) { track ->
+            TrackListItem(
+                track = track,
+                onClick = {
+                    if (viewModel.isTrackDownloaded(track.id) || connectionState == ConnectionState.Available) {
+                        viewModel.addToHistory(track)
+                        navController.navigate(Screen.NOW_PLAYING.name + "/${track.id}")
+                    } else showToast()
+                },
+                onFavoriteClick = { viewModel.onFavoriteClicked(it) })
+        }
     }
 }
 
@@ -301,7 +303,7 @@ fun TrackListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick(track) }
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+            .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -341,7 +343,11 @@ fun TrackListItem(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-            FavoriteButton(onClick = { onFavoriteClick(track) }, track.isFavorite)
+            FavoriteButton(
+                modifier = Modifier,
+                onClick = { onFavoriteClick(track) },
+                isFavorite = track.isFavorite
+            )
         }
     }
 }

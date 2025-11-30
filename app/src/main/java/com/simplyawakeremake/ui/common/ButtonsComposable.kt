@@ -1,7 +1,7 @@
 package com.simplyawakeremake.ui.common
 
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.simplyawakeremake.R
 
@@ -43,10 +44,15 @@ fun LoadingButton(
 }
 
 @Composable
-fun FavoriteButton(onClick: () -> Unit, isFavorite: Boolean){
+fun FavoriteButton(
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 24.dp,
+    onClick: () -> Unit,
+    isFavorite: Boolean
+) {
     IconButton(
-        onClick = { onClick() },
-        modifier = Modifier.padding(start = 4.dp)
+        modifier = modifier,
+        onClick = { onClick() }
     ) {
         val icon = if (isFavorite) {
             Icons.Filled.Favorite
@@ -61,6 +67,7 @@ fun FavoriteButton(onClick: () -> Unit, isFavorite: Boolean){
         }
 
         Icon(
+            modifier = Modifier.requiredSize(iconSize),
             imageVector = icon,
             contentDescription = if (isFavorite) {
                 stringResource(R.string.cd_unfavorite_track)

@@ -3,6 +3,7 @@ package com.simplyawakeremake.viewmodel
 import app.cash.turbine.test
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.history.UiTrackHistory
+import com.simplyawakeremake.ui.history.RecentHistoryViewModel
 import com.simplyawakeremake.usecases.GetRecentHistoryUseCase
 import io.mockk.coEvery
 import io.mockk.every

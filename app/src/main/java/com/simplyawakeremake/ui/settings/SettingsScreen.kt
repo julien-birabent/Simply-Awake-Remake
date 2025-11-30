@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
+import com.simplyawakeremake.extensions.formatSize
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.LoadingButton
 import com.simplyawakeremake.ui.common.ToolbarConfig
@@ -135,10 +136,9 @@ fun DeleteDownloadsSection(
         trackFilesCount
     )
 
-    val sizeInMb = trackFilesSizeBytes.toDouble() / (1024.0 * 1024.0)
     val sizeLabel = stringResource(
         id = R.string.settings_downloads_size_mb,
-        sizeInMb
+        trackFilesSizeBytes.formatSize()
     )
 
     val statusText = stringResource(

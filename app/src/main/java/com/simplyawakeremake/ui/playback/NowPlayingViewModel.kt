@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,6 +43,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -59,19 +61,43 @@ class NowPlayingViewModel(
     private val trackFileManager: TrackFileManager by inject()
 
     private lateinit var player: Player
-    private val trackIdFlow = MutableStateFlow<String?>(null)
     private val playerFlow = MutableStateFlow<Player?>(null)
     private var playerListener: PlayerSubjectWrapper? = null
 
+    private val trackIdFlow = MutableStateFlow<String?>(null)
     private var playlistTrackIds: List<String> = emptyList()
 
     private val _isShuffleEnabled = MutableStateFlow(false)
     val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled
 
+    private data class PlaybackRequest(
+        val trackId: String,
+        val autoPlay: Boolean
+    )
+
+    private val playbackRequestFlow = MutableSharedFlow<PlaybackRequest>(
+        extraBufferCapacity = 1
+    )
+
     private val trackFlow: Flow<ResultState<Track>> = trackIdFlow
         .filterNotNull()
         .flatMapLatest { id -> userTrackRepository.getTrackBy(id) }
         .flowOn(Dispatchers.IO)
+
+    val uiState: StateFlow<PlayerUIState> = trackFlow
+        .map { resultState ->
+            when (resultState) {
+                is ResultState.Loading -> PlayerUIState.Loading
+                is ResultState.Error -> PlayerUIState.Error
+                is ResultState.Success -> PlayerUIState.ReadyToPlay(resultState.data)
+            }
+        }
+        .catch { error ->
+            Log.e(NowPlayingViewModel::class.simpleName, error.message.orEmpty())
+            emit(PlayerUIState.Error)
+        }
+        .stateIn(viewModelScope, SharingStarted.Lazily, PlayerUIState.Loading)
+
 
     private val tickerFlow = flow {
         while (true) {
@@ -79,33 +105,6 @@ class NowPlayingViewModel(
             delay(1000L)
         }
     }
-
-    val uiState: StateFlow<PlayerUIState> = combine(
-        playerFlow.filterNotNull(), trackFlow
-    ) { player, resultState ->
-        when (resultState) {
-            is ResultState.Loading -> PlayerUIState.Loading
-            is ResultState.Success -> {
-                val track = resultState.data
-
-                val currentMediaId = player.currentMediaItem?.mediaId
-                if (currentMediaId != track.id) {
-                    player.setMediaItem(createMediaItem(track))
-                    player.prepare()
-                }
-
-                PlayerUIState.ReadyToPlay(track, player)
-            }
-
-            is ResultState.Error -> PlayerUIState.Error
-        }
-    }
-        .catch { error ->
-            Log.e(NowPlayingViewModel::class.simpleName, error.message.orEmpty())
-            emit(PlayerUIState.Error)
-        }
-        .stateIn(viewModelScope, SharingStarted.Lazily, PlayerUIState.Loading)
-
 
     private val onPlayerUpdate: Flow<Player> = playerFlow
         .filterNotNull()
@@ -127,7 +126,8 @@ class NowPlayingViewModel(
 
     val playerPositionUpdates: StateFlow<Long> = combine(tickerFlow, onPlayerUpdate) { _, player ->
         player
-    }.filter { it.playbackState == Player.STATE_READY }
+    }
+        .filter { it.playbackState == Player.STATE_READY }
         .map { it.currentPosition }
         .catch { emit(0L) }
         .stateIn(viewModelScope, SharingStarted.Lazily, 0L)
@@ -150,6 +150,17 @@ class NowPlayingViewModel(
             },
             MoreExecutors.directExecutor()
         )
+
+        viewModelScope.launch(Dispatchers.IO) {
+            combine(
+                playerFlow.filterNotNull(),
+                playbackRequestFlow
+            ) { _, request ->
+                request
+            }.collectLatest { request ->
+                loadTrackForPlayback(request.trackId, request.autoPlay)
+            }
+        }
     }
 
     private suspend fun ensurePlaylistLoaded() {
@@ -167,6 +178,13 @@ class NowPlayingViewModel(
 
     fun setupTrackId(id: String) {
         trackIdFlow.value = id
+
+        playbackRequestFlow.tryEmit(
+            PlaybackRequest(
+                trackId = id,
+                autoPlay = true
+            )
+        )
     }
 
     private fun getNextTrackId(currentId: String): String? {
@@ -195,6 +213,7 @@ class NowPlayingViewModel(
     fun onControlPressed(controlPressed: ControlButtons) {
         when (controlPressed) {
             ControlButtons.Play -> {
+                if (!::player.isInitialized) return
                 if (player.isPlaying) player.pause() else player.play()
             }
 
@@ -202,7 +221,15 @@ class NowPlayingViewModel(
                 viewModelScope.launch(Dispatchers.IO) {
                     val currentId = trackIdFlow.value ?: return@launch
                     val nextId = getNextTrackId(currentId) ?: return@launch
+
                     trackIdFlow.emit(nextId)
+                    playbackRequestFlow.emit(
+                        PlaybackRequest(
+                            trackId = nextId,
+                            autoPlay = true
+                        )
+                    )
+
                     onTrackStarted(nextId)
                 }
             }
@@ -211,13 +238,45 @@ class NowPlayingViewModel(
                 viewModelScope.launch(Dispatchers.IO) {
                     val currentId = trackIdFlow.value ?: return@launch
                     val prevId = getPreviousTrackId(currentId) ?: return@launch
+
                     trackIdFlow.emit(prevId)
+
+                    playbackRequestFlow.emit(
+                        PlaybackRequest(
+                            trackId = prevId,
+                            autoPlay = true
+                        )
+                    )
+
                     onTrackStarted(prevId)
                 }
             }
 
             ControlButtons.ToggleShuffle -> {
                 _isShuffleEnabled.value = !_isShuffleEnabled.value
+            }
+        }
+    }
+
+    private suspend fun loadTrackForPlayback(trackId: String, autoPlay: Boolean) = withContext(
+        Dispatchers.IO
+    ) {
+        val trackResult = userTrackRepository.getTrackBy(trackId).firstOrNull()
+        val track = (trackResult as? ResultState.Success)?.data ?: return@withContext
+
+        val mediaItem = createMediaItem(track)
+
+        withContext(Dispatchers.Main) {
+            if (!::player.isInitialized) return@withContext
+
+            val wasPlaying = player.isPlaying
+
+            player.setMediaItem(mediaItem)
+            player.prepare()
+
+            val shouldPlay = autoPlay || wasPlaying
+            if (shouldPlay) {
+                player.play()
             }
         }
     }
@@ -253,9 +312,16 @@ class NowPlayingViewModel(
         }
     }
 
+    fun onSeekTo(positionMs: Long) {
+        if (!::player.isInitialized) return
+        player.seekTo(positionMs)
+    }
+
     override fun onCleared() {
         super.onCleared()
-        player.stop()
-        playerListener?.let { player.removeListener(it) }
+        if (::player.isInitialized) {
+            player.stop()
+            playerListener?.let { player.removeListener(it) }
+        }
     }
 }

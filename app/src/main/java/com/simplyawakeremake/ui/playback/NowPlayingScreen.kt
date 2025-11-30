@@ -71,7 +71,7 @@ fun NowPlayingScreen(
         mainViewModel.updateToolbar(toolbarConfig)
     }
 
-    LaunchedEffect(viewModel) {
+    LaunchedEffect(viewModel, trackId) {
         viewModel.setupTrackId(trackId)
         viewModel.onTrackStarted(trackId)
     }
@@ -114,8 +114,7 @@ fun NowPlayingScreen(
         ) {
             when (uiState) {
                 PlayerUIState.Error -> {
-                    // this cast was wrong before, use a generic error view or just show a message
-                    //CommonErrorView(throwable = null)
+                    // TODO: show error message
                 }
 
                 PlayerUIState.Loading -> {
@@ -150,12 +149,12 @@ fun NowPlayingScreen(
                         )
                         Spacer(modifier = Modifier.size(12.dp))
                         PlayerControlsView(
-                            exoPlayer = readyState.player,
                             totalDuration = totalDurationState,
                             currentPosition = currentPositionState,
                             isPlaying = isPlayingState,
                             isShuffleEnabled = isShuffleEnabled,
-                            onControlPressed = viewModel::onControlPressed
+                            onControlPressed = viewModel::onControlPressed,
+                            onSeekTo = viewModel::onSeekTo
                         )
                         Spacer(modifier = Modifier.size(12.dp))
                     }
@@ -166,33 +165,56 @@ fun NowPlayingScreen(
 }
 
 
+
 @Composable
-fun PlayerSlider(player: Player, duration: Long) {
+fun PlayerSlider(
+    duration: Long,
+    currentPosition: Long,
+    onSeekTo: (Long) -> Unit
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val isDragged by interactionSource.collectIsDraggedAsState()
     val isInteracting by remember { derivedStateOf { isPressed || isDragged } }
+
     var sliderPosition by remember { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(player) {
-        while (true) {
-            if (player.duration > 0 && !isInteracting) {
-                val currentPosition = player.currentPosition.toFloat()
-                sliderPosition = currentPosition
-                    .div(player.duration)
+    /*val targetSliderPosition by remember(duration, currentPosition) {
+        mutableFloatStateOf(
+            if (duration > 0L) {
+                currentPosition.toFloat()
+                    .div(duration.toFloat())
                     .times(100f)
+                    .coerceIn(0f, 100f)
+            } else {
+                0f
             }
-            delay(1000L)
+        )
+    }
+
+    if (!isInteracting) {
+        sliderPosition = targetSliderPosition
+    }*/
+
+    LaunchedEffect(duration, currentPosition, isInteracting) {
+        if (!isInteracting && duration > 0L) {
+            val clampedPosition = currentPosition.coerceIn(0L, duration)
+            sliderPosition = clampedPosition.toFloat()
+                .div(duration.toFloat())
+                .times(100f)
+                .coerceIn(0f, 100f)
         }
     }
 
     Column {
         Slider(
             value = sliderPosition,
-            onValueChange = { newSliderPosition -> sliderPosition = newSliderPosition },
+            onValueChange = { newSliderPosition ->
+                sliderPosition = newSliderPosition
+            },
             onValueChangeFinished = {
                 val newPosition = (sliderPosition / 100f) * duration
-                player.seekTo(newPosition.toLong())
+                onSeekTo(newPosition.toLong())
             },
             valueRange = 0f..100f,
             interactionSource = interactionSource,
@@ -200,6 +222,7 @@ fun PlayerSlider(player: Player, duration: Long) {
         )
     }
 }
+
 
 @Composable
 fun TrackInformationSection(
@@ -239,19 +262,23 @@ fun TrackInformationSection(
 
 @Composable
 fun PlayerControlsView(
-    exoPlayer: Player,
     totalDuration: Long,
     currentPosition: Long,
     isPlaying: Boolean,
     isShuffleEnabled: Boolean,
-    onControlPressed: (ControlButtons) -> Unit
+    onControlPressed: (ControlButtons) -> Unit,
+    onSeekTo: (Long) -> Unit
 ) {
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        PlayerSlider(player = exoPlayer, duration = totalDuration)
+        PlayerSlider(
+            duration = totalDuration,
+            currentPosition = currentPosition,
+            onSeekTo = onSeekTo
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),

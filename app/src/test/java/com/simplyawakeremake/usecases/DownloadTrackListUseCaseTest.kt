@@ -3,6 +3,8 @@ package com.simplyawakeremake.usecases
 
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.download.track.TrackFileManager
+import com.simplyawakeremake.usecases.download.DownloadProgress
+import com.simplyawakeremake.usecases.download.DownloadTrackListUseCase
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk

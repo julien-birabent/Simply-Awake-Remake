@@ -2,9 +2,16 @@ package com.simplyawakeremake.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.simplyawakeremake.R
+import com.simplyawakeremake.data.download.track.TrackDownloadInfo
+import com.simplyawakeremake.data.download.track.TrackDownloadStatus
+import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
+import com.simplyawakeremake.ui.UiText
+import com.simplyawakeremake.usecases.download.DeleteAllDownloadsUseCase
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
+import com.simplyawakeremake.usecases.download.ObserveActiveDownloadsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +24,7 @@ import kotlinx.coroutines.launch
 
 sealed interface SettingsEvent {
     data class LaunchGoogleSignIn(val intent: android.content.Intent) : SettingsEvent
-    data class ShowMessage(val message: String) : SettingsEvent
+    data class ShowMessage(val message: UiText) : SettingsEvent
 }
 
 data class SettingsUiState(
@@ -27,11 +34,20 @@ data class SettingsUiState(
     val userDisplayName: String? = null,
     val errorMessage: String? = null,
     val showSyncDialog: Boolean = false,
+    val isDeletingDownloads: Boolean = false,
+    val lastDeleteSucceeded: Boolean? = null,
+    val trackFilesCount: Int = 0,
+    val trackFilesSizeBytes: Long = 0L,
+    val hasActiveTrackDownloads: Boolean = false,
+    val remainingTracksDownloading: Int = 0,
 )
 
 class SettingsViewModel(
     private val userRepository: UserRepository,
     private val googleSignInUseCase: GoogleSignInUseCase,
+    private val deleteAllDownloadsUseCase: DeleteAllDownloadsUseCase,
+    private val trackFileManager: TrackFileManager,
+    private val observeActiveDownloadsUseCase: ObserveActiveDownloadsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -42,6 +58,34 @@ class SettingsViewModel(
 
     init {
         observeCurrentUser()
+        observeTrackFilesCount()
+        observeActiveDownloads()
+    }
+
+    private fun observeActiveDownloads() {
+        viewModelScope.launch {
+            observeActiveDownloadsUseCase().collect { downloadState ->
+                _uiState.update {
+                    it.copy(
+                        hasActiveTrackDownloads = downloadState.hasActiveDownloads,
+                        remainingTracksDownloading = downloadState.remainingTracks
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeTrackFilesCount() {
+        viewModelScope.launch {
+            trackFileManager.trackFilesUsage.collect { fileUsage ->
+                _uiState.update {
+                    it.copy(
+                        trackFilesCount = fileUsage.count,
+                        trackFilesSizeBytes = fileUsage.totalSizeBytes
+                    )
+                }
+            }
+        }
     }
 
     private fun observeCurrentUser() {
@@ -85,7 +129,12 @@ class SettingsViewModel(
                     )
                 }
                 _events.emit(
-                    SettingsEvent.ShowMessage("Login failed: ${e.message ?: "unknown error"}")
+                    SettingsEvent.ShowMessage(
+                        UiText.StringResource(
+                            R.string.settings_login_failed_toast,
+                            listOf(e.message ?: "unknown error")
+                        )
+                    )
                 )
             }
         }
@@ -98,20 +147,51 @@ class SettingsViewModel(
             when (result) {
                 is UserTrackSyncResult.Success -> {
                     _events.emit(
-                        SettingsEvent.ShowMessage("Account linked and data synchronized ✨")
+                        SettingsEvent.ShowMessage(
+                            UiText.StringResource(R.string.settings_sync_success_toast)
+                        )
                     )
                 }
 
                 is UserTrackSyncResult.Failure -> {
                     _events.emit(
                         SettingsEvent.ShowMessage(
-                            "Account linked, but sync failed: ${
-                                result.cause.message ?: "unknown error"
-                            }"
+                            UiText.StringResource(
+                                R.string.settings_sync_failure_toast,
+                                listOf(result.cause.message ?: "unknown error")
+                            )
                         )
                     )
                 }
             }
+        }
+    }
+
+    fun onDeleteAllDownloadsClicked() {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isDeletingDownloads = true,
+                    lastDeleteSucceeded = null
+                )
+            }
+
+            val success = deleteAllDownloadsUseCase()
+
+            _uiState.update {
+                it.copy(
+                    isDeletingDownloads = false,
+                    lastDeleteSucceeded = success
+                )
+            }
+
+            val message = if (success) {
+                UiText.StringResource(R.string.settings_downloads_delete_success)
+            } else {
+                UiText.StringResource(R.string.settings_downloads_delete_partial_failure)
+            }
+
+            _events.emit(SettingsEvent.ShowMessage(message))
         }
     }
 }

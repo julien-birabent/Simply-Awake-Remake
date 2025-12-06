@@ -1,4 +1,4 @@
-package com.simplyawakeremake.usecases
+package com.simplyawakeremake.usecases.sync
 
 import android.util.Log
 import com.simplyawakeremake.data.user.UserRepository

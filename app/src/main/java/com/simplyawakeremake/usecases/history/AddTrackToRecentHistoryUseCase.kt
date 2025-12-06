@@ -1,4 +1,4 @@
-package com.simplyawakeremake.usecases
+package com.simplyawakeremake.usecases.history
 
 import com.simplyawakeremake.data.history.TrackHistoryRepositoryInterface
 import com.simplyawakeremake.data.track.Track

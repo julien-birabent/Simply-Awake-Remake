@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
-import com.simplyawakeremake.usecases.SyncUserTracksAfterLoginUseCase
+import com.simplyawakeremake.usecases.sync.SyncUserTracksAfterLoginUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow

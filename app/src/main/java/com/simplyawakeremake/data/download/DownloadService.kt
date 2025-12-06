@@ -12,4 +12,5 @@ interface DownloadService {
     )
 
     fun cancelDownloads()
+    fun cancelDownload(file: File)
 }

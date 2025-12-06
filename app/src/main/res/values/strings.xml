@@ -43,6 +43,22 @@
     <string name="settings_unknown_user">Unknown user</string>
     <string name="settings_guest_message">You are currently using the app as a guest.</string>
     <string name="settings_sign_in_with_google">Sign in with Google</string>
+    <string name="settings_login_failed_toast">Login failed: %1$s</string>
+    <string name="settings_sync_success_toast">Account linked and data synchronized ✨</string>
+    <string name="settings_sync_failure_toast">Account linked, but sync failed: %1$s</string>
+
+    <string name="settings_section_downloads_title">Downloads</string>
+    <string name="settings_section_downloads_title_appendix">files</string>
+    <plurals name="settings_downloads_tracks">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
+
+    <string name="settings_downloads_status">%1$s \u2013 %2$s on device</string>
+    <string name="settings_downloads_delete_all_description">Delete all downloaded tracks from your device.</string>
+    <string name="settings_downloads_delete_all_button">Delete all downloads</string>
+    <string name="settings_downloads_delete_success">All downloaded tracks have been deleted ✅</string>
+    <string name="settings_downloads_delete_partial_failure">Some downloaded tracks could not be deleted ❌</string>
 
     <string name="login_track_artwork_cd">Track artwork</string>
     <string name="login_title">Welcome to Simply Awake</string>

@@ -1,36 +1,98 @@
 package com.simplyawakeremake.data.download.track
 
 import android.net.Uri
-import com.simplyawakeremake.data.download.DownloadService
-import com.simplyawakeremake.data.download.DownloadSession
+import androidx.core.net.toUri
 import com.simplyawakeremake.data.download.FileStorage
 import java.io.File
+import kotlinx.coroutines.flow.StateFlow
 
 class TrackFileManager(
-    private val downloadService: DownloadService,
     private val fileStorage: FileStorage,
-    private val trackUriProvider: (String) -> String
+    private val trackUriProvider: (String) -> String,
+    private val downloadStore: TrackDownloadStore,
+    private val trackDownloader: TrackDownloader,
 ) {
+
+    val downloadInfos: StateFlow<List<TrackDownloadInfo>> = downloadStore.downloadInfos
+    val trackFilesUsage: StateFlow<TrackFilesUsage> = downloadStore.trackFilesUsage
 
     init {
         fileStorage.ensureDirectoriesExist()
+        downloadStore.refreshUsage()
     }
 
-    private var session: DownloadSession? = null
-    private val batchSize = 4
+    fun getDownloadStatus(trackId: String): TrackDownloadStatus {
+        val fromState = downloadStore.getInfoOrNull(trackId)?.status
+        if (fromState != null) return fromState
 
-    fun cancelAllDownloads() {
-        session?.cancel()
-        session = null
-        downloadService.cancelDownloads()
+        val file = fileStorage.getTrackFile(trackId)
+        return if (file.exists()) {
+            TrackDownloadStatus.DOWNLOADED
+        } else {
+            TrackDownloadStatus.NOT_DOWNLOADED
+        }
     }
+
+    fun getDownloadInfo(trackId: String): TrackDownloadInfo =
+        downloadStore.getInfoOrNull(trackId) ?: TrackDownloadInfo(
+            trackId = trackId,
+            status = getDownloadStatus(trackId),
+            progress = null
+        )
 
     fun getTrackFile(trackId: String): File = fileStorage.getTrackFile(trackId)
 
     fun getTrackUri(trackId: String): Uri {
         val localFile = fileStorage.getTrackFile(trackId)
         return if (localFile.exists()) Uri.fromFile(localFile)
-        else Uri.parse(trackUriProvider(trackId))
+        else trackUriProvider(trackId).toUri()
+    }
+
+    fun cancelAllDownloads() {
+        trackDownloader.cancelAllDownloads()
+    }
+
+    fun cancelTrackDownload(trackId: String) {
+        val destination = fileStorage.getTrackFile(trackId)
+        trackDownloader.cancelTrackDownload(trackId, destination)
+    }
+
+    fun deleteAllTrackFiles(): Boolean {
+        trackDownloader.cancelAllDownloads()
+        val success = fileStorage.deleteAll()
+        fileStorage.ensureDirectoriesExist()
+        downloadStore.clearAll()
+        downloadStore.refreshUsage()
+        return success
+    }
+
+    fun deleteTrackFile(trackId: String): Boolean {
+        val file = fileStorage.getTrackFile(trackId)
+        val deleted = if (file.exists()) file.delete() else true
+        if (deleted) {
+            downloadStore.removeTrack(trackId)
+            downloadStore.refreshUsage()
+        }
+        return deleted
+    }
+
+    fun downloadSingleTrack(
+        trackId: String,
+        trackTitle: String,
+        onResult: (Boolean) -> Unit = {}
+    ) {
+        val request = TrackDownloadRequest(
+            trackId = trackId,
+            url = trackUriProvider(trackId),
+            destination = fileStorage.getTrackFile(trackId),
+            title = trackTitle
+        )
+
+        trackDownloader.downloadSingleTrack(
+            request = request,
+            currentStatusResolver = ::getDownloadStatus,
+            onResult = onResult
+        )
     }
 
     fun downloadTracks(
@@ -39,41 +101,21 @@ class TrackFileManager(
         onEachTrackDownloaded: (Int) -> Unit,
         onComplete: (List<File>) -> Unit
     ) {
-        if (session != null) throw IllegalStateException("A download session is already in progress. Call cancelAllDownloads() first.")
-
-        if (areAllTracksDownloaded(tracks)) {
-            onComplete(tracks.map { (id, _) -> fileStorage.getTrackFile(id) })
-            return
+        val requests = tracks.map { (id, title) ->
+            TrackDownloadRequest(
+                trackId = id,
+                url = trackUriProvider(id),
+                destination = fileStorage.getTrackFile(id),
+                title = title
+            )
         }
 
-        session = DownloadSession(
-            pendingDownloads = tracks.toMutableList(),
+        trackDownloader.downloadTracks(
+            requests = requests,
+            currentStatusResolver = ::getDownloadStatus,
             onDownloadCanceled = onDownloadCanceled,
-            onEachDownloaded = onEachTrackDownloaded,
+            onEachTrackDownloaded = onEachTrackDownloaded,
             onComplete = onComplete
         )
-        session?.startNextBatch(batchSize, ::enqueueSingleDownload)
     }
-
-    private fun enqueueSingleDownload(
-        session: DownloadSession,
-        track: Pair<String, String>
-    ) {
-        val (trackId, trackTitle) = track
-        val filePath = fileStorage.getTrackFile(trackId)
-
-        downloadService.enqueueDownload(
-            url = trackUriProvider(trackId),
-            destination = filePath,
-            title = trackTitle,
-            onCancel = session::cancel
-        ) { resultFile ->
-            session.handleDownloadResult(resultFile) {
-                session.startNextBatch(batchSize, ::enqueueSingleDownload)
-            }
-        }
-    }
-
-    private fun areAllTracksDownloaded(tracks: List<Pair<String, String>>) =
-        tracks.all { (id, _) -> fileStorage.getTrackFile(id).exists() }
 }

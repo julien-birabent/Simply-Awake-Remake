@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.history.UiTrackHistory
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
-import com.simplyawakeremake.usecases.GetRecentHistoryUseCase
+import com.simplyawakeremake.usecases.history.GetRecentHistoryUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

@@ -5,11 +5,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,11 +24,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.simplyawakeremake.R
+import com.simplyawakeremake.extensions.formatSize
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.LoadingButton
 import com.simplyawakeremake.ui.common.ToolbarConfig
@@ -65,9 +71,11 @@ fun SettingsRoute(
                 }
 
                 is SettingsEvent.ShowMessage -> {
-                    Toast
-                        .makeText(context, event.message, Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        context,
+                        event.message.asString(context),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -75,7 +83,8 @@ fun SettingsRoute(
 
     SettingsScreen(
         uiState = uiState,
-        onLoginWithGoogle = viewModel::onLoginWithGoogleClicked
+        onLoginWithGoogle = viewModel::onLoginWithGoogleClicked,
+        onDeleteAllDownloadsClicked = viewModel::onDeleteAllDownloadsClicked
     )
 
     if (uiState.showSyncDialog) {
@@ -88,7 +97,11 @@ fun SettingsRoute(
 }
 
 @Composable
-private fun SettingsScreen(uiState: SettingsUiState, onLoginWithGoogle: () -> Unit) {
+private fun SettingsScreen(
+    uiState: SettingsUiState,
+    onLoginWithGoogle: () -> Unit = {},
+    onDeleteAllDownloadsClicked: () -> Unit = {}
+) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.Start,
@@ -103,8 +116,94 @@ private fun SettingsScreen(uiState: SettingsUiState, onLoginWithGoogle: () -> Un
             onLoginWithGoogle = onLoginWithGoogle
         )
         HorizontalDivider(modifier = Modifier.height(1.dp))
+
+        DeleteDownloadsSection(
+            isDeleting = uiState.isDeletingDownloads,
+            isDownloading = uiState.hasActiveTrackDownloads,
+            remainingTracksDownloading = uiState.remainingTracksDownloading,
+            trackFilesCount = uiState.trackFilesCount,
+            trackFilesSizeBytes = uiState.trackFilesSizeBytes,
+            onDeleteClicked = onDeleteAllDownloadsClicked
+        )
+        HorizontalDivider(modifier = Modifier.height(1.dp))
     }
 }
+
+@Composable
+fun DeleteDownloadsSection(
+    isDeleting: Boolean,
+    isDownloading: Boolean = false,
+    remainingTracksDownloading: Int = 0,
+    trackFilesCount: Int,
+    trackFilesSizeBytes: Long,
+    onDeleteClicked: () -> Unit
+) {
+    val tracksLabel = pluralStringResource(
+        id = R.plurals.settings_downloads_tracks,
+        count = trackFilesCount,
+        trackFilesCount
+    )
+
+    val formattedSize = trackFilesSizeBytes.formatSize()
+
+    val statusText = stringResource(
+        id = R.string.settings_downloads_status,
+        tracksLabel,
+        formattedSize
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(id = R.string.settings_section_downloads_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = " ($remainingTracksDownloading downloads enqueued)",
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            if (isDownloading) {
+                Spacer(modifier = Modifier.width(8.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = statusText,
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(id = R.string.settings_downloads_delete_all_description),
+            style = MaterialTheme.typography.bodySmall
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LoadingButton(
+            modifier = Modifier.fillMaxWidth(),
+            text = stringResource(id = R.string.settings_downloads_delete_all_button),
+            isLoading = isDeleting,
+            enabled = !isDeleting && trackFilesCount > 0,
+            onClick = onDeleteClicked
+        )
+    }
+}
+
 
 @Composable
 fun GoogleSignInSection(

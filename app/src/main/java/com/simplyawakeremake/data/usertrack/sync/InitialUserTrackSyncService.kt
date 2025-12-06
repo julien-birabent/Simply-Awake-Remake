@@ -2,7 +2,7 @@ package com.simplyawakeremake.data.usertrack.sync
 
 import android.util.Log
 import com.simplyawakeremake.data.user.UserRepository
-import com.simplyawakeremake.usecases.UserTrackLoginSyncUseCase
+import com.simplyawakeremake.usecases.sync.UserTrackLoginSyncUseCase
 import kotlinx.coroutines.flow.first
 
 class InitialUserTrackSyncManager(

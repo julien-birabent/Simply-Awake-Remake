@@ -171,8 +171,7 @@ class TrackListViewModel(
         val infoById = downloadInfos.associateBy { it.trackId }
 
         return tracks.map { track ->
-            val info = infoById[track.id]
-            val status = info?.status ?: TrackDownloadStatus.NOT_DOWNLOADED
+            val status = trackFileManager.getDownloadStatus(track.id)
 
             TrackUi(
                 id = track.id,

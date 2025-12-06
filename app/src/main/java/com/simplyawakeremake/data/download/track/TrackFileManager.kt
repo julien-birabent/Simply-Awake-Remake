@@ -38,7 +38,6 @@ class TrackFileManager(
 
     val trackFilesUsage: StateFlow<TrackFilesUsage> =
         downloadInfos
-            .onStart { recomputeUsage() }
             .map { recomputeUsage() }
             .stateIn(
                 scope,
@@ -144,20 +143,24 @@ class TrackFileManager(
             throw IllegalStateException("A download session is already in progress. Call cancelAllDownloads() first.")
         }
 
-        if (areAllTracksDownloaded(tracks)) {
-            onComplete(tracks.map { (id, _) -> fileStorage.getTrackFile(id) })
+        val (alreadyDownloaded, toDownload) = tracks.partition { (id, _) ->
+            fileStorage.getTrackFile(id).exists()
+        }
+
+        if (toDownload.isEmpty()) {
+            onComplete(alreadyDownloaded.map { (id, _) -> fileStorage.getTrackFile(id) })
             return
         }
 
-        val trackIds = tracks.map { it.first }.toSet()
-        trackIds.forEach { id ->
+        val toDownloadIds = toDownload.map { it.first }.toSet()
+        toDownloadIds.forEach { id ->
             setDownloadState(id, TrackDownloadStatus.DOWNLOADING)
         }
 
         session = DownloadSession(
-            pendingDownloads = tracks.toMutableList(),
+            pendingDownloads = toDownload.toMutableList(),
             onDownloadCanceled = {
-                trackIds.forEach { id ->
+                toDownloadIds.forEach { id ->
                     if (getDownloadStatus(id) != TrackDownloadStatus.DOWNLOADED) {
                         setDownloadState(id, TrackDownloadStatus.NOT_DOWNLOADED)
                     }
@@ -167,12 +170,16 @@ class TrackFileManager(
             onEachDownloaded = { downloadedCount ->
                 onEachTrackDownloaded(downloadedCount)
             },
-            onComplete = { files ->
-                onComplete(files)
+            onComplete = { downloadedFiles ->
+                val allFiles = alreadyDownloaded.map { (id, _) ->
+                    fileStorage.getTrackFile(id) } + downloadedFiles
+                onComplete(allFiles)
             }
         )
+
         session?.startNextBatch(batchSize, ::enqueueSingleDownload)
     }
+
 
     private fun enqueueSingleDownload(
         session: DownloadSession,
@@ -198,9 +205,6 @@ class TrackFileManager(
             }
         }
     }
-
-    private fun areAllTracksDownloaded(tracks: List<Pair<String, String>>) =
-        tracks.all { (id, _) -> fileStorage.getTrackFile(id).exists() }
 
     private fun setDownloadState(
         trackId: String,

@@ -380,8 +380,6 @@ fun TrackListItem(
                 onClick = { onDownloadClick(track) }
             )
         }
-
-
     }
 }
 

@@ -17,7 +17,7 @@ class SingleTrackDownloadUseCase(
             }
 
             TrackDownloadStatus.DOWNLOADING -> {
-                // Later: per-track cancel.
+                trackFileManager.cancelTrackDownload(trackId)
             }
 
             TrackDownloadStatus.DOWNLOADED -> {

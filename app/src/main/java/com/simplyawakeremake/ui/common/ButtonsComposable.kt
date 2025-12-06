@@ -108,23 +108,27 @@ fun TrackDownloadButton(
         modifier = modifier,
         enabled = enabled,
 
-    ) {
+        ) {
         when (status) {
             TrackDownloadStatus.NOT_DOWNLOADED -> {
                 Icon(
                     imageVector = Icons.Outlined.FileDownload,
                     contentDescription = "Download",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             TrackDownloadStatus.DOWNLOADING -> {
-               StopWithCircularProgress { onClick() }
+                StopWithCircularProgress(modifier = Modifier.size(28.dp)) {
+                    onClick()
+                }
             }
 
             TrackDownloadStatus.DOWNLOADED -> {
                 Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_save_24),
-                    contentDescription = "Downloaded"
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_check_circle),
+                    contentDescription = "Downloaded",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -150,6 +154,7 @@ private fun StopWithCircularProgress(
             modifier = Modifier.fillMaxSize(),
         ) {
             Icon(
+                modifier = Modifier.size(20.dp),
                 imageVector = Icons.Default.Stop,
                 contentDescription = "",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant

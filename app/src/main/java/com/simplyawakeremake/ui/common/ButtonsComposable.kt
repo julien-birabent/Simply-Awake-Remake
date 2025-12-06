@@ -3,6 +3,7 @@ package com.simplyawakeremake.ui.common
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Download
@@ -57,7 +58,7 @@ fun FavoriteButton(
     isFavorite: Boolean
 ) {
     IconButton(
-        modifier = modifier,
+        modifier = modifier.wrapContentSize(),
         onClick = { onClick() }
     ) {
         val icon = if (isFavorite) {
@@ -87,22 +88,23 @@ fun FavoriteButton(
 
 @Composable
 fun TrackDownloadButton(
+    modifier: Modifier = Modifier,
     status: TrackDownloadStatus,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
     val enabled = status != TrackDownloadStatus.DOWNLOADING
 
     IconButton(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
+
     ) {
         when (status) {
             TrackDownloadStatus.NOT_DOWNLOADED -> {
                 Icon(
                     imageVector = Icons.Outlined.FileDownload,
-                    contentDescription = "Download"
+                    contentDescription = "Download",
                 )
             }
 

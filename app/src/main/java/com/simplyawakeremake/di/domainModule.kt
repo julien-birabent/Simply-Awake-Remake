@@ -1,17 +1,19 @@
 package com.simplyawakeremake.di
 
 import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
-import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
+import com.simplyawakeremake.usecases.history.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
-import com.simplyawakeremake.usecases.DeleteAllDownloadsUseCase
-import com.simplyawakeremake.usecases.DownloadTrackListUseCase
-import com.simplyawakeremake.usecases.GetRecentHistoryUseCase
+import com.simplyawakeremake.usecases.download.DeleteAllDownloadsUseCase
+import com.simplyawakeremake.usecases.download.DownloadTrackListUseCase
+import com.simplyawakeremake.usecases.history.GetRecentHistoryUseCase
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
 import com.simplyawakeremake.usecases.RegisterTrackPlayUseCase
-import com.simplyawakeremake.usecases.SingleTrackDownloadUseCase
-import com.simplyawakeremake.usecases.SyncUserTracksAfterLoginUseCase
+import com.simplyawakeremake.usecases.download.SingleTrackDownloadUseCase
+import com.simplyawakeremake.usecases.sync.SyncUserTracksAfterLoginUseCase
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
-import com.simplyawakeremake.usecases.UserTrackLoginSyncUseCase
+import com.simplyawakeremake.usecases.download.ObserveActiveDownloadsUseCase
+import com.simplyawakeremake.usecases.download.ObserveTrackDownloadsUseCase
+import com.simplyawakeremake.usecases.sync.UserTrackLoginSyncUseCase
 import org.koin.dsl.module
 
 val domainModule = module {
@@ -33,4 +35,6 @@ val domainModule = module {
     single { InitialUserTrackSyncManager(userRepository = get(), loginSyncUseCase = get()) }
     single { DeleteAllDownloadsUseCase(trackFileManager = get()) }
     single { SingleTrackDownloadUseCase(trackFileManager = get()) }
+    factory { ObserveTrackDownloadsUseCase(trackFileManager = get()) }
+    single { ObserveActiveDownloadsUseCase(trackFileManager = get()) }
 }

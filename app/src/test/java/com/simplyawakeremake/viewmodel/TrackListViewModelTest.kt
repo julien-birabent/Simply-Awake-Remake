@@ -8,8 +8,8 @@ import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.ui.tracklist.PlayerListUIState
 import com.simplyawakeremake.ui.tracklist.TrackListViewModel
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
-import com.simplyawakeremake.usecases.DownloadProgress
-import com.simplyawakeremake.usecases.DownloadTrackListUseCase
+import com.simplyawakeremake.usecases.download.DownloadProgress
+import com.simplyawakeremake.usecases.download.DownloadTrackListUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every

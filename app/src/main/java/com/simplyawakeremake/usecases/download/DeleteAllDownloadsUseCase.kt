@@ -1,7 +1,6 @@
-package com.simplyawakeremake.usecases
+package com.simplyawakeremake.usecases.download
 
 import com.simplyawakeremake.data.download.track.TrackFileManager
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

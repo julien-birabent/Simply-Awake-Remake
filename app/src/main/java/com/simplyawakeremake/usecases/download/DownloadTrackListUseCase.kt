@@ -1,4 +1,4 @@
-package com.simplyawakeremake.usecases
+package com.simplyawakeremake.usecases.download
 
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.Track

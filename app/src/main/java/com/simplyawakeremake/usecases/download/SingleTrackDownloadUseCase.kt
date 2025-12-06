@@ -1,4 +1,4 @@
-package com.simplyawakeremake.usecases
+package com.simplyawakeremake.usecases.download
 
 import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.data.download.track.TrackFileManager
@@ -17,8 +17,7 @@ class SingleTrackDownloadUseCase(
             }
 
             TrackDownloadStatus.DOWNLOADING -> {
-                // For now: ignore repeated clicks while downloading.
-                // Later you could add per-track cancel behavior here.
+                // Later: per-track cancel.
             }
 
             TrackDownloadStatus.DOWNLOADED -> {

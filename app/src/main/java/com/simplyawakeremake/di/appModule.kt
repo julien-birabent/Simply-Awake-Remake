@@ -14,7 +14,6 @@ import com.simplyawakeremake.data.download.track.LocalTrackFileStorage
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.history.TrackHistorySaver
 import com.simplyawakeremake.data.history.UiTrackHistory
-import com.simplyawakeremake.data.track.TrackSharedPrefsSaver
 import com.simplyawakeremake.data.track.TrackUriProvider
 import com.simplyawakeremake.data.track.remote.TrackDto
 import org.koin.android.ext.koin.androidContext
@@ -30,7 +29,7 @@ val appModule = module {
 
     single<SharedPreferences> {
         androidContext().getSharedPreferences(
-            "private_shared_preferences_tracks",
+            "private_shared_preferences",
             Context.MODE_PRIVATE
         )
     }
@@ -39,7 +38,6 @@ val appModule = module {
         androidContext().userPrefsDataStore
     }
 
-    single<DataSaver<TrackDto>>(named("tracks")) { TrackSharedPrefsSaver(get()) }
     single<DataSaver<UiTrackHistory>>(named("track_history")) { TrackHistorySaver(get()) }
     single { TrackUriProvider(BuildConfig.baseServerUrl) }
 

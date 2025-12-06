@@ -1,4 +1,4 @@
-package com.simplyawakeremake.usecases
+package com.simplyawakeremake.usecases.sync
 
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.remote.UserTrackRemoteDataSource
@@ -23,7 +23,6 @@ class UserTrackLoginSyncUseCase(
         )
 
         val remoteTracks = remote.fetchAllForUser(firebaseUid)
-        // Single call that does two-way merge based on updatedAt
         return syncService.syncDownFromRemoteToLocal(remoteTracks)
     }
 }

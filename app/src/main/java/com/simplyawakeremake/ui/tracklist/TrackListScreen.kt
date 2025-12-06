@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.History
@@ -44,12 +45,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
 import com.simplyawakeremake.connectionState
+import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.navigation.Screen
 import com.simplyawakeremake.ui.LocalMainViewModel
 import com.simplyawakeremake.ui.common.CommonErrorView
@@ -62,7 +65,8 @@ import com.simplyawakeremake.ui.common.TrackDownloadButton
 import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.ui.main.MainViewModel
-import com.simplyawakeremake.usecases.DownloadProgress
+import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
+import com.simplyawakeremake.usecases.download.DownloadProgress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -235,6 +239,7 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
         Button(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(56.dp)
                 .padding(start = 32.dp, end = 32.dp),
             onClick = { scope.launch { tryAgainAction() } },
             contentPadding = PaddingValues(),
@@ -309,20 +314,32 @@ fun TrackListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = track.ordinal.toString(),
-            modifier = Modifier.padding(8.dp),
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        Box(
+            modifier = Modifier
+                .width(32.dp)
+                .padding(4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = track.ordinal.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
             Text(
+                modifier = Modifier.fillMaxWidth(),
                 text = track.displayName,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             if (track.tagString.isNotBlank()) {
@@ -331,19 +348,26 @@ fun TrackListItem(
                     text = track.tagString,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 8.dp)
+            horizontalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            Text(
-                text = track.duration,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Box(
+                modifier = Modifier.padding(end = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = track.duration,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
             FavoriteButton(
                 modifier = Modifier,
@@ -356,6 +380,8 @@ fun TrackListItem(
                 onClick = { onDownloadClick(track) }
             )
         }
+
+
     }
 }
 
@@ -461,5 +487,129 @@ fun DownloadProgressIndicator(
                 DownloadProgress.Idle -> Unit
             }
         }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+    name = "Playlist – Download confirmation dialog"
+)
+@Composable
+private fun DownloadConfirmationDialogPreview() {
+    SimplyAwakeRemakeTheme {
+        DownloadConfirmationDialog(
+            onConfirmSelected = {},
+            onDismiss = {}
+        )
+    }
+}
+
+
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+    name = "Playlist – No internet"
+)
+@Composable
+private fun NoInternetScreenPreview() {
+    SimplyAwakeRemakeTheme {
+        NoInternetScreen(
+            tryAgainAction = {}
+        )
+    }
+}
+
+@Preview(
+    backgroundColor = 0xFF00000,
+    name = "TrackListItem – Not favorite, not downloaded"
+)
+@Composable
+private fun TrackListItemNotFavoriteNotDownloadedPreview() {
+    val track = TrackUi(
+        id = "track_1",
+        ordinal = 1,
+        displayName = "Gentle Awareness Meditation",
+        tagString = "Beginner • 20 min",
+        duration = "20:00",
+        isFavorite = false,
+        downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED
+    )
+
+    SimplyAwakeRemakeTheme (dynamicColor = false){
+        Column {
+            TrackListItem(
+                track = track,
+                onClick = {},
+                onFavoriteClick = {},
+                onDownloadClick = {}
+            )
+            TrackListItem(
+                track = track.copy(ordinal = 10),
+                onClick = {},
+                onFavoriteClick = {},
+                onDownloadClick = {}
+            )
+            TrackListItem(
+                track = track.copy(ordinal = 100),
+                onClick = {},
+                onFavoriteClick = {},
+                onDownloadClick = {}
+            )
+        }
+    }
+}
+
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+    name = "TrackListItem – Favorite & downloaded"
+)
+@Composable
+private fun TrackListItemFavoriteDownloadedPreview() {
+    val track = TrackUi(
+        id = "track_2",
+        ordinal = 2,
+        displayName = "Deep Body Scan for Sleep",
+        tagString = "Sleep • 45 min • Guided",
+        duration = "45:00",
+        isFavorite = true,
+        downloadStatus = TrackDownloadStatus.DOWNLOADED
+    )
+
+    SimplyAwakeRemakeTheme {
+        TrackListItem(
+            track = track,
+            onClick = {},
+            onFavoriteClick = {},
+            onDownloadClick = {}
+        )
+    }
+}
+
+@Preview(
+    showBackground = true,
+    backgroundColor = 0xFF000000,
+    name = "TrackListItem – Downloading"
+)
+@Composable
+private fun TrackListItemDownloadingPreview() {
+    val track = TrackUi(
+        id = "track_3",
+        ordinal = 3,
+        displayName = "Breath Awareness – Short",
+        tagString = "Focused • 10 min",
+        duration = "10:00",
+        isFavorite = false,
+        downloadStatus = TrackDownloadStatus.DOWNLOADING
+    )
+
+    SimplyAwakeRemakeTheme (dynamicColor = false, darkTheme = true){
+        TrackListItem(
+            track = track,
+            onClick = {},
+            onFavoriteClick = {},
+            onDownloadClick = {}
+        )
     }
 }

@@ -4,17 +4,19 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.data.common.ResultState
+import com.simplyawakeremake.data.download.track.TrackDownloadInfo
 import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
-import com.simplyawakeremake.usecases.AddTrackToRecentHistoryUseCase
-import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
-import com.simplyawakeremake.usecases.DownloadProgress
-import com.simplyawakeremake.usecases.DownloadTrackListUseCase
-import com.simplyawakeremake.usecases.SingleTrackDownloadUseCase
+import com.simplyawakeremake.extensions.toCompactDurationLabel
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
+import com.simplyawakeremake.usecases.download.DownloadProgress
+import com.simplyawakeremake.usecases.download.DownloadTrackListUseCase
+import com.simplyawakeremake.usecases.download.ObserveTrackDownloadsUseCase
+import com.simplyawakeremake.usecases.download.SingleTrackDownloadUseCase
+import com.simplyawakeremake.usecases.history.AddTrackToRecentHistoryUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -49,11 +51,11 @@ sealed interface TrackListUiState {
 class TrackListViewModel(
     private val trackRepository: TrackRepositoryInterface,
     private val downloadTrackListUseCase: DownloadTrackListUseCase,
-    private val checkTrackDownloadStatusUseCase: CheckTrackDownloadStatusUseCase,
     private val addTrackToRecentHistoryUseCase: AddTrackToRecentHistoryUseCase,
     private val toggleTrackFavoriteUseCase: ToggleTrackFavoriteUseCase,
     private val initialUserTrackSyncManager: InitialUserTrackSyncManager,
     private val trackFileManager: TrackFileManager,
+    observeTrackDownloadsUseCase: ObserveTrackDownloadsUseCase,
     private val singleTrackDownloadUseCase: SingleTrackDownloadUseCase,
 ) : ViewModel(), KoinComponent {
 
@@ -66,27 +68,27 @@ class TrackListViewModel(
     private val tracksFlow: StateFlow<ResultState<List<Track>>> =
         retryTrigger
             .onStart { emit(Unit) }
-            .flatMapLatest {
-                fetchTrackList()
-            }
+            .flatMapLatest { fetchTrackList() }
             .stateIn(
                 viewModelScope,
                 SharingStarted.Lazily,
                 ResultState.Loading(emptyList())
             )
 
+    private val downloadInfosFlow: StateFlow<List<TrackDownloadInfo>> =
+        observeTrackDownloadsUseCase()
+
     val uiState: StateFlow<TrackListUiState> =
         combine(
             tracksFlow,
-            trackFileManager.downloadingTrackIds, trackFileManager.trackFilesUsage,
-        ) { result, downloadingIds, _ ->
+            downloadInfosFlow,
+        ) { result, downloadInfos ->
             when (result) {
                 is ResultState.Success -> {
                     val sortedTracks = result.data.sortedBy { it.ordinal }
                     val uiTracks = mapTracksToUi(
                         tracks = sortedTracks,
-                        downloadingIds = downloadingIds,
-                        fileManager = trackFileManager
+                        downloadInfos = downloadInfos
                     )
                     TrackListUiState.Content(uiTracks)
                 }
@@ -104,7 +106,7 @@ class TrackListViewModel(
     private fun fetchTrackList(): Flow<ResultState<List<Track>>> =
         trackRepository.getAllTracks()
             .onStart { emit(ResultState.Loading(emptyList())) }
-            .catch { emit(ResultState.Error(lastData = null, throwable = it)) }
+            .catch { emit(ResultState.Error(it, emptyList())) }
 
     fun retryLoadingPlaylist() {
         retryTrigger.tryEmit(Unit)
@@ -140,14 +142,7 @@ class TrackListViewModel(
     }
 
     fun isTrackDownloaded(trackId: String): Boolean {
-        return checkTrackDownloadStatusUseCase.execute(trackId)
-    }
-
-    private fun findTrackById(id: String): Track? {
-        val current = tracksFlow.value
-        return (current as? ResultState.Success)
-            ?.data
-            ?.firstOrNull { it.id == id }
+        return trackFileManager.getDownloadStatus(trackId) == TrackDownloadStatus.DOWNLOADED
     }
 
     fun addToHistory(track: TrackUi) = viewModelScope.launch(Dispatchers.IO) {
@@ -162,7 +157,6 @@ class TrackListViewModel(
         }
     }
 
-
     fun onDownloadClicked(track: TrackUi) {
         singleTrackDownloadUseCase(
             trackId = track.id,
@@ -172,36 +166,31 @@ class TrackListViewModel(
 
     private fun mapTracksToUi(
         tracks: List<Track>,
-        downloadingIds: Set<String>,
-        fileManager: TrackFileManager
+        downloadInfos: List<TrackDownloadInfo>
     ): List<TrackUi> {
+        val infoById = downloadInfos.associateBy { it.trackId }
+
         return tracks.map { track ->
-            track.toUi(
-                isDownloading = downloadingIds.contains(track.id),
-                isDownloaded = fileManager.getTrackFile(track.id).exists()
+            val info = infoById[track.id]
+            val status = info?.status ?: TrackDownloadStatus.NOT_DOWNLOADED
+
+            TrackUi(
+                id = track.id,
+                ordinal = track.ordinal,
+                displayName = track.displayName,
+                tagString = track.tagString,
+                duration = track.duration.toCompactDurationLabel(),
+                isFavorite = track.isFavorite,
+                downloadStatus = status
             )
         }
     }
 
-    private fun Track.toUi(
-        isDownloading: Boolean,
-        isDownloaded: Boolean
-    ): TrackUi {
-        val status = when {
-            isDownloading -> TrackDownloadStatus.DOWNLOADING
-            isDownloaded -> TrackDownloadStatus.DOWNLOADED
-            else -> TrackDownloadStatus.NOT_DOWNLOADED
-        }
-
-        return TrackUi(
-            id = this.id,
-            ordinal = this.ordinal,
-            displayName = this.displayName,
-            tagString = this.tagString,
-            duration = this.duration,
-            isFavorite = this.isFavorite,
-            downloadStatus = status
-        )
+    private fun findTrackById(id: String): Track? {
+        val current = tracksFlow.value
+        return (current as? ResultState.Success)
+            ?.data
+            ?.firstOrNull { it.id == id }
     }
 
     fun onConnectionAvailableForInitialSync() {

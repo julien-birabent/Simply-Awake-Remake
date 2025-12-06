@@ -47,12 +47,7 @@ class MainActivity : ComponentActivity(), KoinComponent {
             SimplyAwakeRemakeTheme {
                 CompositionLocalProvider(LocalMainViewModel provides mainViewModel) {
                     SetStatusBarColor(MaterialTheme.colorScheme.background)
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        MainScreen(navController = navController, canNavBack)
-                    }
+                    MainScreen(navController = navController, canNavBack)
                 }
             }
         }

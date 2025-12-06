@@ -5,11 +5,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -115,6 +119,8 @@ private fun SettingsScreen(
 
         DeleteDownloadsSection(
             isDeleting = uiState.isDeletingDownloads,
+            isDownloading = uiState.hasActiveTrackDownloads,
+            remainingTracksDownloading = uiState.remainingTracksDownloading,
             trackFilesCount = uiState.trackFilesCount,
             trackFilesSizeBytes = uiState.trackFilesSizeBytes,
             onDeleteClicked = onDeleteAllDownloadsClicked
@@ -126,6 +132,8 @@ private fun SettingsScreen(
 @Composable
 fun DeleteDownloadsSection(
     isDeleting: Boolean,
+    isDownloading: Boolean = false,
+    remainingTracksDownloading: Int = 0,
     trackFilesCount: Int,
     trackFilesSizeBytes: Long,
     onDeleteClicked: () -> Unit
@@ -149,10 +157,26 @@ fun DeleteDownloadsSection(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = stringResource(id = R.string.settings_section_downloads_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(id = R.string.settings_section_downloads_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = " ($remainingTracksDownloading downloads enqueued)",
+                style = MaterialTheme.typography.titleMedium,
+            )
+
+            if (isDownloading) {
+                Spacer(modifier = Modifier.width(8.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(4.dp))
 

@@ -2,14 +2,16 @@ package com.simplyawakeremake.ui.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.firestore.AggregateField.count
 import com.simplyawakeremake.R
+import com.simplyawakeremake.data.download.track.TrackDownloadInfo
+import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
 import com.simplyawakeremake.ui.UiText
-import com.simplyawakeremake.usecases.DeleteAllDownloadsUseCase
+import com.simplyawakeremake.usecases.download.DeleteAllDownloadsUseCase
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
+import com.simplyawakeremake.usecases.download.ObserveActiveDownloadsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,14 +37,17 @@ data class SettingsUiState(
     val isDeletingDownloads: Boolean = false,
     val lastDeleteSucceeded: Boolean? = null,
     val trackFilesCount: Int = 0,
-    val trackFilesSizeBytes: Long = 0L
+    val trackFilesSizeBytes: Long = 0L,
+    val hasActiveTrackDownloads: Boolean = false,
+    val remainingTracksDownloading: Int = 0,
 )
 
 class SettingsViewModel(
     private val userRepository: UserRepository,
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val deleteAllDownloadsUseCase: DeleteAllDownloadsUseCase,
-    private val trackFileManager: TrackFileManager
+    private val trackFileManager: TrackFileManager,
+    private val observeActiveDownloadsUseCase: ObserveActiveDownloadsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -54,6 +59,20 @@ class SettingsViewModel(
     init {
         observeCurrentUser()
         observeTrackFilesCount()
+        observeActiveDownloads()
+    }
+
+    private fun observeActiveDownloads() {
+        viewModelScope.launch {
+            observeActiveDownloadsUseCase().collect { downloadState ->
+                _uiState.update {
+                    it.copy(
+                        hasActiveTrackDownloads = downloadState.hasActiveDownloads,
+                        remainingTracksDownloading = downloadState.remainingTracks
+                    )
+                }
+            }
+        }
     }
 
     private fun observeTrackFilesCount() {
@@ -153,8 +172,7 @@ class SettingsViewModel(
             _uiState.update {
                 it.copy(
                     isDeletingDownloads = true,
-                    lastDeleteSucceeded = null,
-                    trackFilesCount = trackFileManager.trackCount()
+                    lastDeleteSucceeded = null
                 )
             }
 
@@ -163,8 +181,7 @@ class SettingsViewModel(
             _uiState.update {
                 it.copy(
                     isDeletingDownloads = false,
-                    lastDeleteSucceeded = success,
-                    trackFilesCount = trackFileManager.trackCount()
+                    lastDeleteSucceeded = success
                 )
             }
 
@@ -177,5 +194,4 @@ class SettingsViewModel(
             _events.emit(SettingsEvent.ShowMessage(message))
         }
     }
-
 }

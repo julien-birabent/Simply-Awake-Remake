@@ -53,7 +53,7 @@ fun String.toDurationSeconds(): Int {
 fun Track.categories(): Set<String> {
     return tagString
         .split(",")
-        .map { it.trim() }
+        .map { it.trim().lowercase() }
         .filter { it.isNotEmpty() }
         .toSet()
 }

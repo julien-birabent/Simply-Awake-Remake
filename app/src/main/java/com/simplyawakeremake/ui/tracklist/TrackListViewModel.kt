@@ -12,6 +12,7 @@ import com.simplyawakeremake.data.track.categories
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
 import com.simplyawakeremake.extensions.toCompactDurationLabel
+import com.simplyawakeremake.extensions.toShortDateLabel
 import com.simplyawakeremake.ui.trackfilter.TrackFilterState
 import com.simplyawakeremake.usecases.ApplyTrackFiltersUseCase
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
@@ -186,7 +187,8 @@ class TrackListViewModel(
                 tagString = track.tagString,
                 duration = track.duration.toCompactDurationLabel(),
                 isFavorite = track.isFavorite,
-                downloadStatus = status
+                downloadStatus = status,
+                createdAtLabel = track.createdAt.toShortDateLabel()
             )
         }
     }

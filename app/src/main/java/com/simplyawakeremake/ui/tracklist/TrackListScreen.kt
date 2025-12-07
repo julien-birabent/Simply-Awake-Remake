@@ -358,28 +358,14 @@ fun TrackListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick(track) }
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .width(32.dp)
-                .padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = track.ordinal.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
         ) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -400,23 +386,29 @@ fun TrackListItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
+
+            val hasDuration = track.duration.isNotBlank()
+            val hasDate = track.createdAtLabel.isNotBlank()
+            if (hasDuration || hasDate) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = buildString {
+                        if (hasDuration) append(track.duration)
+                        if (hasDuration && hasDate) append(" · ")
+                        if (hasDate) append(track.createdAtLabel)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            Box(
-                modifier = Modifier.padding(end = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = track.duration,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
             FavoriteButton(
                 modifier = Modifier,
                 onClick = { onFavoriteClick(track) },
@@ -575,10 +567,11 @@ private fun TrackListItemNotFavoriteNotDownloadedPreview() {
         id = "track_1",
         ordinal = 1,
         displayName = "Gentle Awareness Meditation",
-        tagString = "Beginner • 20 min",
+        tagString = "presence, awakening, natural meditation",
         duration = "20:00",
         isFavorite = false,
-        downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED
+        downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED,
+        createdAtLabel = "16 Feb 2023"
     )
 
     SimplyAwakeRemakeTheme(dynamicColor = false) {
@@ -619,7 +612,8 @@ private fun TrackListItemFavoriteDownloadedPreview() {
         tagString = "Sleep • 45 min • Guided",
         duration = "45:00",
         isFavorite = true,
-        downloadStatus = TrackDownloadStatus.DOWNLOADED
+        downloadStatus = TrackDownloadStatus.DOWNLOADED,
+        createdAtLabel = "16 Feb 2023"
     )
 
     SimplyAwakeRemakeTheme {
@@ -646,7 +640,8 @@ private fun TrackListItemDownloadingPreview() {
         tagString = "Focused • 10 min",
         duration = "10:00",
         isFavorite = false,
-        downloadStatus = TrackDownloadStatus.DOWNLOADING
+        downloadStatus = TrackDownloadStatus.DOWNLOADING,
+        createdAtLabel = "16 Feb 2023"
     )
 
     SimplyAwakeRemakeTheme(dynamicColor = false, darkTheme = true) {

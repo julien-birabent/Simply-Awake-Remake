@@ -10,4 +10,5 @@ data class TrackUi(
     val duration: String,
     val isFavorite: Boolean,
     val downloadStatus: TrackDownloadStatus,
+    val createdAtLabel: String,
 )

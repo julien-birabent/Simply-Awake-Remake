@@ -20,7 +20,7 @@ fun String.toCompactDurationLabel(): String {
     return when {
         hours > 0 -> { if (minutes > 0) "${hours}h${minutes}m" else "${hours}h" }
 
-        minutes > 0 -> { "${minutes}m" }
+        minutes > 0 -> { "${minutes}min" }
 
         seconds > 0 -> { "${seconds}s" }
 

@@ -48,7 +48,7 @@ class ApplyTrackFiltersUseCase(
                 tracks.sortedBy { it.rawDurationSeconds() }
 
             TrackSortOption.RELEASE_ORDINAL -> {
-                tracks.sortedBy { it.ordinal }
+                tracks.sortedBy { it.createdAt }
             }
         }
     }
@@ -102,7 +102,7 @@ private class CategoryTrackListFilter : TrackListFilter {
 
         return tracks.filter { track ->
             val trackCategories = track.categories()
-            trackCategories.all { it in selectedCategoryIds }
+            selectedCategoryIds.all { it in trackCategories }
         }
     }
 }

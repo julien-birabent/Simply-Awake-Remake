@@ -27,7 +27,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,10 +39,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TrackFilterBottomSheet(
-    initialFilterState: TrackFilterState,
+    initialFilterState: TrackFilter,
     availableCategories: List<TrackCategoryUi>,
     onCancel: () -> Unit,
-    onApplyFilter: (TrackFilterState) -> Unit,
+    onApplyFilter: (TrackFilter) -> Unit,
     viewModel: TrackFilterViewModel = koinViewModel()
 ) {
     LaunchedEffect(initialFilterState) {
@@ -68,7 +67,7 @@ fun TrackFilterBottomSheet(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TrackFilterBottomSheetContent(
-    filterState: TrackFilterState,
+    filterState: TrackFilter,
     availableCategories: List<TrackCategoryUi>,
     onSortSelected: (TrackSortOption) -> Unit,
     onStateFilterToggled: (TrackStateFilter) -> Unit,
@@ -220,7 +219,7 @@ fun TrackFilterBottomSheetContent(
 @Preview(showBackground = true)
 @Composable
 private fun TrackFilterBottomSheetContentPreview() {
-    val dummyFilterState = TrackFilterState(
+    val dummyFilterState = TrackFilter(
         sortOption = TrackSortOption.DURATION_ASC,
         stateFilters = setOf(
             TrackStateFilter.Downloaded,

@@ -5,12 +5,12 @@ import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.categories
 import com.simplyawakeremake.data.track.rawDurationSeconds
 import com.simplyawakeremake.ui.trackfilter.DurationBucket
-import com.simplyawakeremake.ui.trackfilter.TrackFilterState
+import com.simplyawakeremake.ui.trackfilter.TrackFilter
 import com.simplyawakeremake.ui.trackfilter.TrackSortOption
 import com.simplyawakeremake.ui.trackfilter.TrackStateFilter
 
 fun interface TrackListFilter {
-    fun apply(tracks: List<Track>, filter: TrackFilterState): List<Track>
+    fun apply(tracks: List<Track>, filter: TrackFilter): List<Track>
 }
 
 class ApplyTrackFiltersUseCase(
@@ -27,7 +27,7 @@ class ApplyTrackFiltersUseCase(
 
     operator fun invoke(
         tracks: List<Track>,
-        filter: TrackFilterState
+        filter: TrackFilter
     ): List<Track> {
         val filtered = filters.fold(tracks) { current, strategy ->
             strategy.apply(current, filter)
@@ -58,7 +58,7 @@ private class StateTrackListFilter(
     private val isTrackDownloaded: (trackId: String) -> Boolean
 ) : TrackListFilter {
 
-    override fun apply(tracks: List<Track>, filter: TrackFilterState): List<Track> {
+    override fun apply(tracks: List<Track>, filter: TrackFilter): List<Track> {
         val stateFilters = filter.stateFilters
         if (stateFilters.isEmpty()) return tracks
 
@@ -84,7 +84,7 @@ private class StateTrackListFilter(
 
 private class DurationTrackListFilter : TrackListFilter {
 
-    override fun apply(tracks: List<Track>, filter: TrackFilterState): List<Track> {
+    override fun apply(tracks: List<Track>, filter: TrackFilter): List<Track> {
         val durationBucket: DurationBucket = filter.durationBucket ?: return tracks
 
         return tracks.filter { track ->
@@ -96,7 +96,7 @@ private class DurationTrackListFilter : TrackListFilter {
 
 private class CategoryTrackListFilter : TrackListFilter {
 
-    override fun apply(tracks: List<Track>, filter: TrackFilterState): List<Track> {
+    override fun apply(tracks: List<Track>, filter: TrackFilter): List<Track> {
         val selectedCategoryIds = filter.selectedCategoryIds
         if (selectedCategoryIds.isEmpty()) return tracks
 

@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.ClearAll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -76,6 +78,54 @@ fun FilterChipCard(
     }
 }
 
+@Composable
+fun RemovableFilterChip(
+    modifier: Modifier = Modifier,
+    label: String,
+    onClick: () -> Unit
+) {
+    FilterChipCard(
+        modifier = modifier,
+        label = label,
+        selected = true,
+        onClick = onClick,
+        iconImage = Icons.Filled.Close,
+        iconTint = MaterialTheme.colorScheme.onSurface
+    )
+}
+
+@Composable fun ResetFiltersChip(
+    modifier: Modifier = Modifier,
+    label: String,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(999.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.ClearAll,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+
+
 @Preview
 @Composable
 private fun preview() {
@@ -101,6 +151,8 @@ private fun preview() {
                 "Favorites",
                 selected = false
             ) {}
+            RemovableFilterChip(Modifier, "Favorite") {}
+            ResetFiltersChip(Modifier, "Reset"){}
         }
     }
 }

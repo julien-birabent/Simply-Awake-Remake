@@ -7,10 +7,10 @@ import kotlinx.coroutines.flow.update
 
 class TrackFilterViewModel : ViewModel() {
 
-    private val _filterState = MutableStateFlow(TrackFilterState())
-    val filterState: StateFlow<TrackFilterState> = _filterState
+    private val _filterState = MutableStateFlow(TrackFilter())
+    val filterState: StateFlow<TrackFilter> = _filterState
 
-    fun setInitialFilterState(initial: TrackFilterState) {
+    fun setInitialFilterState(initial: TrackFilter) {
         _filterState.value = initial
     }
 
@@ -43,6 +43,6 @@ class TrackFilterViewModel : ViewModel() {
     }
 
     fun reset() {
-        _filterState.value = TrackFilterState()
+        _filterState.value = TrackFilter()
     }
 }

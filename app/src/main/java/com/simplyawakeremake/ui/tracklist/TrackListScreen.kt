@@ -74,7 +74,10 @@ import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.ui.main.MainViewModel
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
+import com.simplyawakeremake.ui.trackfilter.ActiveTrackFiltersHeader
+import com.simplyawakeremake.ui.trackfilter.TrackFilter
 import com.simplyawakeremake.ui.trackfilter.TrackFilterBottomSheet
+import com.simplyawakeremake.ui.trackfilter.hasActiveFilters
 import com.simplyawakeremake.usecases.download.DownloadProgress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -130,6 +133,8 @@ fun PlayListScreen(
                 Playlist(
                     modifier = Modifier.fillMaxSize(),
                     tracks = contentState.items,
+                    filterState = contentState.filterState,
+                    availableCategories = contentState.availableCategories,
                     navController = navController,
                     viewModel = viewModel
                 )
@@ -302,16 +307,19 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
     }
 }
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
     tracks: List<TrackUi>,
+    filterState: TrackFilter,
+    availableCategories: List<TrackCategoryUi>,
     navController: NavController,
     viewModel: TrackListViewModel
 ) {
     val context = LocalContext.current
     var currentToast by remember { mutableStateOf<Toast?>(null) }
+    val connectionState by connectionState()
 
     val showToast = {
         currentToast?.cancel()
@@ -322,12 +330,24 @@ fun Playlist(
         )
         currentToast?.show()
     }
-    val connectionState by connectionState()
 
-    Column {
+    Column(modifier = modifier) {
+        if (filterState.hasActiveFilters()) {
+            HorizontalDivider(color = Color.White, thickness = 1.dp)
+            ActiveTrackFiltersHeader(
+                filterState = filterState,
+                availableCategories = availableCategories,
+                onRemoveStateFilter = viewModel::onRemoveStateFilter,
+                onClearDuration = viewModel::onClearDurationFilter,
+                onRemoveCategory = viewModel::onRemoveCategoryFilter,
+                onClearAll = viewModel::resetFilters
+            )
+        }
+
         HorizontalDivider(color = Color.White, thickness = 1.dp)
+
         ItemList(
-            modifier = modifier,
+            modifier = Modifier.fillMaxSize(),
             items = tracks,
             keySelector = { index -> tracks[index].id },
             divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
@@ -341,7 +361,8 @@ fun Playlist(
                     } else showToast()
                 },
                 onFavoriteClick = { viewModel.onFavoriteClicked(it) },
-                onDownloadClick = { viewModel.onDownloadClicked(it) })
+                onDownloadClick = { viewModel.onDownloadClicked(it) }
+            )
         }
     }
 }

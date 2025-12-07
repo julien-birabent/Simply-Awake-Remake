@@ -13,7 +13,8 @@ import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
 import com.simplyawakeremake.extensions.toCompactDurationLabel
 import com.simplyawakeremake.extensions.toShortDateLabel
-import com.simplyawakeremake.ui.trackfilter.TrackFilterState
+import com.simplyawakeremake.ui.trackfilter.TrackFilter
+import com.simplyawakeremake.ui.trackfilter.TrackStateFilter
 import com.simplyawakeremake.usecases.ApplyTrackFiltersUseCase
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
 import com.simplyawakeremake.usecases.download.DownloadProgress
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 
@@ -41,7 +43,7 @@ sealed interface TrackListUiState {
     data class Error(val throwable: Throwable) : TrackListUiState
     data class Content(
         val items: List<TrackUi>,
-        val filterState: TrackFilterState,
+        val filterState: TrackFilter,
         val availableCategories: List<TrackCategoryUi>
     ) : TrackListUiState
 }
@@ -63,7 +65,7 @@ class TrackListViewModel(
     private val _downloadState = MutableStateFlow<DownloadProgress>(DownloadProgress.Idle)
     val downloadState: StateFlow<DownloadProgress> = _downloadState
 
-    private val filterState = MutableStateFlow(TrackFilterState())
+    private val filterState = MutableStateFlow(TrackFilter())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tracksFlow: StateFlow<ResultState<List<Track>>> =
@@ -223,11 +225,33 @@ class TrackListViewModel(
         }
     }
 
-    fun onFilterStateChanged(newFilterState: TrackFilterState) {
+    fun onFilterStateChanged(newFilterState: TrackFilter) {
         filterState.value = newFilterState
     }
 
+    fun onRemoveStateFilter(stateFilter: TrackStateFilter) {
+        filterState.update { current ->
+            current.copy(
+                stateFilters = current.stateFilters - stateFilter
+            )
+        }
+    }
+
+    fun onClearDurationFilter() {
+        filterState.update { current ->
+            current.copy(durationBucket = null)
+        }
+    }
+
+    fun onRemoveCategoryFilter(categoryId: String) {
+        filterState.update { current ->
+            current.copy(
+                selectedCategoryIds = current.selectedCategoryIds - categoryId
+            )
+        }
+    }
+
     fun resetFilters() {
-        filterState.value = TrackFilterState()
+        filterState.value = TrackFilter()
     }
 }

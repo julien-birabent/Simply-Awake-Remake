@@ -1,13 +1,15 @@
 package com.simplyawakeremake.viewmodel
 
 import com.simplyawakeremake.MainCoroutineRule
-import com.simplyawakeremake.ui.model.UiTrack
+import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.UiTrackTestData
 import com.simplyawakeremake.data.common.ResultState
-import com.simplyawakeremake.data.track.TrackRepositoryInterface
+import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
+import com.simplyawakeremake.ui.tracklist.PlayerListUIState
+import com.simplyawakeremake.ui.tracklist.TrackListViewModel
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
-import com.simplyawakeremake.usecases.DownloadProgress
-import com.simplyawakeremake.usecases.DownloadTrackListUseCase
+import com.simplyawakeremake.usecases.download.DownloadProgress
+import com.simplyawakeremake.usecases.download.DownloadTrackListUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -141,7 +143,7 @@ class TrackListViewModelTest {
         val error = UnknownHostException("UnknownHostException")
         val testTracks = UiTrackTestData.listOfTracks
 
-        val testFlow = MutableStateFlow<ResultState<List<UiTrack>>>(ResultState.Error(error, null))
+        val testFlow = MutableStateFlow<ResultState<List<Track>>>(ResultState.Error(error, null))
 
         coEvery { trackRepository.getAllTracks() } coAnswers { testFlow }
 

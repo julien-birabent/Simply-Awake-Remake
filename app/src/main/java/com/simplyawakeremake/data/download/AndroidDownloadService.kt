@@ -7,15 +7,22 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.simplyawakeremake.extensions.deleteFileByDownloadId
 import com.simplyawakeremake.extensions.getDownloadedFile
 import com.simplyawakeremake.extensions.isDownloadComplete
 import java.io.File
 
+internal data class DownloadUnit(
+    val id: Long,
+    val file: File,
+    val onFileResult: (DownloadUnit, File?) -> Unit
+)
+
 class AndroidDownloadService(context: Context) : DownloadService {
     private val downloadManager =
         context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-    private val downloads = mutableMapOf<Long, (File?) -> Unit>()
+    private val downloads = mutableSetOf<DownloadUnit>()
 
     init {
         val receiver = object : BroadcastReceiver() {
@@ -36,25 +43,40 @@ class AndroidDownloadService(context: Context) : DownloadService {
         onCancel: () -> Unit,
         onComplete: (File?) -> Unit
     ) {
-        val request = DownloadManager.Request(Uri.parse(url))
+        val request = DownloadManager.Request(url.toUri())
             .setDestinationUri(Uri.fromFile(destination))
             .setTitle(title)
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
 
         val downloadId = downloadManager.enqueue(request)
-        downloads[downloadId] = { resultFile ->
+        DownloadUnit(downloadId, destination) { downloadUnit, resultFile ->
             if (resultFile == null) {
                 onCancel()
-            } else onComplete(resultFile)
-            downloads.remove(downloadId)
+            } else {
+                onComplete(resultFile)
+            }
+            removeUnit(downloadUnit)
+        }.also { downloadUnit ->
+            downloads.add(downloadUnit)
         }
     }
 
+    private fun removeUnit(downloadUnit: DownloadUnit) {
+        downloads.removeIf { it.id == downloadUnit.id }
+    }
+
     override fun cancelDownloads() {
-        val downloadIds = downloads.keys.toLongArray()
+        val downloadIds = downloads.map { it.id }.toLongArray()
         if (downloadIds.isNotEmpty()) {
             downloadManager.remove(*downloadIds)
             downloads.clear()
+        }
+    }
+
+    override fun cancelDownload(file: File) {
+        downloads.find { it.file == file }?.let { toCancel ->
+            downloadManager.remove(toCancel.id)
+            removeUnit(toCancel)
         }
     }
 
@@ -67,8 +89,10 @@ class AndroidDownloadService(context: Context) : DownloadService {
         } else {
             downloadManager.deleteFileByDownloadId(id)
             null
-        }.also {
-            downloads[id]?.invoke(it)
+        }.also { file ->
+            downloads.find { it.id == id }?.let {
+                it.onFileResult(it, file)
+            }
         }
     }
 }

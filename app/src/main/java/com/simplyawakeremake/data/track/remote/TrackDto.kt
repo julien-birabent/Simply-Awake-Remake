@@ -1,0 +1,34 @@
+package com.simplyawakeremake.data.track.remote
+
+import com.google.gson.annotations.Expose
+import com.google.gson.annotations.SerializedName
+
+
+data class TrackDto(
+    @SerializedName("id")
+    val id: String,
+    @Expose
+    @SerializedName("createDate")
+    val createDate: Int,
+    @Expose
+    @SerializedName("updateDate")
+    val updateDate: Int,
+    @Expose
+    @SerializedName("name")
+    val name: String,
+    @Expose
+    @SerializedName("lengthInSeconds")
+    val lengthInSeconds: Int,
+    @Expose
+    @SerializedName("tagString")
+    val tagString: String,
+    @Expose
+    @SerializedName("season")
+    val season: Int,
+    @Expose
+    @SerializedName("year")
+    val year: Int,
+    @Expose
+    @SerializedName("duration")
+    val duration: String
+)

@@ -1,7 +1,10 @@
 package com.simplyawakeremake.data.common
 
+import android.util.Log
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
@@ -12,16 +15,17 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class DataRepositoryTest {
 
+    data class TestDTO(val id: String, val name: String)
+    data class TestDB(val id: String, val name: String)
+    data class TestDomain(val id: String, val name: String)
+
     class TestDataRepository(
         override val fetchAllCall: suspend () -> List<TestDTO>,
         override val saver: DataSaver<TestDB>,
-        override val dtoToDbMapper: (TestDTO) -> TestDB,
-        override val dbToUiModelMapper: (TestDB) -> TestUiModel
-    ) : DataRepository<TestUiModel, TestDTO, TestDB>()
-
-    data class TestDTO(val id: String, val name: String)
-    data class TestDB(val id: String, val name: String)
-    data class TestUiModel(val id: String, val name: String)
+        override val dtoToDomainMapper: (TestDTO) -> TestDomain,
+        override val domainToDbMapper: (TestDomain) -> TestDB,
+        override val dbToDomainMapper: (TestDB) -> TestDomain,
+    ) : DataRepository<TestDomain, TestDTO, TestDB>()
 
     private lateinit var repository: TestDataRepository
     private lateinit var mockSaver: DataSaver<TestDB>
@@ -31,84 +35,109 @@ class DataRepositoryTest {
     fun setup() {
         mockSaver = mockk(relaxed = true)
         mockFetchAllCall = mockk()
-
+        mockkStatic(Log::class)
+        every { Log.d(any(), any()) } returns 0
+        every { Log.e(any(), any(), any()) } returns 0
         repository = TestDataRepository(
             fetchAllCall = mockFetchAllCall,
             saver = mockSaver,
-            dtoToDbMapper = { dto -> TestDB(dto.id, dto.name) },
-            dbToUiModelMapper = { db -> TestUiModel(db.id, db.name) }
+            dtoToDomainMapper = { dto -> TestDomain(dto.id, dto.name) },
+            domainToDbMapper = { domain -> TestDB(domain.id, domain.name) },
+            dbToDomainMapper = { db -> TestDomain(db.id, db.name) }
         )
     }
 
     @Test
-    fun `getAll() returns cached data first then updates from remote source`() = runTest {
+    fun `getAll - GIVEN cached data AND remote different WHEN called THEN emits cached then remote`() = runTest {
+        // GIVEN
         val oldCachedData = listOf(TestDB("1", "Old Cached Track"))
-        val newCachedData = listOf(TestDB("2", "New Remote Track"))
         val remoteData = listOf(TestDTO("2", "New Remote Track"))
 
-        coEvery { mockSaver.loadAll() } coAnswers {
-            oldCachedData // First call: returns old data
-        } andThen {
-            newCachedData // After remote fetch, returns updated cache
-        }
-
+        coEvery { mockSaver.loadAll() } returns oldCachedData
         coEvery { mockFetchAllCall() } returns remoteData
 
-        val emittedStates = mutableListOf<ResultState<List<TestUiModel>>>()
+        // WHEN
+        val emittedStates = mutableListOf<ResultState<List<TestDomain>>>()
         repository.getAll().toList(emittedStates)
 
+        // THEN
         assertEquals(
-            ResultState.Success(listOf(TestUiModel("1", "Old Cached Track"))),
+            ResultState.Success(listOf(TestDomain("1", "Old Cached Track"))),
             emittedStates[0]
         )
         assertEquals(
-            ResultState.Success(listOf(TestUiModel("2", "New Remote Track"))),
+            ResultState.Success(listOf(TestDomain("2", "New Remote Track"))),
             emittedStates[1]
         )
     }
 
     @Test
-    fun `getAll() fetches remote data when cache is empty`() = runTest {
-        coEvery { mockSaver.loadAll() } coAnswers {
-            emptyList()
-        } andThen {
-            listOf(TestDB("1", "Remote Track Saved"))
-        }
+    fun `getAll - GIVEN empty cache WHEN remote succeeds THEN emits Loading then remote data`() = runTest {
+        // GIVEN
+        coEvery { mockSaver.loadAll() } returnsMany listOf(
+            emptyList(),                             // initial cache
+        )
         coEvery { mockFetchAllCall() } returns listOf(TestDTO("1", "Remote Track"))
 
-        val emittedStates = mutableListOf<ResultState<List<TestUiModel>>>()
+        // WHEN
+        val emittedStates = mutableListOf<ResultState<List<TestDomain>>>()
         repository.getAll().toList(emittedStates)
 
+        // THEN
+        // First emission: Loading (empty cache)
         assertEquals(
-            ResultState.Success(listOf(TestUiModel("1", "Remote Track"))),
+            ResultState.Loading<List<TestDomain>>(null),
+            emittedStates[0]
+        )
+
+        // Second emission: remote data
+        assertEquals(
+            ResultState.Success(listOf(TestDomain("1", "Remote Track"))),
             emittedStates[1]
         )
     }
 
     @Test
-    fun `getAll() returns cached data if remote fetch fails`() = runTest {
+    fun `getAll - GIVEN cached data WHEN remote fails THEN emits cached twice`() = runTest {
+        // GIVEN
         val cachedData = listOf(TestDB("1", "Cached Track"))
 
         coEvery { mockSaver.loadAll() } returns cachedData
         coEvery { mockFetchAllCall() } throws RuntimeException("Network Error")
 
-        val emittedStates = mutableListOf<ResultState<List<TestUiModel>>>()
+        // WHEN
+        val emittedStates = mutableListOf<ResultState<List<TestDomain>>>()
         repository.getAll().toList(emittedStates)
 
+        // THEN
+        // 1st emission: cached
         assertEquals(
-            ResultState.Success(listOf(TestUiModel("1", "Cached Track"))),
+            ResultState.Success(listOf(TestDomain("1", "Cached Track"))),
             emittedStates[0]
+        )
+        // 2nd emission: fallback = cached again (per new implementation)
+        assertEquals(
+            ResultState.Success(listOf(TestDomain("1", "Cached Track"))),
+            emittedStates[1]
         )
     }
 
     @Test
-    fun `getAll() returns error if cache is empty and remote fetch fails`() = runTest {
+    fun `getAll - GIVEN empty cache WHEN remote fails THEN emits only Loading`() = runTest {
+        // GIVEN
         coEvery { mockSaver.loadAll() } returns emptyList()
         coEvery { mockFetchAllCall() } throws RuntimeException("Network Error")
 
-        val emittedStates = mutableListOf<ResultState<List<TestUiModel>>>()
+        // WHEN
+        val emittedStates = mutableListOf<ResultState<List<TestDomain>>>()
         repository.getAll().toList(emittedStates)
 
-        assert(emittedStates[1] is ResultState.Error)
+        // THEN
+        // New behavior: we only get the initial Loading, error is logged but not emitted
+        assertEquals(1, emittedStates.size)
+        assertEquals(
+            ResultState.Loading<List<TestDomain>>(null),
+            emittedStates[0]
+        )
     }
 }

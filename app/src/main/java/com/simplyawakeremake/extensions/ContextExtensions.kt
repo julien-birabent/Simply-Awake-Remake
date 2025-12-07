@@ -18,7 +18,6 @@ fun Context.askForStoragePermission(
     onDenied: () -> Unit
 ) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        // API 29+ does not require external storage permission for app-specific directories
         onGranted()
     } else {
         val permission = android.Manifest.permission.WRITE_EXTERNAL_STORAGE

@@ -1,7 +1,75 @@
 <resources>
     <string name="app_name">Simply Awake</string>
-    <!-- Notification Channel -->
+
     <string name="notification_channel">Now Playing</string>
     <string name="notification_channel_description">Shows the current meditation playing</string>
     <string name="baseCDNUrl">https://evolv-audio.sfo3.cdn.digitaloceanspaces.com/simply-awake/</string>
+    <string name="toolbar_title_settings">Settings</string>
+
+    <!-- Playlist / toolbar -->
+    <string name="playlist_toolbar_recent_history">Recent History</string>
+
+    <!-- Download confirmation dialog -->
+    <string name="playlist_download_confirm_title">Confirm Download</string>
+    <string name="playlist_download_confirm_message">
+        This action will download all the tracks to your device. Do you want to proceed?
+    </string>
+    <string name="playlist_download_confirm_start">Start Download</string>
+    <string name="playlist_download_confirm_cancel">Cancel</string>
+
+    <!-- No internet screen -->
+    <string name="playlist_no_internet_title">Whoops!!</string>
+    <string name="playlist_no_internet_message">
+        No Internet connection was found. Check your connection or try again.
+    </string>
+    <string name="playlist_no_internet_try_again">Try again</string>
+    <string name="playlist_no_internet_track_not_available">
+        No internet &amp; track not downloaded!
+    </string>
+
+    <string name="sync_dialog_title">Synchronizing your data…</string>
+    <string name="sync_dialog_done">Finalizing…</string>
+
+    <!-- Download progress indicator -->
+    <string name="playlist_download_dismiss">Dismiss</string>
+    <string name="playlist_download_in_progress">Downloading... %1$d%%</string>
+    <string name="playlist_download_cancel">Cancel</string>
+    <string name="playlist_download_complete">Download Complete!</string>
+    <string name="playlist_download_failed">Download Failed: %1$s</string>
+
+
+
+    <string name="settings_section_account_title">Account</string>
+    <string name="settings_loading_account">Loading account…</string>
+    <string name="settings_logged_in_as">Logged in as:</string>
+    <string name="settings_unknown_user">Unknown user</string>
+    <string name="settings_guest_message">You are currently using the app as a guest.</string>
+    <string name="settings_sign_in_with_google">Sign in with Google</string>
+    <string name="settings_login_failed_toast">Login failed: %1$s</string>
+    <string name="settings_sync_success_toast">Account linked and data synchronized ✨</string>
+    <string name="settings_sync_failure_toast">Account linked, but sync failed: %1$s</string>
+
+    <string name="settings_section_downloads_title">Downloads</string>
+    <string name="settings_section_downloads_title_appendix">files</string>
+    <plurals name="settings_downloads_tracks">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
+
+    <string name="settings_downloads_status">%1$s \u2013 %2$s on device</string>
+    <string name="settings_downloads_delete_all_description">Delete all downloaded tracks from your device.</string>
+    <string name="settings_downloads_delete_all_button">Delete all downloads</string>
+    <string name="settings_downloads_delete_success">All downloaded tracks have been deleted ✅</string>
+    <string name="settings_downloads_delete_partial_failure">Some downloaded tracks could not be deleted ❌</string>
+
+    <string name="login_track_artwork_cd">Track artwork</string>
+    <string name="login_title">Welcome to Simply Awake</string>
+    <string name="login_subtitle">Choose how you want to continue:</string>
+    <string name="login_continue_as_guest">Continue as guest</string>
+    <string name="login_sign_in_with_google">Sign in with Google</string>
+    <string name="login_why_login_question">Why log in with a Google account?</string>
+
+    <string name="login_dialog_ok">OK</string>
+    <string name="login_dialog_title">Why log in?</string>
+    <string name="login_dialog_text">If you sign in with Google, your favorites and listening history can be synced across devices and remain available even if you reinstall the app. As a guest, your data stays on this device only.</string>
 </resources>

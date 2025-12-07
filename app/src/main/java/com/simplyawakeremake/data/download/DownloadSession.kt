@@ -47,7 +47,9 @@ class DownloadSession(
             onEachDownloaded(calculateProgress())
         }
 
-        if (batchCounter.decrementAndGet() <= 0) { onBatchComplete() }
+        if (batchCounter.decrementAndGet() <= 0) {
+            onBatchComplete()
+        }
 
     }
 

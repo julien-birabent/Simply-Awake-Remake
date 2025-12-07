@@ -2,8 +2,9 @@ package com.simplyawakeremake.viewmodel
 
 import android.app.Application
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.simplyawakeremake.ui.ToolbarAction
-import com.simplyawakeremake.ui.ToolbarConfig
+import com.simplyawakeremake.ui.common.ToolbarAction
+import com.simplyawakeremake.ui.common.ToolbarConfig
+import com.simplyawakeremake.ui.main.MainViewModel
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -19,7 +20,7 @@ class MainViewModelTest {
     @Before
     fun setup() {
         val application = mockk<Application>(relaxed = true)
-        viewModel = MainViewModel(application)
+        viewModel = MainViewModel(application, mockk(relaxed = true))
     }
 
     @Test

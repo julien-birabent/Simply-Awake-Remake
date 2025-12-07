@@ -86,14 +86,14 @@ class TrackListViewModel(
         ) { result, downloadInfos, currentFilterState ->
             when (result) {
                 is ResultState.Success -> {
+                    val allTracks = result.data
                     val filteredTracks = applyTrackFiltersUseCase(
-                        tracks = result.data,
+                        tracks = allTracks,
                         filter = currentFilterState
                     )
 
                     val uiTracks = mapTracksToUi(tracks = filteredTracks)
-
-                    val categories = buildAvailableCategories(filteredTracks)
+                    val categories = buildAvailableCategories(allTracks)
 
                     TrackListUiState.Content(
                         items = uiTracks,

@@ -45,7 +45,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -102,6 +104,9 @@ fun PlayListScreen(
 
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
+    val density = LocalDensity.current
+    var downloadBarHeightPx by remember { mutableStateOf(0) }
+
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
             is TrackListUiState.Error -> {
@@ -132,6 +137,7 @@ fun PlayListScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
+                        .onSizeChanged { size -> downloadBarHeightPx = size.height }
                 ) {
                     DownloadProgressIndicator(
                         downloadState = downloadState,
@@ -139,11 +145,16 @@ fun PlayListScreen(
                         onCancelClick = viewModel::cancelDownload
                     )
                 }
+                val downloadBarHeightDp = with(density) { downloadBarHeightPx.toDp() }
+                val hasDownloadBar = downloadState !is DownloadProgress.Idle
                 FloatingActionButton(
                     onClick = { showFilterSheet = true },
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(16.dp)
+                        .padding(
+                            end = 16.dp,
+                            bottom = 16.dp + if (hasDownloadBar) downloadBarHeightDp else 0.dp
+                        )
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Tune,

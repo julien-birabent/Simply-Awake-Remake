@@ -11,6 +11,8 @@ We decided to rebuild the app because maintaining the previous version had becom
 - **Remote Content Fetching:** Retrieves meditation content from a remote server with a local caching strategy to ensure availability and performance.
 - **Audio Playback Management:** Provides minimal yet essential controls for audio playback, both in foreground and background modes.
 - **Persistent Playback:** Utilizes foreground and background services to ensure uninterrupted playback, even when the app is in the background or when the device enters sleep mode.
+- **Offline Playback Support:** Users can now download meditation tracks locally and listen to them even without an internet connection.
+- **Recent History Tracking:** Automatically keeps a history of recently played meditations so users can quickly revisit previous sessions.
 
 ## Technical Stack
 
@@ -19,7 +21,7 @@ We decided to rebuild the app because maintaining the previous version had becom
 - **Dependency Injection:** Implemented using Koin for smooth and scalable dependency management.
 - **Architecture:** Follows a classic MVVM architecture, with the Repository pattern as the backbone for delivering data to the ViewModels.
 - **Media Playback:** Custom MediaSessionService implementation is used to manage playback, complete with system notifications.
-- **Reactive Programming:** Primarily uses RxKotlin for reactive and asynchronous operations.
+- **Reactive Programming:** Uses Kotlin Coroutines and Flow for reactive and asynchronous operations.
 
 ## Design Philosophy
 
@@ -29,4 +31,3 @@ The design stays true to the original app, aiming for practicality and simplicit
   <img src="https://github.com/user-attachments/assets/b6fcfd1d-10bc-4969-8a42-4381eee139b1" alt="Screenshot_20240918_143619_Simply Awake" width="30%" />
   <img src="https://github.com/user-attachments/assets/7fd941d9-bad5-48c4-8076-afbc7320d89f" alt="Screenshot_20240918_143632_Simply Awake" width="30%" />
 </div>
-

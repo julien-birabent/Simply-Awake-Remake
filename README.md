@@ -89,6 +89,7 @@ The design stays true to the original app, aiming for practicality and simplicit
 - Filters and sorting designed to help you **quickly find the right track for the moment**, without overwhelming the user with options.
 
 <p align="center">
+  <img width="220" alt="Login page" src="https://github.com/user-attachments/assets/8e9e6f93-4d2c-485e-a5a9-9e5d2a66f824" />
   <img
     src="https://github.com/user-attachments/assets/2c684d10-b37b-4f2f-b6ee-989370edb44c"
     alt="Track list"
@@ -106,4 +107,3 @@ The design stays true to the original app, aiming for practicality and simplicit
     alt="Track details"
     width="220" />
 </p>
-

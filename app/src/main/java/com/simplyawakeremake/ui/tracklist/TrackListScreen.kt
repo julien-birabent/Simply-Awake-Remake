@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -35,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -108,7 +111,7 @@ fun PlayListScreen(
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
     val density = LocalDensity.current
-    var downloadBarHeightPx by remember { mutableStateOf(0) }
+    var downloadBarHeightPx by remember { mutableIntStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
@@ -130,14 +133,21 @@ fun PlayListScreen(
 
             is TrackListUiState.Content -> {
                 val contentState = uiState as TrackListUiState.Content
-                Playlist(
-                    modifier = Modifier.fillMaxSize(),
-                    tracks = contentState.items,
-                    filterState = contentState.filterState,
-                    availableCategories = contentState.availableCategories,
-                    navController = navController,
-                    viewModel = viewModel
-                )
+                if (contentState.items.isEmpty() && contentState.filterState.hasActiveFilters()) {
+                    EmptyFilteredTrackList(
+                        onResetFilters = viewModel::resetFilters,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Playlist(
+                        modifier = Modifier.fillMaxSize(),
+                        tracks = contentState.items,
+                        filterState = contentState.filterState,
+                        availableCategories = contentState.availableCategories,
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -333,7 +343,6 @@ fun Playlist(
 
     Column(modifier = modifier) {
         if (filterState.hasActiveFilters()) {
-            HorizontalDivider(color = Color.White, thickness = 1.dp)
             ActiveTrackFiltersHeader(
                 filterState = filterState,
                 availableCategories = availableCategories,
@@ -342,9 +351,8 @@ fun Playlist(
                 onRemoveCategory = viewModel::onRemoveCategoryFilter,
                 onClearAll = viewModel::resetFilters
             )
+            HorizontalDivider(color = Color.White, thickness = 1.dp)
         }
-
-        HorizontalDivider(color = Color.White, thickness = 1.dp)
 
         ItemList(
             modifier = Modifier.fillMaxSize(),
@@ -366,6 +374,51 @@ fun Playlist(
         }
     }
 }
+
+@Composable
+fun EmptyFilteredTrackList(
+    modifier: Modifier = Modifier,
+    onResetFilters: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.SearchOff,
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "No tracks match these filters",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Try adjusting or resetting your filters.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            onClick = onResetFilters
+        ) {
+            Text(text = "Reset filters")
+        }
+    }
+}
+
 
 @Composable
 fun TrackListItem(

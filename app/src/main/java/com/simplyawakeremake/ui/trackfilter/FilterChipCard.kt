@@ -103,7 +103,7 @@ fun RemovableFilterChip(
         modifier = modifier,
         shape = RoundedCornerShape(999.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
         onClick = onClick
     ) {
         Row(
@@ -111,14 +111,14 @@ fun RemovableFilterChip(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium
+            )
             Icon(
                 imageVector = Icons.Outlined.ClearAll,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium
             )
         }
     }

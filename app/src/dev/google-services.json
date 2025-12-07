@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "949586261890",
+    "project_id": "simply-awake-dev",
+    "storage_bucket": "simply-awake-dev.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949586261890:android:27a868c94fb840101dc19b",
+        "android_client_info": {
+          "package_name": "org.marklackey.android.awake.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "949586261890-u5g8n0srov1lqf0pc4jhqt8etvchj6ro.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.marklackey.android.awake.dev",
+            "certificate_hash": "922385eb88658e4f2550b1b205b6b0aa7e596926"
+          }
+        },
+        {
+          "client_id": "949586261890-2ieotlgbt1blg7sjm2532arbkt99oja3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ7QVikNZ6J5qUtiuWaDzlfyl1TVjtzRM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "949586261890-2ieotlgbt1blg7sjm2532arbkt99oja3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

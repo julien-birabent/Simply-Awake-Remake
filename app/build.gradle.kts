@@ -24,6 +24,22 @@ android {
             useSupportLibrary = true
         }
     }
+    flavorDimensions += "env"
+
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            buildConfigField("String", "FIREBASE_ENV", "\"dev\"")
+        }
+
+        create("prod") {
+            dimension = "env"
+            buildConfigField("String", "FIREBASE_ENV", "\"prod\"")
+        }
+    }
 
     buildTypes {
         release {

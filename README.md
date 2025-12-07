@@ -65,11 +65,11 @@ An “active filters” header shows which filters are currently applied and let
 - **Data Management:**  
   - **Retrofit** for remote data fetching from the content server  
   - Repository layer for separating data sources from UI logic
+  - Cloud syncing done via Firestore
 - **Dependency Injection:**  
   - **Koin** for dependency management and modularization.
 - **Architecture:**  
   - Classic **MVVM** with a dedicated **use case layer** (e.g. filtering, downloads, history) on top of repositories.  
-  - Track filtering is handled by a composable `ApplyTrackFiltersUseCase`, making sorting/filtering logic testable and UI-agnostic.
 - **Media Playback:**  
   - Custom **MediaSessionService** implementation to manage playback and integrate with system controls & notifications.
 - **Downloads:**  
@@ -83,45 +83,27 @@ An “active filters” header shows which filters are currently applied and let
 
 The design stays true to the original app, aiming for practicality and simplicity. Since the app’s primary focus is on meditation and awakening, the interface is intentionally straightforward and user-friendly:
 
-- Minimal navigation and chrome
+- Minimal navigation
+- Dark minimal theme
 - Clear visibility of track length, tags, and publication date
 - Filters and sorting designed to help you **quickly find the right track for the moment**, without overwhelming the user with options.
 
-<div
-  style="
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  "
->
+<p align="center">
   <img
     src="https://github.com/user-attachments/assets/2c684d10-b37b-4f2f-b6ee-989370edb44c"
-    alt="Screenshot_20251207_203421"
-    style="width: 100%; height: auto;"
-  />
-
-  <img
-    src="https://github.com/user-attachments/assets/574a7d3d-aca2-4293-9c9e-f24061da10e7"
-    alt="Screenshot_20251207_203316"
-    style="width: 100%; height: auto;"
-  />
-
+    alt="Track list"
+    width="220" />
   <img
     src="https://github.com/user-attachments/assets/8117ebb3-f3ee-44d3-a588-85d311915958"
-    alt="Screenshot_20251207_203356"
-    style="width: 100%; height: auto;"
-  />
-
+    alt="Filter bottom sheet"
+    width="220" />
   <img
     src="https://github.com/user-attachments/assets/fd1c11b9-2290-41fe-8cb7-a2f0b45f028e"
-    alt="Screenshot_20251207_203234"
-    style="width: 100%; height: auto;"
-  />
-
+    alt="Downloads settings"
+    width="220" />
   <img
     src="https://github.com/user-attachments/assets/3afe3bcf-e6e5-4508-ae5a-222ef2e6f460"
-    alt="Screenshot_20251207_203120"
-    style="width: 100%; height: auto;"
-  />
-</div>
+    alt="Track details"
+    width="220" />
+</p>
 

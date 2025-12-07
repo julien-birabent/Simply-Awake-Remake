@@ -1,4 +1,4 @@
-<img width="1080" height="2400" alt="Screenshot_20251207_203316" src="https://github.com/user-attachments/assets/574a7d3d-aca2-4293-9c9e-f24061da10e7" /># Simply Awake Project 
+# Simply Awake Project 
 
 The **Simply Awake Project** is a revamped version of the original *Simply Awake* app, available on the Android Store. It is a simple, yet effective, meditation app designed to guide users through their mindfulness and awakening journey. The app’s content is curated by **Angello Dillulo**, whose YouTube channel [Simply Always Awake](https://www.youtube.com/@SimplyAlwaysAwake) offers valuable insights into spirituality and awakening.
 
@@ -87,26 +87,41 @@ The design stays true to the original app, aiming for practicality and simplicit
 - Clear visibility of track length, tags, and publication date
 - Filters and sorting designed to help you **quickly find the right track for the moment**, without overwhelming the user with options.
 
-<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;">
-
+<div
+  style="
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  "
+>
   <img
     src="https://github.com/user-attachments/assets/2c684d10-b37b-4f2f-b6ee-989370edb44c"
     alt="Screenshot_20251207_203421"
-    width="24%" />
+    style="width: 100%; height: auto;"
+  />
+
+  <img
+    src="https://github.com/user-attachments/assets/574a7d3d-aca2-4293-9c9e-f24061da10e7"
+    alt="Screenshot_20251207_203316"
+    style="width: 100%; height: auto;"
+  />
 
   <img
     src="https://github.com/user-attachments/assets/8117ebb3-f3ee-44d3-a588-85d311915958"
     alt="Screenshot_20251207_203356"
-    width="24%" />
+    style="width: 100%; height: auto;"
+  />
 
   <img
     src="https://github.com/user-attachments/assets/fd1c11b9-2290-41fe-8cb7-a2f0b45f028e"
     alt="Screenshot_20251207_203234"
-    width="24%" />
+    style="width: 100%; height: auto;"
+  />
 
   <img
     src="https://github.com/user-attachments/assets/3afe3bcf-e6e5-4508-ae5a-222ef2e6f460"
     alt="Screenshot_20251207_203120"
-    width="24%" />
-
+    style="width: 100%; height: auto;"
+  />
 </div>
+

@@ -3,14 +3,12 @@ package com.simplyawakeremake.ui.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.R
-import com.simplyawakeremake.data.download.track.TrackDownloadInfo
-import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
 import com.simplyawakeremake.ui.UiText
-import com.simplyawakeremake.usecases.download.DeleteAllDownloadsUseCase
 import com.simplyawakeremake.usecases.GoogleSignInUseCase
+import com.simplyawakeremake.usecases.download.DeleteAllDownloadsUseCase
 import com.simplyawakeremake.usecases.download.ObserveActiveDownloadsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow

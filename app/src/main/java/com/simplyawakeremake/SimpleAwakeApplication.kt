@@ -1,6 +1,8 @@
 package com.simplyawakeremake
 
 import android.app.Application
+import android.util.Log
+import com.google.firebase.FirebaseApp
 import com.simplyawakeremake.di.appModule
 import com.simplyawakeremake.di.dataModule
 import com.simplyawakeremake.di.databaseModule
@@ -19,5 +21,12 @@ class SimpleAwakeApplication : Application() {
             androidContext(this@SimpleAwakeApplication)
             modules(appModule, dataModule, databaseModule, repositoryModule, domainModule, uiModule)
         }
+        logFirebaseInfo()
     }
+
+    fun logFirebaseInfo() {
+        val options = FirebaseApp.getInstance().options
+        Log.d("FirebaseInfo", "projectId=${options.projectId}, appId=${options.applicationId}")
+    }
+
 }

@@ -8,9 +8,14 @@ import com.simplyawakeremake.data.download.track.TrackDownloadInfo
 import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.Track
+import com.simplyawakeremake.data.track.categories
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
 import com.simplyawakeremake.extensions.toCompactDurationLabel
+import com.simplyawakeremake.extensions.toShortDateLabel
+import com.simplyawakeremake.ui.trackfilter.TrackFilter
+import com.simplyawakeremake.ui.trackfilter.TrackStateFilter
+import com.simplyawakeremake.usecases.ApplyTrackFiltersUseCase
 import com.simplyawakeremake.usecases.ToggleTrackFavoriteUseCase
 import com.simplyawakeremake.usecases.download.DownloadProgress
 import com.simplyawakeremake.usecases.download.DownloadTrackListUseCase
@@ -29,23 +34,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
-
-data class TrackUi(
-    val id: String,
-    val ordinal: Int,
-    val displayName: String,
-    val tagString: String,
-    val duration: String,
-    val isFavorite: Boolean,
-    val downloadStatus: TrackDownloadStatus,
-)
 
 sealed interface TrackListUiState {
     data object Loading : TrackListUiState
     data class Error(val throwable: Throwable) : TrackListUiState
-    data class Content(val items: List<TrackUi>) : TrackListUiState
+    data class Content(
+        val items: List<TrackUi>,
+        val filterState: TrackFilter,
+        val availableCategories: List<TrackCategoryUi>
+    ) : TrackListUiState
 }
 
 class TrackListViewModel(
@@ -57,12 +57,15 @@ class TrackListViewModel(
     private val trackFileManager: TrackFileManager,
     observeTrackDownloadsUseCase: ObserveTrackDownloadsUseCase,
     private val singleTrackDownloadUseCase: SingleTrackDownloadUseCase,
+    private val applyTrackFiltersUseCase: ApplyTrackFiltersUseCase
 ) : ViewModel(), KoinComponent {
 
     private val retryTrigger: MutableSharedFlow<Unit> = MutableSharedFlow(replay = 1)
 
     private val _downloadState = MutableStateFlow<DownloadProgress>(DownloadProgress.Idle)
     val downloadState: StateFlow<DownloadProgress> = _downloadState
+
+    private val filterState = MutableStateFlow(TrackFilter())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tracksFlow: StateFlow<ResultState<List<Track>>> =
@@ -82,15 +85,24 @@ class TrackListViewModel(
         combine(
             tracksFlow,
             downloadInfosFlow,
-        ) { result, downloadInfos ->
+            filterState,
+        ) { result, downloadInfos, currentFilterState ->
             when (result) {
                 is ResultState.Success -> {
-                    val sortedTracks = result.data.sortedBy { it.ordinal }
-                    val uiTracks = mapTracksToUi(
-                        tracks = sortedTracks,
-                        downloadInfos = downloadInfos
+                    val allTracks = result.data
+                    val filteredTracks = applyTrackFiltersUseCase(
+                        tracks = allTracks,
+                        filter = currentFilterState
                     )
-                    TrackListUiState.Content(uiTracks)
+
+                    val uiTracks = mapTracksToUi(tracks = filteredTracks)
+                    val categories = buildAvailableCategories(allTracks)
+
+                    TrackListUiState.Content(
+                        items = uiTracks,
+                        filterState = currentFilterState,
+                        availableCategories = categories
+                    )
                 }
 
                 is ResultState.Error -> TrackListUiState.Error(result.throwable)
@@ -166,10 +178,7 @@ class TrackListViewModel(
 
     private fun mapTracksToUi(
         tracks: List<Track>,
-        downloadInfos: List<TrackDownloadInfo>
     ): List<TrackUi> {
-        val infoById = downloadInfos.associateBy { it.trackId }
-
         return tracks.map { track ->
             val status = trackFileManager.getDownloadStatus(track.id)
 
@@ -180,9 +189,23 @@ class TrackListViewModel(
                 tagString = track.tagString,
                 duration = track.duration.toCompactDurationLabel(),
                 isFavorite = track.isFavorite,
-                downloadStatus = status
+                downloadStatus = status,
+                createdAtLabel = track.createdAt.toShortDateLabel()
             )
         }
+    }
+
+    private fun buildAvailableCategories(tracks: List<Track>): List<TrackCategoryUi> {
+        return tracks
+            .flatMap { it.categories() }
+            .distinct()
+            .sorted()
+            .map { categoryName ->
+                TrackCategoryUi(
+                    id = categoryName,
+                    label = categoryName
+                )
+            }
     }
 
     private fun findTrackById(id: String): Track? {
@@ -200,5 +223,35 @@ class TrackListViewModel(
                 Log.e("TrackListViewModel", "Initial sync crashed", e)
             }
         }
+    }
+
+    fun onFilterStateChanged(newFilterState: TrackFilter) {
+        filterState.value = newFilterState
+    }
+
+    fun onRemoveStateFilter(stateFilter: TrackStateFilter) {
+        filterState.update { current ->
+            current.copy(
+                stateFilters = current.stateFilters - stateFilter
+            )
+        }
+    }
+
+    fun onClearDurationFilter() {
+        filterState.update { current ->
+            current.copy(durationBucket = null)
+        }
+    }
+
+    fun onRemoveCategoryFilter(categoryId: String) {
+        filterState.update { current ->
+            current.copy(
+                selectedCategoryIds = current.selectedCategoryIds - categoryId
+            )
+        }
+    }
+
+    fun resetFilters() {
+        filterState.value = TrackFilter()
     }
 }

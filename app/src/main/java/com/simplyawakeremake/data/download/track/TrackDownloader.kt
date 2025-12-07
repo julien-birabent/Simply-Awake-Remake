@@ -134,16 +134,18 @@ class TrackDownloader(
             title = title,
             onCancel = session::cancel
         ) { resultFile ->
+            val success = resultFile != null && resultFile.exists()
+            if (success) {
+                downloadStore.setDownloadState(id, TrackDownloadStatus.DOWNLOADED)
+            } else {
+                downloadStore.setDownloadState(id, TrackDownloadStatus.NOT_DOWNLOADED)
+            }
+            downloadStore.refreshUsage()
+
             session.handleDownloadResult(resultFile) {
-                val success = resultFile != null && resultFile.exists()
-                if (success) {
-                    downloadStore.setDownloadState(id, TrackDownloadStatus.DOWNLOADED)
-                } else {
-                    downloadStore.setDownloadState(id, TrackDownloadStatus.NOT_DOWNLOADED)
-                }
-                downloadStore.refreshUsage()
                 session.startNextBatch(batchSize, ::enqueueSingleDownload)
             }
         }
     }
+
 }

@@ -17,8 +17,6 @@ import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.history.TrackHistorySaver
 import com.simplyawakeremake.data.history.UiTrackHistory
 import com.simplyawakeremake.data.track.TrackUriProvider
-import com.simplyawakeremake.data.track.remote.TrackDto
-import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
 import org.koin.dsl.module

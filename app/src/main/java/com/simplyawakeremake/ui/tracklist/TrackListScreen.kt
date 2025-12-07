@@ -15,20 +15,28 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -39,7 +47,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +76,10 @@ import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.ui.main.MainViewModel
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
+import com.simplyawakeremake.ui.trackfilter.ActiveTrackFiltersHeader
+import com.simplyawakeremake.ui.trackfilter.TrackFilter
+import com.simplyawakeremake.ui.trackfilter.TrackFilterBottomSheet
+import com.simplyawakeremake.ui.trackfilter.hasActiveFilters
 import com.simplyawakeremake.usecases.download.DownloadProgress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -74,7 +88,7 @@ import java.net.UnknownHostException
 import java.util.Locale
 import com.simplyawakeremake.ui.common.LoadingIndicator as LoadingIndicator1
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayListScreen(
     navController: NavController,
@@ -83,8 +97,9 @@ fun PlayListScreen(
     val uiState by viewModel.uiState.collectAsState(initial = TrackListUiState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
     val mainViewModel = LocalMainViewModel.current
-
     val connectionState by connectionState()
+    var showFilterSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(connectionState) {
         if (connectionState == ConnectionState.Available) {
@@ -92,8 +107,10 @@ fun PlayListScreen(
         }
     }
 
-
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
+
+    val density = LocalDensity.current
+    var downloadBarHeightPx by remember { mutableIntStateOf(0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         when (uiState) {
@@ -114,22 +131,67 @@ fun PlayListScreen(
             }
 
             is TrackListUiState.Content -> {
-                Playlist(
-                    modifier = Modifier.fillMaxSize(),
-                    tracks = (uiState as TrackListUiState.Content).items,
-                    navController = navController,
-                    viewModel = viewModel
-                )
+                val contentState = uiState as TrackListUiState.Content
+                if (contentState.items.isEmpty() && contentState.filterState.hasActiveFilters()) {
+                    EmptyFilteredTrackList(
+                        onResetFilters = viewModel::resetFilters,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Playlist(
+                        modifier = Modifier.fillMaxSize(),
+                        tracks = contentState.items,
+                        filterState = contentState.filterState,
+                        availableCategories = contentState.availableCategories,
+                        navController = navController,
+                        viewModel = viewModel
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
+                        .onSizeChanged { size -> downloadBarHeightPx = size.height }
                 ) {
                     DownloadProgressIndicator(
                         downloadState = downloadState,
                         onDismiss = viewModel::resetDownloadState,
                         onCancelClick = viewModel::cancelDownload
                     )
+                }
+                val downloadBarHeightDp = with(density) { downloadBarHeightPx.toDp() }
+                val hasDownloadBar = downloadState !is DownloadProgress.Idle
+                FloatingActionButton(
+                    onClick = { showFilterSheet = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(
+                            end = 16.dp,
+                            bottom = 16.dp + if (hasDownloadBar) downloadBarHeightDp else 0.dp
+                        )
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Tune,
+                        contentDescription = stringResource(
+                            id = R.string.track_filter_bottom_sheet_fab_content_description
+                        )
+                    )
+                }
+                if (showFilterSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showFilterSheet = false },
+                        sheetState = sheetState
+                    ) {
+                        TrackFilterBottomSheet(
+                            initialFilterState = contentState.filterState,
+                            availableCategories = contentState.availableCategories,
+                            onCancel = { showFilterSheet = false },
+                            onApplyFilter = { newFilterState ->
+                                viewModel.onFilterStateChanged(newFilterState)
+                                showFilterSheet = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -254,16 +316,19 @@ private fun NoInternetScreen(tryAgainAction: () -> Unit) {
     }
 }
 
-@ExperimentalCoroutinesApi
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun Playlist(
     modifier: Modifier = Modifier,
     tracks: List<TrackUi>,
+    filterState: TrackFilter,
+    availableCategories: List<TrackCategoryUi>,
     navController: NavController,
     viewModel: TrackListViewModel
 ) {
     val context = LocalContext.current
     var currentToast by remember { mutableStateOf<Toast?>(null) }
+    val connectionState by connectionState()
 
     val showToast = {
         currentToast?.cancel()
@@ -274,12 +339,22 @@ fun Playlist(
         )
         currentToast?.show()
     }
-    val connectionState by connectionState()
 
-    Column {
-        HorizontalDivider(color = Color.White, thickness = 1.dp)
+    Column(modifier = modifier) {
+        if (filterState.hasActiveFilters()) {
+            ActiveTrackFiltersHeader(
+                filterState = filterState,
+                availableCategories = availableCategories,
+                onRemoveStateFilter = viewModel::onRemoveStateFilter,
+                onClearDuration = viewModel::onClearDurationFilter,
+                onRemoveCategory = viewModel::onRemoveCategoryFilter,
+                onClearAll = viewModel::resetFilters
+            )
+            HorizontalDivider(color = Color.White, thickness = 1.dp)
+        }
+
         ItemList(
-            modifier = modifier,
+            modifier = Modifier.fillMaxSize(),
             items = tracks,
             keySelector = { index -> tracks[index].id },
             divider = { HorizontalDivider(color = Color.White, thickness = 1.dp) },
@@ -293,10 +368,56 @@ fun Playlist(
                     } else showToast()
                 },
                 onFavoriteClick = { viewModel.onFavoriteClicked(it) },
-                onDownloadClick = { viewModel.onDownloadClicked(it) })
+                onDownloadClick = { viewModel.onDownloadClicked(it) }
+            )
         }
     }
 }
+
+@Composable
+fun EmptyFilteredTrackList(
+    modifier: Modifier = Modifier,
+    onResetFilters: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.SearchOff,
+            contentDescription = null,
+            modifier = Modifier.size(72.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = "No tracks match these filters",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Try adjusting or resetting your filters.",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            onClick = onResetFilters
+        ) {
+            Text(text = "Reset filters")
+        }
+    }
+}
+
 
 @Composable
 fun TrackListItem(
@@ -310,28 +431,14 @@ fun TrackListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onClick(track) }
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .width(32.dp)
-                .padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = track.ordinal.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        }
-
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp)
         ) {
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -352,23 +459,29 @@ fun TrackListItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
+
+            val hasDuration = track.duration.isNotBlank()
+            val hasDate = track.createdAtLabel.isNotBlank()
+            if (hasDuration || hasDate) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = buildString {
+                        if (hasDuration) append(track.duration)
+                        if (hasDuration && hasDate) append(" · ")
+                        if (hasDate) append(track.createdAtLabel)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            Box(
-                modifier = Modifier.padding(end = 8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = track.duration,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
             FavoriteButton(
                 modifier = Modifier,
                 onClick = { onFavoriteClick(track) },
@@ -503,7 +616,6 @@ private fun DownloadConfirmationDialogPreview() {
     }
 }
 
-
 @Preview(
     showBackground = true,
     backgroundColor = 0xFF000000,
@@ -528,13 +640,14 @@ private fun TrackListItemNotFavoriteNotDownloadedPreview() {
         id = "track_1",
         ordinal = 1,
         displayName = "Gentle Awareness Meditation",
-        tagString = "Beginner • 20 min",
+        tagString = "presence, awakening, natural meditation",
         duration = "20:00",
         isFavorite = false,
-        downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED
+        downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED,
+        createdAtLabel = "16 Feb 2023"
     )
 
-    SimplyAwakeRemakeTheme (dynamicColor = false){
+    SimplyAwakeRemakeTheme(dynamicColor = false) {
         Column {
             TrackListItem(
                 track = track,
@@ -572,7 +685,8 @@ private fun TrackListItemFavoriteDownloadedPreview() {
         tagString = "Sleep • 45 min • Guided",
         duration = "45:00",
         isFavorite = true,
-        downloadStatus = TrackDownloadStatus.DOWNLOADED
+        downloadStatus = TrackDownloadStatus.DOWNLOADED,
+        createdAtLabel = "16 Feb 2023"
     )
 
     SimplyAwakeRemakeTheme {
@@ -599,10 +713,11 @@ private fun TrackListItemDownloadingPreview() {
         tagString = "Focused • 10 min",
         duration = "10:00",
         isFavorite = false,
-        downloadStatus = TrackDownloadStatus.DOWNLOADING
+        downloadStatus = TrackDownloadStatus.DOWNLOADING,
+        createdAtLabel = "16 Feb 2023"
     )
 
-    SimplyAwakeRemakeTheme (dynamicColor = false, darkTheme = true){
+    SimplyAwakeRemakeTheme(dynamicColor = false, darkTheme = true) {
         TrackListItem(
             track = track,
             onClick = {},

@@ -102,7 +102,7 @@ private class CategoryTrackListFilter : TrackListFilter {
 
         return tracks.filter { track ->
             val trackCategories = track.categories()
-            trackCategories.any { it in selectedCategoryIds }
+            trackCategories.all { it in selectedCategoryIds }
         }
     }
 }

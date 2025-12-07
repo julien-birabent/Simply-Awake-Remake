@@ -40,6 +40,10 @@ class TrackFileManager(
             progress = null
         )
 
+    fun isTrackDownloaded(trackId: String): Boolean {
+        return getDownloadStatus(trackId) == TrackDownloadStatus.DOWNLOADED
+    }
+
     fun getTrackFile(trackId: String): File = fileStorage.getTrackFile(trackId)
 
     fun getTrackUri(trackId: String): Uri {
@@ -68,6 +72,11 @@ class TrackFileManager(
 
     fun deleteTrackFile(trackId: String): Boolean {
         val file = fileStorage.getTrackFile(trackId)
+
+        if (getDownloadStatus(trackId) == TrackDownloadStatus.DOWNLOADING) {
+            trackDownloader.cancelTrackDownload(trackId, file)
+        }
+
         val deleted = if (file.exists()) file.delete() else true
         if (deleted) {
             downloadStore.removeTrack(trackId)
@@ -75,6 +84,7 @@ class TrackFileManager(
         }
         return deleted
     }
+
 
     fun downloadSingleTrack(
         trackId: String,

@@ -18,13 +18,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -66,6 +72,7 @@ import com.simplyawakeremake.ui.common.goToSettingsAction
 import com.simplyawakeremake.ui.common.tracksDownloadAction
 import com.simplyawakeremake.ui.main.MainViewModel
 import com.simplyawakeremake.ui.theme.SimplyAwakeRemakeTheme
+import com.simplyawakeremake.ui.trackfilter.TrackFilterBottomSheet
 import com.simplyawakeremake.usecases.download.DownloadProgress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -74,7 +81,7 @@ import java.net.UnknownHostException
 import java.util.Locale
 import com.simplyawakeremake.ui.common.LoadingIndicator as LoadingIndicator1
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlayListScreen(
     navController: NavController,
@@ -83,15 +90,15 @@ fun PlayListScreen(
     val uiState by viewModel.uiState.collectAsState(initial = TrackListUiState.Loading)
     val downloadState by viewModel.downloadState.collectAsState()
     val mainViewModel = LocalMainViewModel.current
-
     val connectionState by connectionState()
+    var showFilterSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(connectionState) {
         if (connectionState == ConnectionState.Available) {
             viewModel.onConnectionAvailableForInitialSync()
         }
     }
-
 
     SetupToolbar(viewModel, mainViewModel, downloadState, navController)
 
@@ -114,9 +121,10 @@ fun PlayListScreen(
             }
 
             is TrackListUiState.Content -> {
+                val contentState = uiState as TrackListUiState.Content
                 Playlist(
                     modifier = Modifier.fillMaxSize(),
-                    tracks = (uiState as TrackListUiState.Content).items,
+                    tracks = contentState.items,
                     navController = navController,
                     viewModel = viewModel
                 )
@@ -130,6 +138,35 @@ fun PlayListScreen(
                         onDismiss = viewModel::resetDownloadState,
                         onCancelClick = viewModel::cancelDownload
                     )
+                }
+                FloatingActionButton(
+                    onClick = { showFilterSheet = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Tune,
+                        contentDescription = stringResource(
+                            id = R.string.track_filter_bottom_sheet_fab_content_description
+                        )
+                    )
+                }
+                if (showFilterSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showFilterSheet = false },
+                        sheetState = sheetState
+                    ) {
+                        TrackFilterBottomSheet(
+                            initialFilterState = contentState.filterState,
+                            availableCategories = contentState.availableCategories,
+                            onCancel = { showFilterSheet = false },
+                            onApplyFilter = { newFilterState ->
+                                viewModel.onFilterStateChanged(newFilterState)
+                                showFilterSheet = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -503,7 +540,6 @@ private fun DownloadConfirmationDialogPreview() {
     }
 }
 
-
 @Preview(
     showBackground = true,
     backgroundColor = 0xFF000000,
@@ -534,7 +570,7 @@ private fun TrackListItemNotFavoriteNotDownloadedPreview() {
         downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED
     )
 
-    SimplyAwakeRemakeTheme (dynamicColor = false){
+    SimplyAwakeRemakeTheme(dynamicColor = false) {
         Column {
             TrackListItem(
                 track = track,
@@ -602,7 +638,7 @@ private fun TrackListItemDownloadingPreview() {
         downloadStatus = TrackDownloadStatus.DOWNLOADING
     )
 
-    SimplyAwakeRemakeTheme (dynamicColor = false, darkTheme = true){
+    SimplyAwakeRemakeTheme(dynamicColor = false, darkTheme = true) {
         TrackListItem(
             track = track,
             onClick = {},

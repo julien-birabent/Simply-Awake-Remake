@@ -1,6 +1,7 @@
 package com.simplyawakeremake.di
 
 import com.simplyawakeremake.data.usertrack.sync.InitialUserTrackSyncManager
+import com.simplyawakeremake.usecases.ApplyTrackFiltersUseCase
 import com.simplyawakeremake.usecases.history.AddTrackToRecentHistoryUseCase
 import com.simplyawakeremake.usecases.CheckTrackDownloadStatusUseCase
 import com.simplyawakeremake.usecases.download.DeleteAllDownloadsUseCase
@@ -37,4 +38,5 @@ val domainModule = module {
     single { SingleTrackDownloadUseCase(trackFileManager = get()) }
     factory { ObserveTrackDownloadsUseCase(trackFileManager = get()) }
     single { ObserveActiveDownloadsUseCase(trackFileManager = get()) }
+    single { ApplyTrackFiltersUseCase(trackFileManager = get()) }
 }

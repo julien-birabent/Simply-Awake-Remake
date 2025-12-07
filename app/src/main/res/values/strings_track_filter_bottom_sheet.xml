@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bottom sheet title (if you want one) -->
+    <string name="track_filter_bottom_sheet_title">Filter &amp; sort tracks</string>
+
+    <string name="track_filter_bottom_sheet_sort_by">Sort by</string>
+    <string name="track_filter_bottom_sheet_filter_by_state">Filter by state</string>
+    <string name="track_filter_bottom_sheet_duration">Duration</string>
+    <string name="track_filter_bottom_sheet_categories">Categories</string>
+
+    <string name="track_filter_bottom_sheet_sort_option_title">Alphabetical</string>
+    <string name="track_filter_bottom_sheet_sort_option_release">By release order</string>
+    <string name="track_filter_bottom_sheet_sort_option_duration">Duration</string>
+
+    <string name="track_filter_bottom_sheet_state_downloaded_only">Downloaded only</string>
+    <string name="track_filter_bottom_sheet_state_favorites">Favorites</string>
+    <string name="track_filter_bottom_sheet_state_never_played">Never played</string>
+
+    <string name="track_filter_bottom_sheet_action_reset">Reset</string>
+    <string name="track_filter_bottom_sheet_action_cancel">Cancel</string>
+    <string name="track_filter_bottom_sheet_action_apply">Apply</string>
+    <string name="track_filter_bottom_sheet_fab_content_description">Filter and sort tracks</string>
+
+</resources>

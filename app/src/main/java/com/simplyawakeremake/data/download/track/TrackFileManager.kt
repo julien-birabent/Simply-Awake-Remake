@@ -3,8 +3,8 @@ package com.simplyawakeremake.data.download.track
 import android.net.Uri
 import androidx.core.net.toUri
 import com.simplyawakeremake.data.download.FileStorage
-import java.io.File
 import kotlinx.coroutines.flow.StateFlow
+import java.io.File
 
 class TrackFileManager(
     private val fileStorage: FileStorage,

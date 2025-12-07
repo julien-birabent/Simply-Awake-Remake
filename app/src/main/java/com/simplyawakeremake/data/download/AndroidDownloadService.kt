@@ -7,13 +7,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.simplyawakeremake.extensions.deleteFileByDownloadId
 import com.simplyawakeremake.extensions.getDownloadedFile
 import com.simplyawakeremake.extensions.isDownloadComplete
 import java.io.File
-import androidx.core.net.toUri
-import okhttp3.Interceptor.Companion.invoke
-import kotlin.collections.toLongArray
 
 internal data class DownloadUnit(
     val id: Long,

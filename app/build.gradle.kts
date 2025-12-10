@@ -10,14 +10,14 @@ plugins {
 
 android {
     namespace = "com.simplyawakeremake"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "org.marklackey.android.awake"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 11
-        versionName = "10.1"
+        targetSdk = 35
+        versionCode = 13
+        versionName = "11.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

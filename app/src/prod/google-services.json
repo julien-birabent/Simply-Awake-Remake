@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "1028914958582-2g80dpi0icsefs0h6gb6mgisb97180tk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "org.marklackey.android.awake",
+            "certificate_hash": "9d9fdc43b12d353a8a1de4af22fb2b0b9a045b3d"
+          }
+        },
+        {
           "client_id": "1028914958582-p2913dis5e3js2p2ga21h67ta082out1.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

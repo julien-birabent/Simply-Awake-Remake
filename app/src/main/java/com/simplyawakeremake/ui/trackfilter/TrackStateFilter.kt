@@ -16,4 +16,5 @@ fun TrackStateFilter.toStringRes(): Int =
 
         TrackStateFilter.NeverPlayed ->
             R.string.track_filter_bottom_sheet_state_never_played
+
     }

@@ -47,9 +47,10 @@ class ApplyTrackFiltersUseCase(
             TrackSortOption.DURATION_ASC ->
                 tracks.sortedBy { it.rawDurationSeconds() }
 
-            TrackSortOption.RELEASE_ORDINAL -> {
-                tracks.sortedBy { it.createdAt }
-            }
+            TrackSortOption.RELEASE_ORDINAL -> tracks.sortedBy { it.createdAt }
+
+            TrackSortOption.MOST_PLAYED -> tracks.sortedByDescending { it.playCount }
+
         }
     }
 }

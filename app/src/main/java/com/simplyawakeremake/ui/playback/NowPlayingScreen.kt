@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.ShuffleOn
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +59,7 @@ import com.simplyawakeremake.ui.common.FavoriteButton
 import com.simplyawakeremake.ui.common.ImmersiveMode
 import com.simplyawakeremake.ui.common.LoadingIndicator
 import com.simplyawakeremake.ui.common.ToolbarConfig
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(UnstableApi::class)
@@ -67,7 +69,9 @@ fun NowPlayingScreen(
     trackId: String,
     viewModel: NowPlayingViewModel = koinViewModel()
 ) {
-    ImmersiveMode(true)
+    val immersiveEnabled by viewModel.immersiveModeEnabled.collectAsState(initial = true)
+    ImmersiveMode(immersiveEnabled)
+
     val mainViewModel = LocalMainViewModel.current
     val toolbarConfig = ToolbarConfig(showToolbar = false)
 
@@ -87,13 +91,14 @@ fun NowPlayingScreen(
     val isShuffleEnabled by viewModel.isShuffleEnabled.collectAsState()
     val isRepeatEnabled by viewModel.isRepeatEnabled.collectAsState()
     val isAutoPlayNextEnabled by viewModel.isAutoPlayNextEnabled.collectAsState()
+    val isBufferingAudio by viewModel.isBufferingAudio.collectAsState(false)
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 52.dp),
-        verticalArrangement = Arrangement.Top,
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 72.dp),
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -164,6 +169,7 @@ fun NowPlayingScreen(
                             isShuffleEnabled = isShuffleEnabled,
                             isRepeatEnabled = isRepeatEnabled,
                             isAutoPlayNextEnabled = isAutoPlayNextEnabled,
+                            isBufferingAudio = isBufferingAudio,
                             onControlPressed = viewModel::onControlPressed,
                             onSeekTo = viewModel::onSeekTo
                         )
@@ -302,7 +308,8 @@ fun PlayerControlsView(
     isRepeatEnabled: Boolean,
     isAutoPlayNextEnabled: Boolean,
     onControlPressed: (ControlButtons) -> Unit,
-    onSeekTo: (Long) -> Unit
+    onSeekTo: (Long) -> Unit,
+    isBufferingAudio: Boolean
 ) {
     var previewPositionMs by remember { mutableStateOf<Long?>(null) }
 
@@ -344,7 +351,8 @@ fun PlayerControlsView(
             isPlaying = isPlaying,
             isShuffleEnabled = isShuffleEnabled,
             isRepeatEnabled = isRepeatEnabled,
-            onControlPressed = onControlPressed
+            onControlPressed = onControlPressed,
+            isBufferingAudio = isBufferingAudio
         )
 
         Spacer(modifier = Modifier.size(12.dp))
@@ -403,12 +411,12 @@ private fun PlaybackButtonsRow(
     isPlaying: Boolean,
     isShuffleEnabled: Boolean,
     isRepeatEnabled: Boolean,
-    onControlPressed: (ControlButtons) -> Unit
+    onControlPressed: (ControlButtons) -> Unit,
+    isBufferingAudio: Boolean
 ) {
-    // Choose icon based on toggle state
     val repeatIcon = if (isRepeatEnabled) Icons.Filled.RepeatOn else Icons.Filled.Repeat
     val shuffleIcon = if (isShuffleEnabled) Icons.Filled.ShuffleOn else Icons.Filled.Shuffle
-
+    val showBufferingIndicator = rememberDelayedBuffering(isBufferingAudio, 250L)
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -442,15 +450,24 @@ private fun PlaybackButtonsRow(
                 .size(64.dp)
                 .background(Color.White, shape = CircleShape)
                 .clip(CircleShape),
+            enabled = !showBufferingIndicator,
             onClick = { onControlPressed(ControlButtons.Play) }
         ) {
-            Icon(
-                imageVector = ImageVector.vectorResource(
-                    id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
-                ),
-                contentDescription = if (isPlaying) "Pause" else "Play",
-                tint = Color.Black
-            )
+            if (showBufferingIndicator) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = Color.Black,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    imageVector = ImageVector.vectorResource(
+                        id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+                    ),
+                    contentDescription = if (isPlaying) "Pause" else "Play",
+                    tint = Color.Black
+                )
+            }
         }
 
         Spacer(modifier = Modifier.size(16.dp))
@@ -477,6 +494,25 @@ private fun PlaybackButtonsRow(
         )
     }
 }
+
+@Composable
+private fun rememberDelayedBuffering(
+    isBuffering: Boolean,
+    delayMs: Long = 250L
+): Boolean {
+    var show by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isBuffering) {
+        if (isBuffering) {
+            delay(delayMs)
+            show = isBuffering
+        } else {
+            show = false
+        }
+    }
+    return show
+}
+
 
 @Composable
 private fun AutoPlayToggle(

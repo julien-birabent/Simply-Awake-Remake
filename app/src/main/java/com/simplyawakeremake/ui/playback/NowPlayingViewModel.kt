@@ -133,6 +133,15 @@ class NowPlayingViewModel(
         .catch { emit(false) }
         .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
+    val isBufferingAudio: StateFlow<Boolean> = onPlayerUpdate
+        .map { player ->
+            player.playbackState == Player.STATE_BUFFERING
+        }
+        .distinctUntilChanged()
+        .catch { emit(false) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+
     val playerPositionUpdates: StateFlow<Long> = combine(tickerFlow, onPlayerUpdate) { _, player ->
         player
     }

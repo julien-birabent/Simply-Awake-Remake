@@ -7,6 +7,7 @@ import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.download.track.TrackDownloadInfo
 import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.data.download.track.TrackFileManager
+import com.simplyawakeremake.data.download.track.TrackFilesUsage
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.categories
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
@@ -80,13 +81,15 @@ class TrackListViewModel(
 
     private val downloadInfosFlow: StateFlow<List<TrackDownloadInfo>> =
         observeTrackDownloadsUseCase()
+    private val trackFilesUsageFlow: StateFlow<TrackFilesUsage> = trackFileManager.trackFilesUsage
 
     val uiState: StateFlow<TrackListUiState> =
         combine(
             tracksFlow,
             downloadInfosFlow,
             filterState,
-        ) { result, downloadInfos, currentFilterState ->
+            trackFilesUsageFlow
+        ) { result, downloadInfos, currentFilterState, _ ->
             when (result) {
                 is ResultState.Success -> {
                     val allTracks = result.data

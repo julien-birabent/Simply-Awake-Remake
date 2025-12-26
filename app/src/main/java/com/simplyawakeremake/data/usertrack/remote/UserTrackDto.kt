@@ -1,7 +1,9 @@
 package com.simplyawakeremake.data.usertrack.remote
 
+import androidx.annotation.Keep
 import com.simplyawakeremake.data.usertrack.UserTrack
 
+@Keep
 data class UserTrackDto(
     val userId: String = "",
     val trackId: String = "",

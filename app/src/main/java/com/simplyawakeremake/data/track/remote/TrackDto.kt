@@ -1,10 +1,12 @@
 package com.simplyawakeremake.data.track.remote
 
+import androidx.annotation.Keep
 import com.google.gson.annotations.Expose
 import com.google.gson.annotations.SerializedName
 
 
 data class TrackDto(
+    @Expose
     @SerializedName("id")
     val id: String,
     @Expose

@@ -1,6 +1,9 @@
 package com.simplyawakeremake.data.user
 
+import androidx.annotation.Keep
 
+
+@Keep
 data class UserDto(
     val id: String,
     val firebaseUid: String?,

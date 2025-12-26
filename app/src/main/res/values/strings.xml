@@ -71,6 +71,9 @@
     <string name="settings_downloads_delete_all_button">Delete all downloads</string>
     <string name="settings_downloads_delete_success">All downloaded tracks have been deleted ✅</string>
     <string name="settings_downloads_delete_partial_failure">Some downloaded tracks could not be deleted ❌</string>
+    <string name="settings_section_playback_title">Playback</string>
+    <string name="settings_playback_immersive_mode_title">Immersive mode</string>
+    <string name="settings_playback_immersive_mode_description">Hide status and navigation bars on the player screen.</string>
 
     <string name="login_track_artwork_cd">Track artwork</string>
     <string name="login_title">Welcome to Simply Awake</string>

@@ -69,7 +69,9 @@ fun NowPlayingScreen(
     trackId: String,
     viewModel: NowPlayingViewModel = koinViewModel()
 ) {
-    ImmersiveMode(true)
+    val immersiveEnabled by viewModel.immersiveModeEnabled.collectAsState(initial = true)
+    ImmersiveMode(immersiveEnabled)
+
     val mainViewModel = LocalMainViewModel.current
     val toolbarConfig = ToolbarConfig(showToolbar = false)
 

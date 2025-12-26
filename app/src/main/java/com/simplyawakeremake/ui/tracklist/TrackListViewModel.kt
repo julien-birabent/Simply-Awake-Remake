@@ -190,7 +190,8 @@ class TrackListViewModel(
                 duration = track.duration.toCompactDurationLabel(),
                 isFavorite = track.isFavorite,
                 downloadStatus = status,
-                createdAtLabel = track.createdAt.toShortDateLabel()
+                createdAtLabel = track.createdAt.toShortDateLabel(),
+                playCount = track.playCount
             )
         }
     }

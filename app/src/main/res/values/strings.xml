@@ -27,6 +27,17 @@
         No internet &amp; track not downloaded!
     </string>
 
+    <string name="playlist_filter_fab_content_description">@string/track_filter_bottom_sheet_fab_content_description</string>
+
+    <string name="playlist_empty_filtered_title">No tracks match these filters</string>
+    <string name="playlist_empty_filtered_message">Try adjusting or resetting your filters.</string>
+    <string name="playlist_empty_filtered_reset_filters">Reset filters</string>
+    <string name="playlist_track_meta_separator">·</string>
+    <plurals name="playlist_played_times">
+        <item quantity="one">played %1$d time</item>
+        <item quantity="other">played %1$d times</item>
+    </plurals>
+
     <string name="sync_dialog_title">Synchronizing your data…</string>
     <string name="sync_dialog_done">Finalizing…</string>
 
@@ -36,7 +47,6 @@
     <string name="playlist_download_cancel">Cancel</string>
     <string name="playlist_download_complete">Download Complete!</string>
     <string name="playlist_download_failed">Download Failed: %1$s</string>
-
 
 
     <string name="settings_section_account_title">Account</string>

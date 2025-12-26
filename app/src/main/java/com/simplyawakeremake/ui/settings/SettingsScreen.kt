@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +46,9 @@ fun SettingsRoute(
 ) {
     val mainViewModel = LocalMainViewModel.current
     val context = LocalContext.current
+
     val uiState by viewModel.uiState.collectAsState()
+    val immersiveModeEnabled by viewModel.immersiveModeEnabled.collectAsState(initial = true)
 
     val toolbarConfig = ToolbarConfig(
         title = R.string.toolbar_title_settings,
@@ -83,6 +86,8 @@ fun SettingsRoute(
 
     SettingsScreen(
         uiState = uiState,
+        immersiveModeEnabled = immersiveModeEnabled,
+        onImmersiveModeToggled = viewModel::onImmersiveModeToggled,
         onLoginWithGoogle = viewModel::onLoginWithGoogleClicked,
         onDeleteAllDownloadsClicked = viewModel::onDeleteAllDownloadsClicked
     )
@@ -99,6 +104,8 @@ fun SettingsRoute(
 @Composable
 private fun SettingsScreen(
     uiState: SettingsUiState,
+    immersiveModeEnabled: Boolean,
+    onImmersiveModeToggled: (Boolean) -> Unit,
     onLoginWithGoogle: () -> Unit = {},
     onDeleteAllDownloadsClicked: () -> Unit = {}
 ) {
@@ -108,6 +115,7 @@ private fun SettingsScreen(
         verticalArrangement = Arrangement.Top
     ) {
         HorizontalDivider(modifier = Modifier.height(1.dp))
+
         GoogleSignInSection(
             modifier = Modifier
                 .padding(16.dp)
@@ -115,6 +123,14 @@ private fun SettingsScreen(
             state = uiState,
             onLoginWithGoogle = onLoginWithGoogle
         )
+
+        HorizontalDivider(modifier = Modifier.height(1.dp))
+
+        PlaybackSection(
+            immersiveModeEnabled = immersiveModeEnabled,
+            onImmersiveModeToggled = onImmersiveModeToggled
+        )
+
         HorizontalDivider(modifier = Modifier.height(1.dp))
 
         DeleteDownloadsSection(
@@ -125,7 +141,50 @@ private fun SettingsScreen(
             trackFilesSizeBytes = uiState.trackFilesSizeBytes,
             onDeleteClicked = onDeleteAllDownloadsClicked
         )
+
         HorizontalDivider(modifier = Modifier.height(1.dp))
+    }
+}
+
+@Composable
+private fun PlaybackSection(
+    immersiveModeEnabled: Boolean,
+    onImmersiveModeToggled: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = stringResource(id = R.string.settings_section_playback_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(id = R.string.settings_playback_immersive_mode_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(id = R.string.settings_playback_immersive_mode_description),
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+
+            Switch(
+                checked = immersiveModeEnabled,
+                onCheckedChange = onImmersiveModeToggled
+            )
+        }
     }
 }
 
@@ -204,7 +263,6 @@ fun DeleteDownloadsSection(
     }
 }
 
-
 @Composable
 fun GoogleSignInSection(
     modifier: Modifier = Modifier,
@@ -265,7 +323,6 @@ fun GoogleSignInSection(
     }
 }
 
-
 @Preview(
     showBackground = true,
     backgroundColor = 0xFF000000,
@@ -281,7 +338,11 @@ fun SettingsGuestPreview() {
         errorMessage = null
     )
     SimplyAwakeRemakeTheme {
-        SettingsScreen(uiState = ui) { }
+        SettingsScreen(
+            uiState = ui,
+            immersiveModeEnabled = true,
+            onImmersiveModeToggled = {}
+        )
     }
 }
 
@@ -300,7 +361,10 @@ fun SettingsLoggedInPreview() {
         errorMessage = null
     )
     SimplyAwakeRemakeTheme {
-        SettingsScreen(uiState = ui) { }
+        SettingsScreen(
+            uiState = ui,
+            immersiveModeEnabled = true,
+            onImmersiveModeToggled = {}
+        )
     }
 }
-

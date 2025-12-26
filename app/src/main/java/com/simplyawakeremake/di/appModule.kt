@@ -16,6 +16,8 @@ import com.simplyawakeremake.data.download.track.TrackDownloader
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.history.TrackHistorySaver
 import com.simplyawakeremake.data.history.UiTrackHistory
+import com.simplyawakeremake.data.playback.PlaybackPreferencesRepository
+import com.simplyawakeremake.data.playback.PlaybackPreferencesRepositoryImpl
 import com.simplyawakeremake.data.track.TrackUriProvider
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.qualifier.named
@@ -34,6 +36,7 @@ val appModule = module {
             Context.MODE_PRIVATE
         )
     }
+    single<PlaybackPreferencesRepository> { PlaybackPreferencesRepositoryImpl(androidContext()) }
 
     single<DataStore<Preferences>> {
         androidContext().userPrefsDataStore

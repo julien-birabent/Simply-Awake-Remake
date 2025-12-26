@@ -51,6 +51,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -83,9 +84,9 @@ import com.simplyawakeremake.ui.trackfilter.hasActiveFilters
 import com.simplyawakeremake.usecases.download.DownloadProgress
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 import java.net.UnknownHostException
 import java.util.Locale
+import org.koin.androidx.compose.koinViewModel
 import com.simplyawakeremake.ui.common.LoadingIndicator as LoadingIndicator1
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
@@ -173,7 +174,7 @@ fun PlayListScreen(
                     Icon(
                         imageVector = Icons.Filled.Tune,
                         contentDescription = stringResource(
-                            id = R.string.track_filter_bottom_sheet_fab_content_description
+                            id = R.string.playlist_filter_fab_content_description
                         )
                     )
                 }
@@ -393,14 +394,14 @@ fun EmptyFilteredTrackList(
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "No tracks match these filters",
+            text = stringResource(R.string.playlist_empty_filtered_title),
             style = MaterialTheme.typography.titleMedium
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Try adjusting or resetting your filters.",
+            text = stringResource(R.string.playlist_empty_filtered_message),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )
@@ -413,11 +414,10 @@ fun EmptyFilteredTrackList(
                 .height(56.dp),
             onClick = onResetFilters
         ) {
-            Text(text = "Reset filters")
+            Text(text = stringResource(R.string.playlist_empty_filtered_reset_filters))
         }
     }
 }
-
 
 @Composable
 fun TrackListItem(
@@ -463,12 +463,21 @@ fun TrackListItem(
             val hasDuration = track.duration.isNotBlank()
             val hasDate = track.createdAtLabel.isNotBlank()
             if (hasDuration || hasDate) {
+                val metaSeparator = " ${stringResource(R.string.playlist_track_meta_separator)} "
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = buildString {
                         if (hasDuration) append(track.duration)
-                        if (hasDuration && hasDate) append(" · ")
-                        if (hasDate) append(track.createdAtLabel)
+                        if (hasDuration && hasDate) append(metaSeparator)
+                        if (hasDate) {
+                            append(track.createdAtLabel)
+                            append(metaSeparator)
+                        }
+                        append(pluralStringResource(
+                            id = R.plurals.playlist_played_times,
+                            count = track.playCount,
+                            track.playCount
+                        ))
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -644,7 +653,8 @@ private fun TrackListItemNotFavoriteNotDownloadedPreview() {
         duration = "20:00",
         isFavorite = false,
         downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED,
-        createdAtLabel = "16 Feb 2023"
+        createdAtLabel = "16 Feb 2023",
+        playCount = 1
     )
 
     SimplyAwakeRemakeTheme(dynamicColor = false) {
@@ -686,7 +696,8 @@ private fun TrackListItemFavoriteDownloadedPreview() {
         duration = "45:00",
         isFavorite = true,
         downloadStatus = TrackDownloadStatus.DOWNLOADED,
-        createdAtLabel = "16 Feb 2023"
+        createdAtLabel = "16 Feb 2023",
+        playCount = 2
     )
 
     SimplyAwakeRemakeTheme {
@@ -714,7 +725,8 @@ private fun TrackListItemDownloadingPreview() {
         duration = "10:00",
         isFavorite = false,
         downloadStatus = TrackDownloadStatus.DOWNLOADING,
-        createdAtLabel = "16 Feb 2023"
+        createdAtLabel = "16 Feb 2023",
+        playCount = 3
     )
 
     SimplyAwakeRemakeTheme(dynamicColor = false, darkTheme = true) {

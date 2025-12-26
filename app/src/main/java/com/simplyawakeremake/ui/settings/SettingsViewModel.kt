@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.download.track.TrackFileManager
+import com.simplyawakeremake.data.playback.PlaybackPreferencesRepository
 import com.simplyawakeremake.data.user.UserRepository
 import com.simplyawakeremake.data.usertrack.sync.UserTrackSyncResult
 import com.simplyawakeremake.ui.UiText
@@ -13,9 +14,11 @@ import com.simplyawakeremake.usecases.download.ObserveActiveDownloadsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -45,7 +48,8 @@ class SettingsViewModel(
     private val googleSignInUseCase: GoogleSignInUseCase,
     private val deleteAllDownloadsUseCase: DeleteAllDownloadsUseCase,
     private val trackFileManager: TrackFileManager,
-    private val observeActiveDownloadsUseCase: ObserveActiveDownloadsUseCase
+    private val observeActiveDownloadsUseCase: ObserveActiveDownloadsUseCase,
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -53,6 +57,20 @@ class SettingsViewModel(
 
     private val _events = MutableSharedFlow<SettingsEvent>()
     val events = _events.asSharedFlow()
+
+    val immersiveModeEnabled: StateFlow<Boolean> =
+        playbackPreferencesRepository.immersiveModeEnabled
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = true
+            )
+
+    fun onImmersiveModeToggled(enabled: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            playbackPreferencesRepository.setImmersiveModeEnabled(enabled)
+        }
+    }
 
     init {
         observeCurrentUser()

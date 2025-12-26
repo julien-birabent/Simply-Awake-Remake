@@ -42,9 +42,9 @@ val uiModule = module {
             applyTrackFiltersUseCase = get<ApplyTrackFiltersUseCase>()
         )
     }
-    viewModel { NowPlayingViewModel(androidApplication(), get(), get(), get()) }
+    viewModel { NowPlayingViewModel(androidApplication(), get(), get(), get(), get()) }
     viewModel { RecentHistoryViewModel(get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { SynchronizationViewModel(syncUserTracksAfterLoginUseCase = get()) }
     viewModel { TrackFilterViewModel() }
 }

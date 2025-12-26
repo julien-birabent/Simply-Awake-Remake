@@ -17,6 +17,7 @@ import com.simplyawakeremake.PlayerSubjectWrapper
 import com.simplyawakeremake.R
 import com.simplyawakeremake.data.common.ResultState
 import com.simplyawakeremake.data.download.track.TrackFileManager
+import com.simplyawakeremake.data.playback.PlaybackPreferencesRepository
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.repository.TrackRepositoryInterface
 import com.simplyawakeremake.extensions.toByteArray
@@ -55,7 +56,8 @@ class NowPlayingViewModel(
     private val app: Application,
     private val userTrackRepository: TrackRepositoryInterface,
     private val toggleTrackFavoriteUseCase: ToggleTrackFavoriteUseCase,
-    private val registerTrackPlayUseCase: RegisterTrackPlayUseCase
+    private val registerTrackPlayUseCase: RegisterTrackPlayUseCase,
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
 ) : AndroidViewModel(app), KoinComponent {
 
     private val TAG = "NowPlayingViewModel"
@@ -69,6 +71,14 @@ class NowPlayingViewModel(
     private var playlistTrackIds: List<String> = emptyList()
 
     private val playbackHistory = mutableListOf<String>()
+
+    val immersiveModeEnabled: StateFlow<Boolean> =
+        playbackPreferencesRepository.immersiveModeEnabled
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = true
+            )
 
     private val _isShuffleEnabled = MutableStateFlow(false)
     val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled
@@ -132,6 +142,15 @@ class NowPlayingViewModel(
         .distinctUntilChanged()
         .catch { emit(false) }
         .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
+    val isBufferingAudio: StateFlow<Boolean> = onPlayerUpdate
+        .map { player ->
+            player.playbackState == Player.STATE_BUFFERING
+        }
+        .distinctUntilChanged()
+        .catch { emit(false) }
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
+
 
     val playerPositionUpdates: StateFlow<Long> = combine(tickerFlow, onPlayerUpdate) { _, player ->
         player

@@ -99,7 +99,10 @@ fun TrackFilterBottomSheetContent(
                 ),
                 TrackSortOption.DURATION_ASC to stringResource(
                     id = R.string.track_filter_bottom_sheet_sort_option_duration
-                )
+                ),
+                TrackSortOption.MOST_PLAYED to stringResource(
+                    id = R.string.track_filter_bottom_sheet_sort_option_most_played
+                ),
             ).forEach { (option, label) ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),

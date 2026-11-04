@@ -28,6 +28,8 @@
     </string>
 
     <string name="playlist_filter_fab_content_description">@string/track_filter_bottom_sheet_fab_content_description</string>
+    <string name="playlist_audio_quality_fair">Fair audio</string>
+    <string name="playlist_audio_quality_poor">Poor audio</string>
 
     <string name="playlist_empty_filtered_title">No tracks match these filters</string>
     <string name="playlist_empty_filtered_message">Try adjusting or resetting your filters.</string>

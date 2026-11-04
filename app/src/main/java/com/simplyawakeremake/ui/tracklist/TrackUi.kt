@@ -1,5 +1,6 @@
 package com.simplyawakeremake.ui.tracklist
 
+import com.simplyawakeremake.data.audioquality.AudioQualityLevel
 import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 
 data class TrackUi(
@@ -10,6 +11,6 @@ data class TrackUi(
     val duration: String,
     val isFavorite: Boolean,
     val downloadStatus: TrackDownloadStatus,
-    val createdAtLabel: String,
-    val playCount: Int
+    val playCount: Int,
+    val audioQuality: AudioQualityLevel? = null,
 )

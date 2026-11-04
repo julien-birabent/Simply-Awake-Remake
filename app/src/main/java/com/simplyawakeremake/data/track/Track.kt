@@ -1,5 +1,6 @@
 package com.simplyawakeremake.data.track
 
+import com.simplyawakeremake.data.audioquality.AudioQualityLevel
 import com.simplyawakeremake.data.usertrack.UserTrack
 import kotlin.math.max
 
@@ -17,6 +18,7 @@ data class Track(
     val isFavorite: Boolean = false,
     val playCount: Int = 0,
     val lastPlayedAt: Long? = null,
+    val audioQuality: AudioQualityLevel? = null,
 ) {
     val ordinal: Int = name.substring(0, 3).removeRange(0, 1).toInt()
     val displayName: String = name.replace(Regex("\\d"), "").trim()
@@ -28,6 +30,9 @@ fun Track.withUserMeta(meta: UserTrack?): Track =
         playCount = meta.playCount,
         lastPlayedAt = meta.lastPlayedAt,
     )
+
+fun Track.withAudioQuality(level: AudioQualityLevel?): Track =
+    if (level == null) this else copy(audioQuality = level)
 
 fun Track.rawDurationSeconds(): Int {
     return duration.toDurationSeconds()

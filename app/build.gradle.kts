@@ -10,13 +10,13 @@ plugins {
 
 android {
     namespace = "com.simplyawakeremake"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "org.marklackey.android.awake"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 16
+        targetSdk = 36
+        versionCode = 17
         versionName = "11.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

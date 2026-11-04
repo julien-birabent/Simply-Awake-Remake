@@ -12,10 +12,12 @@
     <string name="track_filter_bottom_sheet_sort_option_release">Release order</string>
     <string name="track_filter_bottom_sheet_sort_option_duration">Duration</string>
     <string name="track_filter_bottom_sheet_sort_option_most_played">Most played</string>
+    <string name="track_filter_bottom_sheet_sort_option_audio_quality">Audio quality</string>
 
     <string name="track_filter_bottom_sheet_state_downloaded_only">Downloaded</string>
     <string name="track_filter_bottom_sheet_state_favorites">Favorites</string>
     <string name="track_filter_bottom_sheet_state_never_played">Never played</string>
+    <string name="track_filter_bottom_sheet_state_hide_poor_audio">Hide poor audio</string>
 
     <string name="track_filter_bottom_sheet_action_reset">Reset</string>
     <string name="track_filter_bottom_sheet_action_cancel">Cancel</string>

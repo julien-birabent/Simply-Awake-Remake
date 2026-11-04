@@ -11,20 +11,30 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FileDownload
+import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -89,33 +99,10 @@ fun TrackFilterBottomSheetContent(
             style = MaterialTheme.typography.titleMedium
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-            listOf(
-                TrackSortOption.RELEASE_ORDINAL to stringResource(
-                    id = R.string.track_filter_bottom_sheet_sort_option_release
-                ),
-                TrackSortOption.TITLE_ASC to stringResource(
-                    id = R.string.track_filter_bottom_sheet_sort_option_title
-                ),
-                TrackSortOption.DURATION_ASC to stringResource(
-                    id = R.string.track_filter_bottom_sheet_sort_option_duration
-                ),
-                TrackSortOption.MOST_PLAYED to stringResource(
-                    id = R.string.track_filter_bottom_sheet_sort_option_most_played
-                ),
-            ).forEach { (option, label) ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = filterState.sortOption == option,
-                        onClick = { onSortSelected(option) }
-                    )
-                    Text(text = label)
-                }
-            }
-        }
+        SortOptionMenu(
+            selected = filterState.sortOption,
+            onSortSelected = onSortSelected
+        )
 
         Text(
             text = stringResource(id = R.string.track_filter_bottom_sheet_filter_by_state),
@@ -145,6 +132,12 @@ fun TrackFilterBottomSheetContent(
                 onClick = { onStateFilterToggled(TrackStateFilter.NeverPlayed) },
                 iconImage = Icons.Default.AutoAwesome,
                 iconTint = CoolYellow
+            )
+            FilterChipCard(
+                label = stringResource(id = R.string.track_filter_bottom_sheet_state_hide_poor_audio),
+                selected = TrackStateFilter.HidePoorAudio in filterState.stateFilters,
+                onClick = { onStateFilterToggled(TrackStateFilter.HidePoorAudio) },
+                iconImage = Icons.Outlined.GraphicEq,
             )
         }
 
@@ -214,6 +207,46 @@ fun TrackFilterBottomSheetContent(
 
             Button(onClick = onApply) {
                 Text(text = stringResource(id = R.string.track_filter_bottom_sheet_action_apply))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SortOptionMenu(
+    selected: TrackSortOption,
+    onSortSelected: (TrackSortOption) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it }
+    ) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+            value = stringResource(id = selected.toStringRes()),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            shape = CircleShape,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+        )
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            TrackSortOption.entries.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(id = option.toStringRes())) },
+                    onClick = {
+                        onSortSelected(option)
+                        expanded = false
+                    }
+                )
             }
         }
     }

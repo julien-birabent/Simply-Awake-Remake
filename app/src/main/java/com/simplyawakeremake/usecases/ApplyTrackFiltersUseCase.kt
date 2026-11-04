@@ -1,5 +1,6 @@
 package com.simplyawakeremake.usecases
 
+import com.simplyawakeremake.data.audioquality.AudioQualityLevel
 import com.simplyawakeremake.data.download.track.TrackFileManager
 import com.simplyawakeremake.data.track.Track
 import com.simplyawakeremake.data.track.categories
@@ -51,6 +52,9 @@ class ApplyTrackFiltersUseCase(
 
             TrackSortOption.MOST_PLAYED -> tracks.sortedByDescending { it.playCount }
 
+            TrackSortOption.AUDIO_QUALITY_DESC ->
+                tracks.sortedBy { it.audioQuality?.ordinal ?: AudioQualityLevel.entries.size }
+
         }
     }
 }
@@ -77,6 +81,10 @@ private class StateTrackListFilter(
 
         if (TrackStateFilter.NeverPlayed in stateFilters) {
             result = result.filter { track -> track.playCount == 0 }
+        }
+
+        if (TrackStateFilter.HidePoorAudio in stateFilters) {
+            result = result.filter { track -> track.audioQuality != AudioQualityLevel.POOR }
         }
 
         return result

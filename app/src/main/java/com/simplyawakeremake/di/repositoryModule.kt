@@ -2,6 +2,9 @@ package com.simplyawakeremake.di
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.simplyawakeremake.data.audioquality.AudioQualityRepository
+import com.simplyawakeremake.data.audioquality.remote.AudioQualityRemoteDataSource
+import com.simplyawakeremake.data.audioquality.remote.FirestoreAudioQualityRemoteDataSource
 import com.simplyawakeremake.data.createGoogleSignInClient
 import com.simplyawakeremake.data.history.TrackHistoryRepository
 import com.simplyawakeremake.data.history.TrackHistoryRepositoryInterface
@@ -46,10 +49,14 @@ val repositoryModule = module {
 
     single<TrackHistoryRepositoryInterface> { TrackHistoryRepository() }
 
+    single<AudioQualityRemoteDataSource> { FirestoreAudioQualityRemoteDataSource(firestore = get()) }
+    single { AudioQualityRepository(remote = get()) }
+
     single<TrackRepositoryInterface> {
         FullTrackRepository(
             catalogRepo = get<TrackRepository>(),
             userTrackRepository = get(),
+            audioQualityRepository = get(),
         )
     }
 

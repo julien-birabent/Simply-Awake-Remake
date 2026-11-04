@@ -6,6 +6,7 @@ sealed class TrackStateFilter {
     data object Downloaded : TrackStateFilter()
     data object Favorite : TrackStateFilter()
     data object NeverPlayed : TrackStateFilter()
+    data object HidePoorAudio : TrackStateFilter()
 }
 
 fun TrackStateFilter.toStringRes(): Int =
@@ -16,5 +17,8 @@ fun TrackStateFilter.toStringRes(): Int =
 
         TrackStateFilter.NeverPlayed ->
             R.string.track_filter_bottom_sheet_state_never_played
+
+        TrackStateFilter.HidePoorAudio ->
+            R.string.track_filter_bottom_sheet_state_hide_poor_audio
 
     }

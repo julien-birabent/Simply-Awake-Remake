@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.simplyawakeremake.ConnectionState
 import com.simplyawakeremake.R
+import com.simplyawakeremake.data.audioquality.AudioQualityLevel
 import com.simplyawakeremake.connectionState
 import com.simplyawakeremake.data.download.track.TrackDownloadStatus
 import com.simplyawakeremake.navigation.Screen
@@ -460,24 +461,27 @@ fun TrackListItem(
                 )
             }
 
-            val hasDuration = track.duration.isNotBlank()
-            val hasDate = track.createdAtLabel.isNotBlank()
-            if (hasDuration || hasDate) {
+            if (track.duration.isNotBlank()) {
                 val metaSeparator = " ${stringResource(R.string.playlist_track_meta_separator)} "
+                val audioQualityLabel = when (track.audioQuality) {
+                    AudioQualityLevel.FAIR -> stringResource(R.string.playlist_audio_quality_fair)
+                    AudioQualityLevel.POOR -> stringResource(R.string.playlist_audio_quality_poor)
+                    AudioQualityLevel.GOOD, null -> null
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = buildString {
-                        if (hasDuration) append(track.duration)
-                        if (hasDuration && hasDate) append(metaSeparator)
-                        if (hasDate) {
-                            append(track.createdAtLabel)
-                            append(metaSeparator)
-                        }
+                        append(track.duration)
+                        append(metaSeparator)
                         append(pluralStringResource(
                             id = R.plurals.playlist_played_times,
                             count = track.playCount,
                             track.playCount
                         ))
+                        audioQualityLabel?.let {
+                            append(metaSeparator)
+                            append(it)
+                        }
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -653,7 +657,6 @@ private fun TrackListItemNotFavoriteNotDownloadedPreview() {
         duration = "20:00",
         isFavorite = false,
         downloadStatus = TrackDownloadStatus.NOT_DOWNLOADED,
-        createdAtLabel = "16 Feb 2023",
         playCount = 1
     )
 
@@ -696,7 +699,6 @@ private fun TrackListItemFavoriteDownloadedPreview() {
         duration = "45:00",
         isFavorite = true,
         downloadStatus = TrackDownloadStatus.DOWNLOADED,
-        createdAtLabel = "16 Feb 2023",
         playCount = 2
     )
 
@@ -725,7 +727,6 @@ private fun TrackListItemDownloadingPreview() {
         duration = "10:00",
         isFavorite = false,
         downloadStatus = TrackDownloadStatus.DOWNLOADING,
-        createdAtLabel = "16 Feb 2023",
         playCount = 3
     )
 

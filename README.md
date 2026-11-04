@@ -16,6 +16,7 @@ We decided to rebuild the app because maintaining the previous version had becom
   - Show only **downloaded** tracks  
   - Show only **favorites**  
   - Show only **never played** tracks  
+  - **Hide poor audio** tracks (audio quality graded offline per track, see `tools/audio_quality/`)  
 - **Filter by duration** using predefined buckets (e.g. short / medium / long sessions).  
 - **Filter by categories**:  
   - Tracks are tagged via a `tagString` (e.g. *sleep, anxiety, body scan*).  
@@ -24,6 +25,8 @@ We decided to rebuild the app because maintaining the previous version had becom
   - Sort by **release order** (original playlist order)
   - Sort **alphabetically** by title
   - Sort by **duration**
+  - Sort by **most played**
+  - Sort by **audio quality**
 
 An “active filters” header shows which filters are currently applied and lets you remove them individually or reset everything in one tap.
 

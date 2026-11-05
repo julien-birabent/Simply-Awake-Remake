@@ -10,3 +10,8 @@ Android, Kotlin, Compose, Koin, Room, Retrofit, Firestore. Les pistes audio vien
 collection Firestore `audioQuality`, lue par l'app pour filtrer et trier par qualité sonore. Nouvelle saison, piste
 remplacée ou seuil à revoir : suivre `tools/audio_quality/PROCEDURE.md`. Métriques et calibration par écoute dans
 `tools/audio_quality/README.md`.
+
+## Release
+
+Publication Play Store : tag `X.Y` ou `X.Y.Z` sur `master`, le workflow `release.yml` produit l'AAB signé.
+Procédure, secrets et rotation de la clé d'upload : `docs/RELEASE.md`.

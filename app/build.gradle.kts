@@ -41,6 +41,33 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            // Identifiants lus depuis les propriétés Gradle (~/.gradle/gradle.properties ou -P)
+            // puis depuis les variables d'environnement (CI). Jamais dans le dépôt.
+            fun secret(name: String): String? =
+                (project.findProperty(name) as String?)?.takeIf { it.isNotBlank() }
+                    ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+
+            val storePath = secret("RELEASE_STORE_FILE")
+            val storePass = secret("RELEASE_STORE_PASSWORD")
+            val alias = secret("RELEASE_KEY_ALIAS")
+            val keyPass = secret("RELEASE_KEY_PASSWORD") ?: storePass
+
+            if (storePath != null && storePass != null && alias != null && keyPass != null) {
+                storeFile = file(storePath)
+                storePassword = storePass
+                keyAlias = alias
+                keyPassword = keyPass
+            } else {
+                logger.warn(
+                    "Release signing not configured (RELEASE_STORE_FILE, RELEASE_STORE_PASSWORD, " +
+                        "RELEASE_KEY_ALIAS, RELEASE_KEY_PASSWORD): release artifacts will be unsigned."
+                )
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -49,6 +76,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Signé seulement si le keystore est configuré, sinon build non signé (dev, CI sans secrets).
+            signingConfigs.getByName("release").takeIf { it.storeFile != null }?.let { signingConfig = it }
         }
 
         debug {

@@ -32,3 +32,8 @@ local.properties
 /.idea/vcs.xml
 /.idea/AndroidProjectSystem.xml
 /.kotlin/sessions/kotlin-compiler-9324448799679683441.salive
+
+# Keystores : jamais dans le dépôt
+*.jks
+*.keystore
+keystore.properties

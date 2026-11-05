@@ -82,6 +82,65 @@ An “active filters” header shows which filters are currently applied and let
 
 ---
 
+## Release signée via GitHub Actions
+
+Le workflow [`.github/workflows/release.yml`](.github/workflows/release.yml) se déclenche à chaque push d'un tag de
+version (`11.3`, `11.3.1`…). Il build `:app:bundleProdRelease`, le signe avec la clé d'upload Play App Signing, vérifie
+que l'AAB contient bien une signature (`META-INF/*.RSA` ou `*.SF`), puis l'attache en artefact de workflow et à la
+GitHub Release du tag. Le keystore n'est jamais présent dans le dépôt ni sur une machine locale : il vit en base64 dans
+un secret du dépôt et n'est décodé que dans `$RUNNER_TEMP` le temps du job.
+
+### Secrets à créer dans le dépôt
+
+Dans *Settings → Secrets and variables → Actions → Repository secrets* :
+
+| Secret                    | Contenu                                                                              |
+|---------------------------|--------------------------------------------------------------------------------------|
+| `RELEASE_KEYSTORE_BASE64` | Le fichier `upload-key.jks` encodé en base64 (voir ci-dessous)                        |
+| `RELEASE_STORE_PASSWORD`  | Mot de passe du keystore                                                              |
+| `RELEASE_KEY_ALIAS`       | Alias de la clé d'upload dans le keystore                                             |
+| `RELEASE_KEY_PASSWORD`    | Mot de passe de la clé (facultatif : s'il est absent, celui du keystore est utilisé) |
+| `BASE_SERVER_URL`         | Valeur de `baseServerUrl` pour `local.properties` (déjà utilisé par la CI des PR)     |
+
+### Encoder le keystore en base64
+
+Sur une seule ligne, sans retour à la ligne, puis coller le résultat dans `RELEASE_KEYSTORE_BASE64` :
+
+```bash
+base64 -w0 upload-key.jks
+```
+
+Sur macOS (`base64` BSD) :
+
+```bash
+base64 -i upload-key.jks | tr -d '\n'
+```
+
+Sur Windows (PowerShell), le résultat est copié dans le presse-papiers :
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("upload-key.jks")) | Set-Clipboard
+```
+
+### Publier une version
+
+1. Mettre à jour `versionCode` et `versionName` dans `app/build.gradle.kts`, merger sur `master`.
+2. Poser et pousser le tag correspondant :
+
+```bash
+git tag 11.3 && git push origin 11.3
+```
+
+3. Récupérer l'AAB signé dans la GitHub Release du tag (ou dans les artefacts du run) et l'envoyer sur la Play Console.
+
+### Signer en local (facultatif)
+
+`app/build.gradle.kts` lit `RELEASE_STORE_FILE`, `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS` et `RELEASE_KEY_PASSWORD`
+depuis les propriétés Gradle (`~/.gradle/gradle.properties` ou `-P`) puis depuis les variables d'environnement. Sans
+ces valeurs, le build release reste non signé, avec un avertissement.
+
+---
+
 ## Design Philosophy
 
 The design stays true to the original app, aiming for practicality and simplicity. Since the app’s primary focus is on meditation and awakening, the interface is intentionally straightforward and user-friendly:
